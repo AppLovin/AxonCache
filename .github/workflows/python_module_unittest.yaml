@@ -1,0 +1,22 @@
+name: Python unittest
+
+on:
+  pull_request:
+    branches: [ master ]   # CI on PRs targeting master
+  push:
+    branches: [ master ]   # CI on merge commits to master only
+
+# Following
+# https://github.com/actions/setup-go
+
+jobs:
+  unittest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - run: sh axoncache/build_python_module.sh
+      - run: python3 axoncache/axoncache_test.py

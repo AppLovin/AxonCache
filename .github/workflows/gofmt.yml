@@ -1,0 +1,14 @@
+name: Go formatter
+
+on:
+  pull_request:
+    branches: [ master ]   # CI on PRs targeting master
+  push:
+    branches: [ master ]   # CI on merge commits to master only
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: Jerome1337/gofmt-action@v1.0.5

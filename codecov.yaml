@@ -1,0 +1,6 @@
+ignore:
+  - "test"
+  - "benchmark"
+
+comment:
+  require_changes: true

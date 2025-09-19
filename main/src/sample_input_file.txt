@@ -1,0 +1,14 @@
+992=Bool|267=String|250=String|1401=Double|999=StringList|1690=Int64|1410=String|1909=FloatList
+992.yyy=1
+992.zzz=false
+267.foo=foo
+267.bar=bar
+250.xxx=foo
+1401.xxx=123.456000
+1401.yyy=3.1415926
+1401.zzz=2.7182818
+999.vec1=slot0|slot1|slot2
+999.vec2=slot0|slot1
+1690.xxx=1234567890
+1909.xxx=3642:1161:371:595:183:60:287:88:29:668:221:79:9:2:1:9:2:0:0.078803:0.075797
+1410.android:com.belkatechnologies.clockmaker:GJH-Word 1-android-US-26+ F-4883/4553 4:5-200707-with 🍑=23845020383600711

@@ -1,0 +1,10 @@
+992=Bool|267=String|250=String|1401=Double|999=StringList|1690=Int64|1909=FloatList
+992.yyy=false
+992.zzz=true
+267.foo=notfoo
+267.bar=notbar
+1234567890.foo=foo
+1401.xxx=2344567000
+999.vec1=slot0|slot1|slot2
+1690.xxx=9876543210
+1909.xxx=3642:1161:371:595

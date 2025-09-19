@@ -1,0 +1,22 @@
+name: Ubuntu 22.04 Unittest
+
+on:
+  pull_request:
+    branches: [ master ]   # CI on PRs targeting master
+  push:
+    branches: [ master ]   # CI on merge commits to master only
+
+jobs:
+  unittest:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: threeal/cmake-action@v2.1.0
+        with:
+          generator: Ninja
+          options: |
+            AL_WITH_MAIN=OFF
+            AL_WITH_TESTS=ON
+
+      - run: ./build/test/axoncacheTest

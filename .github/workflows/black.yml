@@ -1,0 +1,29 @@
+name: BlackFormatter
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v46
+        with:
+          since_last_remote_commit: false
+      - name: Filter Python files and set environment variable
+        run: |
+          FILES_TO_LINT=$(echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr " " "\n" | grep '\.py$' | tr "\n" " " || true)
+          echo "FILES_TO_LINT=$FILES_TO_LINT"
+          echo "FILES_TO_LINT=$FILES_TO_LINT" >> $GITHUB_ENV
+      - name: Run Black Formatter
+        if: ${{ env.FILES_TO_LINT != '' }}
+        uses: psf/black@stable
+        with:
+          src: ${{ env.FILES_TO_LINT }}
+          check: true
