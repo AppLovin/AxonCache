@@ -205,6 +205,8 @@ func must(err error) {
 }
 
 func RunBenchmarkLmdb(keysCount int, keys, vals [][]byte) {
+	log.Println("Using AxonCache")
+
 	// temp DB path
 	path := filepath.Join(os.TempDir(), "lmdb_ro_bench")
 	_ = os.RemoveAll(path)
