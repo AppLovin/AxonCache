@@ -76,9 +76,11 @@ func RunBenchmark() {
 
 	keys := make([][]byte, keysCount)
 	vals := make([][]byte, keysCount)
-	for i := 0; i < keysCount; i++ {
-		keys[i] = []byte(fmt.Sprintf("key_%d", i+1))
-		vals[i] = []byte(fmt.Sprintf("val_%d", i+1))
+	for i := range keysCount {
+		key := fmt.Sprintf("key_%d", i+1)
+		val := fmt.Sprintf("val_%d", i+1)
+		keys[i] = []byte(key)
+		vals[i] = []byte(val)
 	}
 
 	RunBenchmarkNativeMap(keysCount, keys, vals)
@@ -268,7 +270,7 @@ func RunBenchmarkLmdb(keysCount int, keys, vals [][]byte) {
 			if err != nil {
 				return err
 			}
-			for i := 0; i < keysCount; i++ {
+			for i := range keysCount {
 				v, err := txn.Get(dbi, keys[i])
 				if lmdb.IsNotFound(err) {
 					missed++
