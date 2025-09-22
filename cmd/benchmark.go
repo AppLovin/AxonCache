@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"time"
 
 	axoncache "github.com/AppLovin/AxonCache"
@@ -206,74 +207,90 @@ func must(err error) {
 }
 
 func RunBenchmarkLmdb(keysCount int, keys, vals [][]byte) {
-	log.Println("Using LMDB")
-	start := time.Now()
+	log.Println("Using AxonCache")
 
-	path := "./lmdb-data-clean"
+	// temp DB path
+	path := filepath.Join(os.TempDir(), "lmdb_ro_bench")
 	_ = os.RemoveAll(path)
-	must(os.MkdirAll(path, 0o755))
+	if err := os.MkdirAll(path, 0o755); err != nil {
+		log.Fatalf("mkdir: %v", err)
+	}
 
-	env, err := lmdb.NewEnv()
-	must(err)
-	defer env.Close()
+	// ---------- Write phase ----------
+	{
+		env, err := lmdb.NewEnv()
+		must(err)
+		// Ensure close even on panic
+		defer env.Close()
 
-	// Set BEFORE Open
-	must(env.SetMapSize(1 << 32)) // 4 GiB
-	must(env.SetMaxDBs(2))        // >=2 because we’ll use a named DB
-	must(env.Open(path, 0, 0o644))
+		// Set BEFORE Open
+		// For 10k—millions of small K/V, 64–512 MiB is fine; bump as needed.
+		must(env.SetMapSize(1 << 32)) // 4 GiB
+		must(env.SetMaxDBs(2))
+		must(env.Open(path, 0, 0o644))
 
-	var dbi lmdb.DBI
-	// Use a short, explicit name and Create
-	must(env.Update(func(txn *lmdb.Txn) error {
-		var err error
-		dbi, err = txn.OpenDBI("main", lmdb.Create)
-		return err
-	}))
-
-	must(env.Update(func(txn *lmdb.Txn) error {
-		for i, k := range keys {
-			if err := txn.Put(dbi, k, vals[i], 0); err != nil {
-				return err
-			}
-		}
-		return nil
-	}))
-
-	elapsed := time.Since(start).Seconds()
-	qps := float64(keysCount) / elapsed
-	log.Printf("Inserted %s keys in %.3fs (%s keys/sec)\n", humanize.Comma(int64(keysCount)), elapsed, humanize.Comma(int64(qps)))
-
-	start = time.Now()
-
-	// Randomize lookup order
-	rand.Shuffle(len(keys), func(i, j int) { keys[i], keys[j] = keys[j], keys[i] })
-
-	// Lookups
-	must(env.View(func(txn *lmdb.Txn) error {
-		missed := 0
-		for i := range keysCount {
-			_ = i // silence warning
-
-			j := rand.Intn(keysCount)
-			_, err := txn.Get(dbi, keys[j])
-			if err == lmdb.NotFound {
-				missed++
-				continue
-			}
+		start := time.Now()
+		must(env.Update(func(txn *lmdb.Txn) error {
+			dbi, err := txn.OpenDBI("kv", lmdb.Create)
 			if err != nil {
 				return err
 			}
-		}
-		if missed > 0 {
-			log.Printf("missed %d", missed)
-		}
-		return nil
-	}))
+			for i := 0; i < keysCount; i++ {
+				if err := txn.Put(dbi, keys[i], vals[i], 0); err != nil {
+					return err
+				}
+			}
+			return nil
+		}))
+		// ensure durability before closing
+		must(env.Sync(true))
+		elapsed := time.Since(start).Seconds()
+		qps := float64(keysCount) / elapsed
+		log.Printf("Inserted %s keys in %.3fs (%s keys/sec)\n", humanize.Comma(int64(keysCount)), elapsed, humanize.Comma(int64(qps)))
 
-	elapsed = time.Since(start).Seconds()
-	qps = float64(keysCount) / elapsed
+		// Close the RW env before reopening RO
+		env.Close()
+	}
 
-	log.Printf("Looked up %s keys in %.2f seconds (%s keys/sec)\n", humanize.Comma(int64(keysCount)), elapsed, humanize.Comma(int64(qps)))
+	// ---------- Read-only lookups ----------
+	{
+		env, err := lmdb.NewEnv()
+		must(err)
+		defer env.Close()
+
+		// Must still be set before Open (even in RO)
+		must(env.SetMapSize(1 << 32)) // 4 GiB
+		must(env.SetMaxDBs(2))
+		must(env.Open(path, lmdb.Readonly, 0o644))
+
+		start := time.Now()
+		missed := 0
+		err = env.View(func(txn *lmdb.Txn) error {
+			dbi, err := txn.OpenDBI("kv", 0)
+			if err != nil {
+				return err
+			}
+			for i := range keysCount {
+				v, err := txn.Get(dbi, keys[i])
+				if lmdb.IsNotFound(err) {
+					missed++
+					continue
+				}
+				if err != nil {
+					return err
+				}
+				_ = v[0] // touch to prevent optimization
+			}
+			return nil
+		})
+		must(err)
+		elapsed := time.Since(start).Seconds()
+		qps := float64(keysCount) / elapsed
+		log.Printf("Looked up %s keys in %.2f seconds (%s keys/sec)\n", humanize.Comma(int64(keysCount)), elapsed, humanize.Comma(int64(qps)))
+	}
+
+	// cleanup temp dir
+	_ = os.RemoveAll(path)
 }
 
 func RunBenchmarkBoltDB(keysCount int, keys, vals [][]byte) {
