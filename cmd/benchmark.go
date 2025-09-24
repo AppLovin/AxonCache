@@ -12,6 +12,7 @@ import (
 
 	axoncache "github.com/AppLovin/AxonCache"
 	"github.com/bmatsuo/lmdb-go/lmdb"
+	"github.com/colinmarc/cdb"
 	"github.com/dustin/go-humanize"
 	"github.com/syndtr/goleveldb/leveldb"
 	bolt "go.etcd.io/bbolt"
@@ -93,6 +94,8 @@ func RunBenchmark() {
 	// RunBenchmarkBoltDB(keysCount, keys, vals)
 	// log.Println()
 	RunBenchmarkLevelDB(keysCount, keys, vals)
+	log.Println()
+	RunBenchmarkCDB(keysCount, keys, vals)
 	log.Println()
 
 	maxRss, _ := PeakRSS()
@@ -387,6 +390,46 @@ func RunBenchmarkLevelDB(keysCount int, keys, vals [][]byte) error {
 	start = time.Now()
 	for _, k := range keys {
 		_, _ = db.Get(k, nil) // ignore value + errors
+	}
+
+	elapsed = time.Since(start).Seconds()
+	qps = float64(keysCount) / elapsed
+	log.Printf("Looked up %s keys in %.3fs (%s keys/sec)\n", humanize.Comma(int64(keysCount)), elapsed, humanize.Comma(int64(qps)))
+
+	return nil
+}
+
+func RunBenchmarkCDB(keysCount int, keys, vals [][]byte) error {
+	log.Println("Using CDB")
+	start := time.Now()
+
+	writer, err := cdb.Create("/tmp/example.cdb")
+	if err != nil {
+		return err
+	}
+
+	// INSERT (batched)
+	for i := range keys {
+		writer.Put(keys[i], vals[i])
+	}
+
+	// Freeze the database, and open it for reads.
+	db, err := writer.Freeze()
+	if err != nil {
+		return err
+	}
+
+	elapsed := time.Since(start).Seconds()
+	qps := float64(keysCount) / elapsed
+	log.Printf("Inserted %s keys in %.3fs (%s keys/sec)\n", humanize.Comma(int64(keysCount)), elapsed, humanize.Comma(int64(qps)))
+
+	// Randomize lookup order
+	rand.Shuffle(len(keys), func(i, j int) { keys[i], keys[j] = keys[j], keys[i] })
+
+	// LOOKUP
+	start = time.Now()
+	for _, k := range keys {
+		_, _ = db.Get(k)
 	}
 
 	elapsed = time.Since(start).Seconds()
