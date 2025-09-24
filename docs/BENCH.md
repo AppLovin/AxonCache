@@ -4,10 +4,14 @@ FIXME: Make sure we re-open LMDB in read-only mode. This made lmdb faster in the
 
 ```
 Using AxonCache
-Inserted 5,000,000 keys in 1.200s (4,168,045 keys/sec)
-Looked up 5,000,000 keys in 1.557s (3,212,234 keys/sec)
+Inserted 1,000,000 keys in 0.185s (5,395,311 keys/sec)
+Looked up 1,000,000 keys in 0.229s (4,370,646 keys/sec)
 
 Using LMDB
-Inserted 5,000,000 keys in 3.752s (1,332,479 keys/sec)
-Looked up 5,000,000 keys in 3.592s (1,391,929 keys/sec)
+Inserted 1,000,000 keys in 0.513s (1,947,860 keys/sec)
+Looked up 1,000,000 keys in 0.445s (2,247,190 keys/sec)
+
+Using Python CDB
+Inserted 1,000,000 keys in 1.048s (954,070 keys/sec)
+Looked up 1,000,000 keys in 1.003s (996,745 keys/sec)
 ```
