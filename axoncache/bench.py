@@ -143,12 +143,13 @@ def bench_lmdb(keys, values, map_size=8 * 1024**3, use_tmpdir=True):
     else:
         print("\n(DB kept on disk)")
 
+
 def bench_cdb(keys, values):
-    '''
+    """
     C module was not ported to Python 3. Using a pure python module.
 
     https://python-pure-cdb.readthedocs.io/en/latest/quickstart.html
-    '''
+    """
     print("Using Python CDB")
 
     start = time.time()
@@ -156,8 +157,8 @@ def bench_cdb(keys, values):
 
     file_path = "./new.cdb"
 
-    with open(file_path, 'wb') as f:
-       with cdblib.Writer(f) as writer:
+    with open(file_path, "wb") as f:
+        with cdblib.Writer(f) as writer:
             for key, value in zip(keys, values):
                 writer.put(key, value)
 
@@ -170,7 +171,7 @@ def bench_cdb(keys, values):
 
     random.shuffle(keys)
 
-    with open(file_path, 'rb') as f:
+    with open(file_path, "rb") as f:
         data = f.read()
 
     reader = cdblib.Reader(data)
