@@ -18,10 +18,11 @@ import random
 
 import axoncache
 import lmdb
+import cdblib
 import humanize
 
 
-def bench_alcache(keys, values):
+def bench_axoncache(keys, values):
     print("Using AxonCache")
 
     n = len(keys)
@@ -70,7 +71,7 @@ def bench_alcache(keys, values):
     r.close()
 
 
-def run_bench(keys, values, map_size=8 * 1024**3, use_tmpdir=True):
+def bench_lmdb(keys, values, map_size=8 * 1024**3, use_tmpdir=True):
     """
     Insert given keys and values into an LMDB database (one per transaction),
     then randomly look them up.
@@ -115,6 +116,7 @@ def run_bench(keys, values, map_size=8 * 1024**3, use_tmpdir=True):
     )
 
     # ----- random lookups -----
+    # FIXME: should re-open in read-only mode
     shuffled = keys[:]
     random.shuffle(shuffled)
 
@@ -141,14 +143,60 @@ def run_bench(keys, values, map_size=8 * 1024**3, use_tmpdir=True):
     else:
         print("\n(DB kept on disk)")
 
+def bench_cdb(keys, values):
+    '''
+    C module was not ported to Python 3. Using a pure python module.
+
+    https://python-pure-cdb.readthedocs.io/en/latest/quickstart.html
+    '''
+    print("Using Python CDB")
+
+    start = time.time()
+    n = len(keys)
+
+    file_path = "./new.cdb"
+
+    with open(file_path, 'wb') as f:
+       with cdblib.Writer(f) as writer:
+            for key, value in zip(keys, values):
+                writer.put(key, value)
+
+    elapsed = time.time() - start
+    qps = float(n) / elapsed
+    print(
+        "Inserted %s keys in %.3fs (%s keys/sec)"
+        % (humanize.intcomma(n), elapsed, humanize.intcomma(int(qps)))
+    )
+
+    random.shuffle(keys)
+
+    with open(file_path, 'rb') as f:
+        data = f.read()
+
+    reader = cdblib.Reader(data)
+
+    start = time.time()
+
+    for key in keys:
+        reader.get(key)
+
+    elapsed = time.time() - start
+    qps = float(n) / elapsed
+    print(
+        "Looked up %s keys in %.3fs (%s keys/sec)"
+        % (humanize.intcomma(n), elapsed, humanize.intcomma(int(qps)))
+    )
+
 
 if __name__ == "__main__":
     # Example: small test set (scale up to millions if you want)
-    num = 5_000_000
+    num = 1_000_000
     keys = [f"key_{i}".encode("ascii") for i in range(num)]
     values = [f"value_{i}".encode("ascii") for i in range(num)]
 
-    bench_alcache(keys, values)
+    bench_axoncache(keys, values)
     print()
-    run_bench(keys, values)
+    bench_lmdb(keys, values)
+    print()
+    bench_cdb(keys, values)
     print()
