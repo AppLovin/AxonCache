@@ -12,18 +12,40 @@
 #include <axoncache/cache/LinearProbeDedupCache.h>
 #include <axoncache/cache/MapCache.h>
 #include <axoncache/memory/MallocMemoryHandler.h>
-#include "axoncache/writer/CacheFileWriter.h"
 #include "axoncache/common/SharedSettingsProvider.h"
+#include "axoncache/writer/CacheFileWriter.h"
 #include "axoncache/common/StringViewUtils.h"
+#include "axoncache/capi/CacheWriterCApi.h"
+#include "axoncache/capi/CacheReaderCApi.h"
 
 #include <cxxopts.hpp>
 #include <spdlog/spdlog.h>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <chrono>
 
 auto readMode( axoncache::SharedSettingsProvider * settings, const cxxopts::ParseResult & result ) -> void;
 auto writeMode( axoncache::SharedSettingsProvider * settings, const cxxopts::ParseResult & result ) -> void;
+
+namespace
+{
+
+void writeFile( const std::string & filename, const std::string & content )
+{
+    std::ofstream out( filename, std::ios::out | std::ios::trunc );
+    if ( !out )
+    {
+        throw std::runtime_error( "Failed to open file for writing: " + filename );
+    }
+    out << content;
+    if ( !out )
+    {
+        throw std::runtime_error( "Failed to write to file: " + filename );
+    }
+}
+
+}
 
 enum class Command
 {
@@ -462,7 +484,73 @@ auto readMode( axoncache::SharedSettingsProvider * settings, const cxxopts::Pars
 
 auto benchMode( axoncache::SharedSettingsProvider * settings, const cxxopts::ParseResult & result ) -> void
 {
-    std::cout << "I WAS HERE" << std::endl;
+    AL_LOG_INFO( "Bench mode" );
+
+    const std::string dataPath = ".";
+    const std::string settingsPath = dataPath + "/test.settings";
+
+    std::ostringstream oss;
+    oss << "ccache.destination_folder=" << dataPath << "\n";
+    oss << "ccache.type=5" << dataPath << "\n";
+    oss << "ccache.offset.bits=28" << dataPath << "\n";
+    writeFile( settingsPath, oss.str() );
+
+    {
+        auto * handle = NewCacheWriterHandle();
+        int errorCode = CacheWriter_Initialize( handle,
+                                                "bench_cli_test",
+                                                settingsPath.c_str(),
+                                                100 );
+        if ( errorCode != 0 )
+        {
+            throw std::runtime_error( "Error initializing writer" );
+        }
+
+        // Insert a few keys
+        std::string key = "1.key";
+        std::string val = "1.val";
+        CacheWriter_AddDuplicateValue( handle, val.data(), 0 );
+        CacheWriter_FinishAddDuplicateValues( handle );
+
+        if ( CacheWriter_InsertKey( handle, key.data(), key.size(), val.data(), val.size(), 0 ) != 0 )
+        {
+            throw std::runtime_error( "Error inserting key" );
+        }
+
+        // Write/Flush the cache
+        CacheWriter_FinishCacheCreation( handle );
+        CacheWriter_Finalize( handle );
+        CacheWriter_DeleteCppObject( handle );
+
+        std::string filePath = dataPath + "/bench_cli_test.cache";
+        std::string newFilePath = dataPath + "/bench_cli_test.1690484217134.cache";
+        ::rename( filePath.c_str(), newFilePath.c_str() );
+    }
+
+    // Now create a reader and do some lookups
+    {
+        auto * handle = NewCacheReaderHandle();
+        int errorCode = CacheReader_Initialize( handle,
+                                                "bench_cli_test",
+                                                dataPath.c_str(),
+                                                "1690484217134",
+                                                1 );
+        if ( errorCode != 0 )
+        {
+            throw std::runtime_error( "Error initializing reader" );
+        }
+
+        {
+            int size = 0;
+            std::string key = "1.key";
+            int isExist = 0;
+            CacheReader_GetKey( handle, key.data(), key.size(), &isExist, &size );
+            if ( isExist != 1 )
+            {
+                throw std::runtime_error( "Error looking up valuereader" );
+            }
+        }
+    }
 }
 
 
