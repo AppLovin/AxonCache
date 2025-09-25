@@ -1,12 +1,11 @@
 module github.com/AppLovin/AxonCache
 
-go 1.23.0
-
-toolchain go1.23.3
+go 1.24.7
 
 require (
 	cloud.google.com/go/storage v1.48.0
 	github.com/bmatsuo/lmdb-go v1.8.0
+	github.com/bsergean/cdb_mmap v0.0.0-20250924234939-4596cf7e5d02
 	github.com/cespare/xxhash v1.1.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/edsrzf/mmap-go v1.2.0
@@ -67,8 +66,8 @@ require (
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/oauth2 v0.27.0 // indirect
-	golang.org/x/sync v0.12.0 // indirect
-	golang.org/x/text v0.23.0 // indirect
+	golang.org/x/sync v0.17.0 // indirect
+	golang.org/x/text v0.29.0 // indirect
 	golang.org/x/time v0.8.0 // indirect
 	google.golang.org/genproto v0.0.0-20241118233622-e639e219e697 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20241118233622-e639e219e697 // indirect

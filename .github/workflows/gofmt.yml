@@ -10,5 +10,20 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: Jerome1337/gofmt-action@v1.0.5
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'   # pick your Go version
+
+      - name: Check formatting
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "The following files are not gofmt'ed:"
+            echo "$unformatted"
+            echo "Run 'gofmt -w .' locally to fix"
+            exit 1
+          fi
