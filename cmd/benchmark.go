@@ -12,7 +12,7 @@ import (
 
 	axoncache "github.com/AppLovin/AxonCache"
 	"github.com/bmatsuo/lmdb-go/lmdb"
-	"github.com/colinmarc/cdb"
+	"github.com/bsergean/cdb_mmap"
 	"github.com/dustin/go-humanize"
 	"github.com/syndtr/goleveldb/leveldb"
 	bolt "go.etcd.io/bbolt"
@@ -403,7 +403,7 @@ func RunBenchmarkCDB(keysCount int, keys, vals [][]byte) error {
 	log.Println("Using CDB")
 	start := time.Now()
 
-	writer, err := cdb.Create("/tmp/example.cdb")
+	writer, err := cdb_mmap.Create("./example.cdb")
 	if err != nil {
 		return err
 	}
@@ -425,6 +425,8 @@ func RunBenchmarkCDB(keysCount int, keys, vals [][]byte) error {
 
 	// Randomize lookup order
 	rand.Shuffle(len(keys), func(i, j int) { keys[i], keys[j] = keys[j], keys[i] })
+
+	db, err = cdb_mmap.OpenMmap("./example.cdb")
 
 	// LOOKUP
 	start = time.Now()

@@ -4,7 +4,7 @@ This library provides a rich key value store backed by files, that are memory ma
 
 1. Rich means that values can be string, int, bool and float, but also list of floats and list of strings, all of them being stored in memory in little endian, so that they can be accessed as is without conversion from string to a pod type, typically done with atoi, strtod etc...
 2. By being memory mapped, the data is available rather instantly without a parsing step, that say would scan over all the keys to store them in a C++ unordered_map, or a golang map, which offer a form of speed upper bound. AxonCache lookups are slower than a pure map lookup by 4.4x in our example for Go. However multiple pods or process can share that memory, without RSS memory going up, and as the dataset grows (ours are beyond 20G), the parsing step becomes slower and will take multiple minutes. Lookups are still sub microsecond, measured to 230 ns in one benchmark, which is many orders of magnitude faster than a typical network call (typically 1ms on an already opened TCP connection).
-3. This library was benched against other well known Go libraries, and is consistently faster than them at generation and lookup time. An internal bench also showed the library being 3x faster that Meta CacheLib.
+3. This library was benched (through the golang/cgo binding, where going through that bridge incur a slowdown) against other well known Go libraries, and is consistently faster than them at generation and lookup time. An internal bench also showed the library being 3x faster than Meta CacheLib. The CDB library (Constant database), re-implemented in native Golang with mmap is actually faster than AxonCache. However the library has an internal 32 bits limitation, and cannot hold more than 4G of data.
 4. The library is written in C++, with a C interface. That interface is used to make a Go and a Python module. A Java module exists as well, but was not open-sourced yet.
 5. There are minimum dependencies, which are bundled, xxhash and fast_float, fast_float could arguably be removed. Everything builds on a mac in seconds, without any required installed library. Only cmake is required for the C++ build. The library is built on Linux and macOS
 6. The library is well unit tested and also tested in production code, it has been used as is for multiple years, and more than 10 years for its previous incarnation.
@@ -26,12 +26,13 @@ go run cmd/{benchmark.go,kv_scanner.go,main.go,progress.go} benchmark
 The benchmark is inserting 1,000,000 small keys (key_%i, val_%i), then randomly looking them up.
 It is run on an Apple M4 Max laptop.
 
-| Library     | Insertion (keys/s) | Lookup (keys/s) |
-| ---------   | -------------------| ----------------|
-| Go Map      |  7,345,465         | 21,329,503      |
-| AxonCache   |  9,602,296         | 4,802,610       |
-| LMDB        |  2,279,228         | 2,316,527       | 
-| LevelDB     |  1,077,189         | 391,601         | 
+| Library                                            | Insertion (keys/s) | Lookup (keys/s) |
+| -------------------------------------------------- | ------------------ | ----------------|
+| [Go Map](https://pkg.go.dev/builtin#map)           |  7,345,465         | 21,329,503      |
+| [CDB](https://cr.yp.to/cdb.html)                   |  14,744,333        | 13,182,843      |
+| [AxonCache](https://github.com/AppLovin/AxonCache) |  9,602,296         | 4,802,610       |
+| [LMDB](https://symas.com/lmdb/)                    |  2,279,228         | 2,316,527       |
+| [LevelDB](https://github.com/google/leveldb)       |  1,077,189         | 391,601         |
 
 ## C++ build steps.
 
