@@ -22,10 +22,7 @@
 #include <fstream>
 #include <string>
 #include <chrono>
-#include <iomanip>
-#include <locale>
 #include <sstream>
-#include <random>
 
 auto readMode( axoncache::SharedSettingsProvider * settings, const cxxopts::ParseResult & result ) -> void;
 auto writeMode( axoncache::SharedSettingsProvider * settings, const cxxopts::ParseResult & result ) -> void;
