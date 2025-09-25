@@ -24,6 +24,10 @@
 #include <fstream>
 #include <string>
 #include <chrono>
+#include <iomanip>
+#include <locale>
+#include <sstream>
+#include <random>
 
 auto readMode( axoncache::SharedSettingsProvider * settings, const cxxopts::ParseResult & result ) -> void;
 auto writeMode( axoncache::SharedSettingsProvider * settings, const cxxopts::ParseResult & result ) -> void;
@@ -482,9 +486,17 @@ auto readMode( axoncache::SharedSettingsProvider * settings, const cxxopts::Pars
     loadCache( settings, cacheName, result );
 }
 
+// custom facet to add thousands separators
+struct comma_numpunct : std::numpunct<char> {
+protected:
+    char do_thousands_sep() const override { return ','; }
+    std::string do_grouping() const override { return "\3"; }
+};
+
 auto benchMode( axoncache::SharedSettingsProvider * settings, const cxxopts::ParseResult & result ) -> void
 {
     AL_LOG_INFO( "Bench mode" );
+    using clock = std::chrono::steady_clock;
 
     const std::string dataPath = ".";
     const std::string settingsPath = dataPath + "/test.settings";
@@ -495,26 +507,36 @@ auto benchMode( axoncache::SharedSettingsProvider * settings, const cxxopts::Par
     oss << "ccache.offset.bits=28" << dataPath << "\n";
     writeFile( settingsPath, oss.str() );
 
+    const int numKeys = 1 * 1000 * 1000;
+    std::vector<std::string> keys;
+    std::vector<std::string> vals;
+    for ( int idx = 0; idx < numKeys ; ++idx )
     {
+        keys.emplace_back( "key_" + std::to_string( idx ) );
+        vals.emplace_back( "val_" + std::to_string( idx ) );
+    }
+
+    {
+        auto start = clock::now();
+
         auto * handle = NewCacheWriterHandle();
         int errorCode = CacheWriter_Initialize( handle,
                                                 "bench_cli_test",
                                                 settingsPath.c_str(),
-                                                100 );
+                                                2 * numKeys );
         if ( errorCode != 0 )
         {
             throw std::runtime_error( "Error initializing writer" );
         }
 
-        // Insert a few keys
-        std::string key = "1.key";
-        std::string val = "1.val";
-        CacheWriter_AddDuplicateValue( handle, val.data(), 0 );
-        CacheWriter_FinishAddDuplicateValues( handle );
-
-        if ( CacheWriter_InsertKey( handle, key.data(), key.size(), val.data(), val.size(), 0 ) != 0 )
+        for ( int idx = 0; idx < numKeys ; ++idx )
         {
-            throw std::runtime_error( "Error inserting key" );
+            if ( CacheWriter_InsertKey( handle,
+                                        keys[idx].data(), keys[idx].size(),
+                                        vals[idx].data(), vals[idx].size(), 0 ) != 0 )
+            {
+                throw std::runtime_error( "Error inserting key" );
+            }
         }
 
         // Write/Flush the cache
@@ -525,7 +547,32 @@ auto benchMode( axoncache::SharedSettingsProvider * settings, const cxxopts::Par
         std::string filePath = dataPath + "/bench_cli_test.cache";
         std::string newFilePath = dataPath + "/bench_cli_test.1690484217134.cache";
         ::rename( filePath.c_str(), newFilePath.c_str() );
+
+        auto end = clock::now();
+        double elapsed = std::chrono::duration<double>( end - start ).count();
+        double qps = static_cast<double>( numKeys ) / elapsed;
+
+        std::stringstream ssKeys;
+        std::stringstream ssQps;
+        ssKeys.imbue(std::locale(std::locale::classic(), new comma_numpunct));
+        ssQps.imbue(std::locale(std::locale::classic(), new comma_numpunct));
+
+        ssKeys << numKeys;
+        ssQps << static_cast<int64_t>( qps );
+
+        std::stringstream ss;
+        ss << "Inserted " << ssKeys.str()
+           << " keys in " << std::fixed << std::setprecision(3) << elapsed
+           << "s (" << ssQps.str() << " keys/sec)\n";
+        AL_LOG_INFO( ss.str() );
     }
+
+    // Create a random generator seeded with a non-deterministic value
+    std::random_device randomDevice;
+    std::mt19937 gen( randomDevice() );
+
+    // Shuffle in place
+    std::shuffle( keys.begin(), keys.end(), gen );
 
     // Now create a reader and do some lookups
     {
@@ -540,16 +587,38 @@ auto benchMode( axoncache::SharedSettingsProvider * settings, const cxxopts::Par
             throw std::runtime_error( "Error initializing reader" );
         }
 
+        auto start = clock::now();
+
+        for ( int idx = 0; idx < numKeys ; ++idx )
         {
             int size = 0;
-            std::string key = "1.key";
             int isExist = 0;
-            CacheReader_GetKey( handle, key.data(), key.size(), &isExist, &size );
+            CacheReader_GetKey( handle,
+                                keys[idx].data(), keys[idx].size(),
+                                &isExist, &size );
             if ( isExist != 1 )
             {
                 throw std::runtime_error( "Error looking up valuereader" );
             }
         }
+
+        auto end = clock::now();
+        double elapsed = std::chrono::duration<double>( end - start ).count();
+        double qps = static_cast<double>( numKeys ) / elapsed;
+
+        std::stringstream ssKeys;
+        std::stringstream ssQps;
+        ssKeys.imbue(std::locale(std::locale::classic(), new comma_numpunct));
+        ssQps.imbue(std::locale(std::locale::classic(), new comma_numpunct));
+
+        ssKeys << numKeys;
+        ssQps << static_cast<int64_t>( qps );
+
+        std::stringstream ss;
+        ss << "Looked up " << ssKeys.str()
+           << " keys in " << std::fixed << std::setprecision(3) << elapsed
+           << "s (" << ssQps.str() << " keys/sec)\n";
+        AL_LOG_INFO( ss.str() );
     }
 }
 
