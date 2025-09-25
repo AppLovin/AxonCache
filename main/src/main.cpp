@@ -664,7 +664,7 @@ auto main( int argc, char ** argv ) -> int
             const int numKeys = 1 * 1000 * 1000;
             std::vector<std::string> keys;
             std::vector<std::string> vals;
-            for ( int idx = 0; idx < numKeys ; ++idx )
+            for ( int idx = 0; idx < numKeys; ++idx )
             {
                 keys.emplace_back( "key_" + std::to_string( idx ) );
                 vals.emplace_back( "val_" + std::to_string( idx ) );

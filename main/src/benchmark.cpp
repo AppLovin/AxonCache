@@ -14,10 +14,17 @@ namespace
 {
 
 // custom facet to add thousands separators
-struct comma_numpunct : std::numpunct<char> {
-protected:
-    char do_thousands_sep() const override { return ','; } // NOLINT
-    std::string do_grouping() const override { return "\3"; } // NOLINT
+struct comma_numpunct : std::numpunct<char>
+{
+  protected:
+    char do_thousands_sep() const override
+    {
+        return ',';
+    } // NOLINT
+    std::string do_grouping() const override
+    {
+        return "\3";
+    } // NOLINT
 };
 
 void writeFile( const std::string & filename, const std::string & content )
@@ -50,7 +57,7 @@ auto benchModeUnorderedMap(
     {
         auto start = clock::now();
 
-        for ( int idx = 0; idx < numKeys ; ++idx )
+        for ( int idx = 0; idx < numKeys; ++idx )
         {
             cache[keys[idx]] = vals[idx];
         }
@@ -62,15 +69,15 @@ auto benchModeUnorderedMap(
 
         std::stringstream ssKeys;
         std::stringstream ssQps;
-        ssKeys.imbue(std::locale(std::locale::classic(), new comma_numpunct));
-        ssQps.imbue(std::locale(std::locale::classic(), new comma_numpunct));
+        ssKeys.imbue( std::locale( std::locale::classic(), new comma_numpunct ) );
+        ssQps.imbue( std::locale( std::locale::classic(), new comma_numpunct ) );
 
         ssKeys << numKeys;
         ssQps << static_cast<int64_t>( qps );
 
         std::stringstream oss;
         oss << "Inserted " << ssKeys.str()
-            << " keys in " << std::fixed << std::setprecision(3) << elapsed
+            << " keys in " << std::fixed << std::setprecision( 3 ) << elapsed
             << "s (" << ssQps.str() << " keys/sec)\n";
         AL_LOG_INFO( oss.str() );
     }
@@ -86,7 +93,7 @@ auto benchModeUnorderedMap(
     {
         auto start = clock::now();
 
-        for ( int idx = 0; idx < numKeys ; ++idx )
+        for ( int idx = 0; idx < numKeys; ++idx )
         {
             auto val = cache[keys[idx]];
         }
@@ -97,15 +104,15 @@ auto benchModeUnorderedMap(
 
         std::stringstream ssKeys;
         std::stringstream ssQps;
-        ssKeys.imbue(std::locale(std::locale::classic(), new comma_numpunct));
-        ssQps.imbue(std::locale(std::locale::classic(), new comma_numpunct));
+        ssKeys.imbue( std::locale( std::locale::classic(), new comma_numpunct ) );
+        ssQps.imbue( std::locale( std::locale::classic(), new comma_numpunct ) );
 
         ssKeys << numKeys;
         ssQps << static_cast<int64_t>( qps );
 
         std::stringstream oss;
         oss << "Looked up " << ssKeys.str()
-            << " keys in " << std::fixed << std::setprecision(3) << elapsed
+            << " keys in " << std::fixed << std::setprecision( 3 ) << elapsed
             << "s (" << ssQps.str() << " keys/sec)\n";
         AL_LOG_INFO( oss.str() );
     }
@@ -141,7 +148,7 @@ auto benchModeAxonCache(
             throw std::runtime_error( "Error initializing writer" );
         }
 
-        for ( int idx = 0; idx < numKeys ; ++idx )
+        for ( int idx = 0; idx < numKeys; ++idx )
         {
             if ( CacheWriter_InsertKey( handle,
                                         keys[idx].data(), keys[idx].size(),
@@ -166,15 +173,15 @@ auto benchModeAxonCache(
 
         std::stringstream ssKeys;
         std::stringstream ssQps;
-        ssKeys.imbue(std::locale(std::locale::classic(), new comma_numpunct));
-        ssQps.imbue(std::locale(std::locale::classic(), new comma_numpunct));
+        ssKeys.imbue( std::locale( std::locale::classic(), new comma_numpunct ) );
+        ssQps.imbue( std::locale( std::locale::classic(), new comma_numpunct ) );
 
         ssKeys << numKeys;
         ssQps << static_cast<int64_t>( qps );
 
         std::ostringstream oss;
         oss << "Inserted " << ssKeys.str()
-            << " keys in " << std::fixed << std::setprecision(3) << elapsed
+            << " keys in " << std::fixed << std::setprecision( 3 ) << elapsed
             << "s (" << ssQps.str() << " keys/sec)\n";
         AL_LOG_INFO( oss.str() );
     }
@@ -201,7 +208,7 @@ auto benchModeAxonCache(
 
         auto start = clock::now();
 
-        for ( int idx = 0; idx < numKeys ; ++idx )
+        for ( int idx = 0; idx < numKeys; ++idx )
         {
             int size = 0;
             int isExist = 0;
@@ -220,18 +227,16 @@ auto benchModeAxonCache(
 
         std::stringstream ssKeys;
         std::stringstream ssQps;
-        ssKeys.imbue(std::locale(std::locale::classic(), new comma_numpunct));
-        ssQps.imbue(std::locale(std::locale::classic(), new comma_numpunct));
+        ssKeys.imbue( std::locale( std::locale::classic(), new comma_numpunct ) );
+        ssQps.imbue( std::locale( std::locale::classic(), new comma_numpunct ) );
 
         ssKeys << numKeys;
         ssQps << static_cast<int64_t>( qps );
 
         std::stringstream oss;
         oss << "Looked up " << ssKeys.str()
-            << " keys in " << std::fixed << std::setprecision(3) << elapsed
+            << " keys in " << std::fixed << std::setprecision( 3 ) << elapsed
             << "s (" << ssQps.str() << " keys/sec)\n";
         AL_LOG_INFO( oss.str() );
     }
 }
-
-
