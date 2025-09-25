@@ -12,18 +12,29 @@
 #include <axoncache/cache/LinearProbeDedupCache.h>
 #include <axoncache/cache/MapCache.h>
 #include <axoncache/memory/MallocMemoryHandler.h>
-#include "axoncache/writer/CacheFileWriter.h"
 #include "axoncache/common/SharedSettingsProvider.h"
+#include "axoncache/writer/CacheFileWriter.h"
 #include "axoncache/common/StringViewUtils.h"
 
 #include <cxxopts.hpp>
 #include <spdlog/spdlog.h>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <chrono>
+#include <sstream>
 
 auto readMode( axoncache::SharedSettingsProvider * settings, const cxxopts::ParseResult & result ) -> void;
 auto writeMode( axoncache::SharedSettingsProvider * settings, const cxxopts::ParseResult & result ) -> void;
+
+auto benchModeUnorderedMap(
+    int numKeys,
+    std::vector<std::string> keys,
+    std::vector<std::string> vals ) -> void;
+auto benchModeAxonCache(
+    int numKeys,
+    std::vector<std::string> keys,
+    std::vector<std::string> vals ) -> void;
 
 enum class Command
 {
@@ -593,8 +604,9 @@ auto main( int argc, char ** argv ) -> int
         ("q,quiet", "Quiet mode")
         ("k,print_key", "Print keys")
         ("g,create", "Create cache from file", cxxopts::value<std::string>()->default_value( "" ))
-        ("s,slot", "Number of key slots", cxxopts::value<int>()->default_value( "10000" ));
-    // clang-format o
+        ("s,slot", "Number of key slots", cxxopts::value<int>()->default_value( "10000" ))
+        ("b,bench", "Run in benchmark mode", cxxopts::value<bool>()->default_value( "false" ));
+    // clang-format on
 
     try
     {
@@ -612,16 +624,16 @@ auto main( int argc, char ** argv ) -> int
             return 0;
         }
 
-        if ( result["input"].count() == 0 && result["load"].count() == 0 && result["abspath"].count() == 0 && result["create"].count() == 0 )
+        if ( result["input"].count() == 0 && result["load"].count() == 0 && result["abspath"].count() == 0 && result["create"].count() == 0 && result["bench"].count() == 0 )
         {
-            std::cerr << "Either input, name, abspath or create is required" << "\n";
+            std::cerr << "Either input, name, bench, abspath or create is required" << "\n";
             std::cout << options.help() << "\n";
             return 1;
         }
 
         axoncache::SharedSettingsProvider settings( axoncache::Constants::ConfDefault::kConfigLocation.data() );
 
-        auto alcacheLogger = []( const char* msg, const axoncache::LogLevel & level )
+        auto alcacheLogger = []( const char * msg, const axoncache::LogLevel & level )
         {
             switch ( level )
             {
@@ -643,9 +655,23 @@ auto main( int argc, char ** argv ) -> int
         {
             writeMode( &settings, result );
         }
-        else if (result["create"].count() > 0)
+        else if ( result["create"].count() > 0 )
         {
-            createMode( &settings, result);
+            createMode( &settings, result );
+        }
+        else if ( result["bench"].count() > 0 )
+        {
+            const int numKeys = 1 * 1000 * 1000;
+            std::vector<std::string> keys;
+            std::vector<std::string> vals;
+            for ( int idx = 0; idx < numKeys; ++idx )
+            {
+                keys.emplace_back( "key_" + std::to_string( idx ) );
+                vals.emplace_back( "val_" + std::to_string( idx ) );
+            }
+
+            benchModeUnorderedMap( numKeys, keys, vals );
+            benchModeAxonCache( numKeys, keys, vals );
         }
         else
         {
