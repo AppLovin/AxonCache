@@ -20,21 +20,28 @@ The library contains no mutex. In Go and Java, a new atomic pointer is used for 
 ## Benchmark
 
 ```
+# Golang
 go run cmd/{benchmark.go,kv_scanner.go,main.go,progress.go} benchmark
+```
+
+```
+# C++
+./build.sh -x -b Release
+./build/main/axoncache_cli --bench
 ```
 
 The benchmark is inserting 1,000,000 small keys (key_%i, val_%i), then randomly looking them up.
 It is run on an Apple M4 Max laptop.
 
-| Library                                                     | Insertion (keys/s) | Lookup (keys/s) |
-| --------------------------------------------------          | ------------------ | ----------------|
-| [Go Map](https://pkg.go.dev/builtin#map)                    |  7,345,465         | 21,329,503      |
-| [CDB](https://cr.yp.to/cdb.html)                            |  14,744,333        | 13,182,843      |
-| [C++ unordered_map](https://github.com/AppLovin/AxonCache)  |  19,203,318        | 10,000,225      |
-| [AxonCache](https://github.com/AppLovin/AxonCache) C api    |  12,115,851        | 14,081,317      |
-| [AxonCache](https://github.com/AppLovin/AxonCache) Golang   |  9,602,296         | 4,802,610       |
-| [LMDB](https://symas.com/lmdb/)                             |  2,279,228         | 2,316,527       |
-| [LevelDB](https://github.com/google/leveldb)                |  1,077,189         | 391,601         |
+| Library                                                     | Insertion (keys/s) | Lookup (keys/s) | Runtime |
+| --------------------------------------------------          | ------------------ | ----------------| --------|
+| [Go Map](https://pkg.go.dev/builtin#map)                    |  7,345,465         | 21,329,503      | Go      |
+| [CDB](https://cr.yp.to/cdb.html)                            |  14,744,333        | 13,182,843      | Go      |
+| [C++ unordered_map](https://github.com/AppLovin/AxonCache)  |  19,203,318        | 10,000,225      | C++     |
+| [AxonCache](https://github.com/AppLovin/AxonCache) C api    |  12,115,851        | 14,081,317      | C++     |
+| [AxonCache](https://github.com/AppLovin/AxonCache) Golang   |  9,602,296         | 4,802,610       | Go      |
+| [LMDB](https://symas.com/lmdb/)                             |  2,279,228         | 2,316,527       | Go      |
+| [LevelDB](https://github.com/google/leveldb)                |  1,077,189         | 391,601         | Go      |
 
 ## C++ build steps.
 
