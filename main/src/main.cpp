@@ -460,6 +460,12 @@ auto readMode( axoncache::SharedSettingsProvider * settings, const cxxopts::Pars
     loadCache( settings, cacheName, result );
 }
 
+auto benchMode( axoncache::SharedSettingsProvider * settings, const cxxopts::ParseResult & result ) -> void
+{
+    std::cout << "I WAS HERE" << std::endl;
+}
+
+
 auto writeMode( axoncache::SharedSettingsProvider * settings, const cxxopts::ParseResult & result ) -> void
 {
     auto cacheName = result["name"].as<std::string>();
@@ -593,8 +599,9 @@ auto main( int argc, char ** argv ) -> int
         ("q,quiet", "Quiet mode")
         ("k,print_key", "Print keys")
         ("g,create", "Create cache from file", cxxopts::value<std::string>()->default_value( "" ))
-        ("s,slot", "Number of key slots", cxxopts::value<int>()->default_value( "10000" ));
-    // clang-format o
+        ("s,slot", "Number of key slots", cxxopts::value<int>()->default_value( "10000" ))
+        ("b,bench", "Run in benchmark mode", cxxopts::value<bool>()->default_value( "false" ));
+    // clang-format on
 
     try
     {
@@ -612,9 +619,9 @@ auto main( int argc, char ** argv ) -> int
             return 0;
         }
 
-        if ( result["input"].count() == 0 && result["load"].count() == 0 && result["abspath"].count() == 0 && result["create"].count() == 0 )
+        if ( result["input"].count() == 0 && result["load"].count() == 0 && result["abspath"].count() == 0 && result["create"].count() == 0 && result["bench"].count() == 0 )
         {
-            std::cerr << "Either input, name, abspath or create is required" << "\n";
+            std::cerr << "Either input, name, bench, abspath or create is required" << "\n";
             std::cout << options.help() << "\n";
             return 1;
         }
@@ -646,6 +653,10 @@ auto main( int argc, char ** argv ) -> int
         else if (result["create"].count() > 0)
         {
             createMode( &settings, result);
+        }
+        else if (result["bench"].count() > 0)
+        {
+            benchMode( &settings, result);
         }
         else
         {
