@@ -553,7 +553,6 @@ auto benchMode( axoncache::SharedSettingsProvider * settings, const cxxopts::Par
     }
 }
 
-
 auto writeMode( axoncache::SharedSettingsProvider * settings, const cxxopts::ParseResult & result ) -> void
 {
     auto cacheName = result["name"].as<std::string>();
@@ -716,7 +715,7 @@ auto main( int argc, char ** argv ) -> int
 
         axoncache::SharedSettingsProvider settings( axoncache::Constants::ConfDefault::kConfigLocation.data() );
 
-        auto alcacheLogger = []( const char* msg, const axoncache::LogLevel & level )
+        auto alcacheLogger = []( const char * msg, const axoncache::LogLevel & level )
         {
             switch ( level )
             {
@@ -738,13 +737,13 @@ auto main( int argc, char ** argv ) -> int
         {
             writeMode( &settings, result );
         }
-        else if (result["create"].count() > 0)
+        else if ( result["create"].count() > 0 )
         {
-            createMode( &settings, result);
+            createMode( &settings, result );
         }
-        else if (result["bench"].count() > 0)
+        else if ( result["bench"].count() > 0 )
         {
-            benchMode( &settings, result);
+            benchMode( &settings, result );
         }
         else
         {
