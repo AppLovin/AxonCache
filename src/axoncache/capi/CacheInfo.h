@@ -5,6 +5,7 @@
 
 #include <cstdlib>
 #include <map>
+#include <string>
 
 namespace axoncache
 {
