@@ -47,7 +47,7 @@ void writeFile( const std::string & filename, const std::string & content )
 
 }
 
-template <class T>
+template<class T>
 auto benchModeHashTable(
     int numKeys,
     std::vector<std::string> keys,
