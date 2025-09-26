@@ -1,6 +1,10 @@
+#pragma once
+
 #include <axoncache/logger/Logger.h>
 #include "axoncache/capi/CacheWriterCApi.h"
 #include "axoncache/capi/CacheReaderCApi.h"
+
+#include "absl/container/flat_hash_map.h"
 
 #include <fstream>
 #include <string>
@@ -43,7 +47,8 @@ void writeFile( const std::string & filename, const std::string & content )
 
 }
 
-auto benchModeUnorderedMap(
+template <class T>
+auto benchModeHashTable(
     int numKeys,
     std::vector<std::string> keys,
     std::vector<std::string> vals ) -> void
@@ -51,7 +56,7 @@ auto benchModeUnorderedMap(
     AL_LOG_INFO( "Bench mode unordered map" );
     using clock = std::chrono::steady_clock;
 
-    std::unordered_map<std::string, std::string> cache;
+    T cache;
     cache.reserve( numKeys );
 
     {
