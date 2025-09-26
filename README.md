@@ -30,18 +30,34 @@ go run cmd/{benchmark.go,kv_scanner.go,main.go,progress.go} benchmark
 ./build/main/axoncache_cli --bench
 ```
 
+```
+# Python ; create + activate a virtualenv, install a few modules
+sh axoncache/build_python_module.sh
+python3 axoncache/bench.py 
+```
+
 The benchmark is inserting 1,000,000 small keys (key_%i, val_%i), then randomly looking them up.
 It is run on an Apple M4 Max laptop.
 
-| Library                                                     | Insertion (keys/s) | Lookup (keys/s) | Runtime |
-| --------------------------------------------------          | ------------------ | ----------------| --------|
-| [Go Map](https://pkg.go.dev/builtin#map)                    |  7,345,465         | 21,329,503      | Go      |
-| [CDB](https://cr.yp.to/cdb.html)                            |  14,744,333        | 13,182,843      | Go      |
-| [C++ unordered_map](https://github.com/AppLovin/AxonCache)  |  19,203,318        | 10,000,225      | C++     |
-| [AxonCache](https://github.com/AppLovin/AxonCache) C api    |  12,115,851        | 14,081,317      | C++     |
-| [AxonCache](https://github.com/AppLovin/AxonCache) Golang   |  9,602,296         | 4,802,610       | Go      |
-| [LMDB](https://symas.com/lmdb/)                             |  2,279,228         | 2,316,527       | Go      |
-| [LevelDB](https://github.com/google/leveldb)                |  1,077,189         | 391,601         | Go      |
+| Library                                                                  | Insertion (keys/s) | Lookup (keys/s) | Runtime |
+| --------------------------------------------------                       | ------------------ | ----------------| --------|
+| [C++ unordered_map](https://github.com/AppLovin/AxonCache)               |  19,203,318        | 10,000,225      | C++     |
+| [Abseil flat_map](https://abseil.io/docs/cpp/guides/container)           |  32,637,164        | 30,737,980      | C++     |
+| [AxonCache](https://github.com/AppLovin/AxonCache) C api                 |  12,115,851        | 14,081,317      | C++     |
+| [Go Map](https://pkg.go.dev/builtin#map)                                 |  7,345,465         | 21,329,503      | Go      |
+| [CDB](https://cr.yp.to/cdb.html) Pure Go Version                         |  14,744,333        | 13,182,843      | Go      |
+| [AxonCache](https://github.com/AppLovin/AxonCache) Golang                |  9,602,296         | 4,802,610       | Go      |
+| [LMDB](https://symas.com/lmdb/)                                          |  2,279,228         | 2,316,527       | Go      |
+| [LevelDB](https://github.com/syndtr/goleveldb) Pure Go version           |  1,077,189         | 391,601         | Go      |
+| [AxonCache](https://github.com/AppLovin/AxonCache) Python                |  5,090,168         | 4,111,591       | Python  |
+| [LMDB](https://github.com/jnwatson/py-lmdb/) Python module               |  1,918,760         | 2,237,891       | Python  |
+| [CDB](https://github.com/bbayles/python-pure-cdb) Pure Python module     |  960,917           | 1,006,572       | Python  |
+
+Few notes.
+
+1. Go maps are quite fast for random lookups. They have been re-implemented in Go 1.24 to use a [Swiss Table](https://go.dev/blog/swisstable), which is also the base for abseil flat_map.
+2. std::unordered_map are fast for insertion but not as good for lookup. It is a known issue that they are not the fastest, Abseil flat_map is much faster.
+3. Pure implementation of the CDB algorithm does not perform well in Python, even if using mmap, showing the overhead of this language.
 
 ## C++ build steps.
 

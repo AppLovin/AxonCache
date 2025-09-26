@@ -24,17 +24,10 @@
 #include <chrono>
 #include <sstream>
 
+#include "benchmark.h"
+
 auto readMode( axoncache::SharedSettingsProvider * settings, const cxxopts::ParseResult & result ) -> void;
 auto writeMode( axoncache::SharedSettingsProvider * settings, const cxxopts::ParseResult & result ) -> void;
-
-auto benchModeUnorderedMap(
-    int numKeys,
-    std::vector<std::string> keys,
-    std::vector<std::string> vals ) -> void;
-auto benchModeAxonCache(
-    int numKeys,
-    std::vector<std::string> keys,
-    std::vector<std::string> vals ) -> void;
 
 enum class Command
 {
@@ -670,7 +663,8 @@ auto main( int argc, char ** argv ) -> int
                 vals.emplace_back( "val_" + std::to_string( idx ) );
             }
 
-            benchModeUnorderedMap( numKeys, keys, vals );
+            benchModeHashTable<std::unordered_map<std::string, std::string>>( numKeys, keys, vals );
+            benchModeHashTable<absl::flat_hash_map<std::string, std::string>>( numKeys, keys, vals );
             benchModeAxonCache( numKeys, keys, vals );
         }
         else
