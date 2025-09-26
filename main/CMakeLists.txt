@@ -24,7 +24,18 @@ CPMAddPackage(
   NAME absl
   GITHUB_REPOSITORY abseil/abseil-cpp
   GIT_TAG 20250814.1
-  OPTIONS "ABSL_USE_SYSTEM_INCLUDES ON"
+  OPTIONS
+  "ABSL_USE_SYSTEM_INCLUDES ON"
+
+  # turn off warnings when Abseil itself compiles
+  "CMAKE_C_FLAGS ${_ABSL_NOWARN}"
+  "CMAKE_CXX_FLAGS ${_ABSL_NOWARN}"
+
+  # make sure warnings aren't promoted to errors inside Abseil
+  "CMAKE_COMPILE_WARNING_AS_ERROR OFF"
+
+  # optional: speed up by not building tests
+  "ABSL_BUILD_TESTING OFF"
 )
 
 # ---- Create standalone executable ----
