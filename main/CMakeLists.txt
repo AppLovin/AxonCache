@@ -23,7 +23,7 @@ cpmaddpackage(
 CPMAddPackage(
   NAME absl
   GITHUB_REPOSITORY abseil/abseil-cpp
-  GIT_TAG 20250814.1
+  GIT_TAG 20230802.3
   OPTIONS
   "ABSL_USE_SYSTEM_INCLUDES ON"
 
