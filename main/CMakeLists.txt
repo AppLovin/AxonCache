@@ -26,16 +26,7 @@ CPMAddPackage(
   GIT_TAG 20230125.1
   OPTIONS
   "ABSL_USE_SYSTEM_INCLUDES ON"
-
-  # turn off warnings when Abseil itself compiles
-  "CMAKE_C_FLAGS -w"
-  "CMAKE_CXX_FLAGS -w"
-
-  # make sure warnings aren't promoted to errors inside Abseil
-  "CMAKE_COMPILE_WARNING_AS_ERROR OFF"
-
-  # optional: speed up by not building tests
-  "ABSL_BUILD_TESTING OFF"
+  "CMAKE_UNITY_BUILD OFF"
 )
 
 # ---- Create standalone executable ----
