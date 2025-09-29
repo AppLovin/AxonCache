@@ -1,0 +1,17 @@
+module(
+    name = "axoncache",
+    version = "2.5.0",
+)
+
+# External dependencies from Bazel Central Registry (BCR)
+bazel_dep(name = "rules_cc", version = "0.0.9")
+bazel_dep(name = "googletest", version = "1.14.0")
+bazel_dep(name = "prometheus-cpp", version = "1.2.4")  # Required by Cpp-Commons
+bazel_dep(name = "doctest", version = "2.4.11")
+bazel_dep(name = "abseil-cpp", version = "20230125.1")
+
+# Note: spdlog, xxhash, cxxopts handled via WORKSPACE compatibility mode in deps.bzl
+# because the BCR versions don't match our specific build requirements or aren't available
+
+# Note: Cpp-Commons dependencies (rapidjson, jsoncpp, etc.) handled via WORKSPACE compatibility mode
+# We'll handle remaining ones via WORKSPACE compatibility mode

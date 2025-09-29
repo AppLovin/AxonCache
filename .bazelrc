@@ -1,0 +1,61 @@
+# AxonCache Bazel Configuration  
+# Based on Cpp-Commons proven patterns
+
+# ---- Modern Dependency Management ----
+common --enable_bzlmod
+
+# ---- Common C++ Settings ----
+build --cxxopt=-std=c++20
+build --host_cxxopt=-std=c++20
+
+# ---- Analysis Cache Performance ----
+build --experimental_repository_cache_hardlinks
+build --experimental_retain_test_configuration_across_testonly
+
+# ---- Local Development Configuration ----
+build:local --compilation_mode=dbg
+build:local --copt=-g3
+build:local --copt=-ggdb
+build:local --copt=-O0
+build:local --copt=-DDEBUG
+build:local --copt=-fdiagnostics-color=always
+build:local --copt=-fno-strict-aliasing
+build:local --copt=-Wall
+build:local --copt=-Wno-deprecated-declarations
+build:local --copt=-Wno-variadic-macros
+# Note: Removed -Werror and strict warnings to avoid conflicts with external dependencies
+
+# Clang-specific local development flags
+build:local --copt=-Wno-deprecated-copy  # For Clang 13+
+
+# Local development-specific settings  
+build:local --verbose_failures
+build:local --show_timestamps
+
+# ---- Release Configuration ----
+build:release --compilation_mode=opt
+build:release --copt=-fno-strict-aliasing
+build:release --copt=-DNDEBUG
+build:release --copt=-Wall
+build:release --copt=-O3
+build:release --copt=-Wno-variadic-macros
+build:release --strip=always
+
+# Platform-specific settings (linkopts, copts) are automatically 
+# handled in BUILD.bazel via select() statements based on @platforms//os
+
+# ---- CI Configuration ----
+build:ci --config=release
+# CI automatically detects platform
+build:ci --verbose_failures
+build:ci --show_timestamps
+build:ci --announce_rc
+build:ci --experimental_repository_cache_hardlinks
+
+# ---- Test Configuration ----
+test --test_output=errors
+test --test_summary=detailed
+test --test_verbose_timeout_warnings
+
+# ---- Default Configuration ----
+try-import %workspace%/.bazelrc.local
