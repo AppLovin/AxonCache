@@ -4,7 +4,11 @@
 #include <string>
 #include <string_view>
 #include <axoncache/transformer/TypeToString.h>
+#ifdef BAZEL_BUILD
+#include "doctest/doctest.h"
+#else
 #include <doctest/doctest.h>
+#endif
 #include <stdint.h>
 #include <vector>
 using namespace axoncache;

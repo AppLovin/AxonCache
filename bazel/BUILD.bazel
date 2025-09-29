@@ -1,0 +1,7 @@
+# Bazel configuration package
+# This file makes the bazel/ directory a valid Bazel package
+
+exports_files([
+    "deps.bzl",
+    "test_utils.bzl",
+])

@@ -5,7 +5,11 @@
 #include <fstream>
 #include <sstream>
 #include <cstdio>
+#ifdef BAZEL_BUILD
+#include "doctest/doctest.h"
+#else
 #include <doctest/doctest.h>
+#endif
 #include "axoncache/capi/CacheWriterCApi.h"
 #include "axoncache/capi/CacheReaderCApi.h"
 

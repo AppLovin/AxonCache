@@ -10,7 +10,11 @@
 #include <axoncache/memory/MallocMemoryHandler.h>
 #include <axoncache/writer/CacheFileWriter.h>
 #include <axoncache/writer/detail/GenerateHeader.h>
+#ifdef BAZEL_BUILD
+#include "doctest/doctest.h"
+#else
 #include <doctest/doctest.h>
+#endif
 #include <stdint.h>
 #include <stdio.h>
 #include <iosfwd>
