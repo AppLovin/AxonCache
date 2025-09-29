@@ -4,7 +4,15 @@
 // define has to happen before the doctest include
 #define DOCTEST_CONFIG_IMPLEMENT
 
+#ifdef BAZEL_BUILD
+#include "doctest/doctest.h"
+#else
+#ifdef BAZEL_BUILD
+#include "doctest/doctest.h"
+#else
 #include <doctest/doctest.h>
+#endif
+#endif
 
 #include <spdlog/spdlog.h>
 #include <axoncache/Constants.h>

@@ -5,7 +5,11 @@
 #include <string_view>
 #include <axoncache/Constants.h>
 #include <axoncache/transformer/StringListToString.h>
+#ifdef BAZEL_BUILD
+#include "doctest/doctest.h"
+#else
 #include <doctest/doctest.h>
+#endif
 #include <stdint.h>
 #include <vector>
 #include "axoncache/cache/CacheType.h"

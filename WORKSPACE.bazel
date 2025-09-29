@@ -1,0 +1,7 @@
+workspace(name = "axoncache")
+
+# Load external dependencies
+load("//bazel:deps.bzl", "axoncache_deps")
+
+# Load all external dependencies
+axoncache_deps()
