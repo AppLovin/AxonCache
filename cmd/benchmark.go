@@ -103,7 +103,7 @@ func RunBenchmark() {
 }
 
 func RunBenchmarkNativeMap(keysCount int, keys, vals [][]byte) {
-	log.Println("Using native go maps")
+	log.Println("Using Native go maps")
 	start := time.Now()
 
 	cache := make(map[string][]byte)
@@ -210,7 +210,7 @@ func must(err error) {
 }
 
 func RunBenchmarkLmdb(keysCount int, keys, vals [][]byte) {
-	log.Println("Using AxonCache")
+	log.Println("Using LMDB")
 
 	// temp DB path
 	path := filepath.Join(os.TempDir(), "lmdb_ro_bench")
