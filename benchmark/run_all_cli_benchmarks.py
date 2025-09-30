@@ -43,16 +43,19 @@ if __name__ == "__main__":
     go_cmd = "go run cmd/benchmark.go cmd/kv_scanner.go cmd/main.go cmd/progress.go benchmark"
     python_cmd = "python3 axoncache/bench.py"
 
-    urls = {
-        "axon_cache": ("https://github.com/AppLovin/AxonCache", "noop"),
-        "flat_map": ("https://abseil.io/docs/cpp/guides/container", "blah"),
-        "go_map": ("https://pkg.go.dev/builtin#map", "blob"),
-        "cdb": ("https://cr.yp.to/cdb.html", "aadsc"),
-        "LMDB": ("https://symas.com/lmdb/", "asdc"),
-        "LevelDB": ("https://github.com/syndtr/goleveldb", "Pure Go version"),
-        "LMDB": ("https://github.com/jnwatson/py-lmdb/", "Python module"),
-        "CDB": ("https://github.com/bbayles/python-pure-cdb", "CDB"),
-    }
+    labels = """\
+| [C++ unordered_map](https://github.com/AppLovin/AxonCache)               |
+| [Abseil flat_map](https://abseil.io/docs/cpp/guides/container)           |
+| [AxonCache](https://github.com/AppLovin/AxonCache) C api                 |
+| [Go Map](https://pkg.go.dev/builtin#map)                                 |
+| [AxonCache](https://github.com/AppLovin/AxonCache) Golang                |
+| [LMDB](https://symas.com/lmdb/)                                          |
+| [LevelDB](https://github.com/syndtr/goleveldb) Pure Go version           |
+| [CDB](https://cr.yp.to/cdb.html) Pure Go Version with mmap support       |
+| [AxonCache](https://github.com/AppLovin/AxonCache) Python                |
+| [LMDB](https://github.com/jnwatson/py-lmdb/) Python module               |
+| [CDB](https://github.com/bbayles/python-pure-cdb) Pure Python module     |
+""".splitlines()
 
     cmds = [
         (cpp_cmd, "C++"),
@@ -65,5 +68,9 @@ if __name__ == "__main__":
         runtime_stats = run_and_parse_output_from_bench_cmd(cmd, runtime)
         stats.extend(runtime_stats)
 
-    for stat in stats:
-        print(stat)
+    for stat, label in zip(stats, labels):
+        print(
+            "{} {:<12} | {:<12} | {:10} | {}".format(
+                label, stat[1], stat[2], stat[3], stat[0]
+            )
+        )
