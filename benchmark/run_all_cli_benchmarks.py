@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
     for stat, label in zip(stats, labels):
         print(
-            "{} {:<12} | {:<12} | {:10} |".format(
+            "{} {:<18} | {:<15} | {:7} |".format(
                 label,
                 stat[1],
                 stat[2],

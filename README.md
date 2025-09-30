@@ -41,18 +41,17 @@ It is run on an Apple M4 Max laptop.
 
 | Library                                                                  | Insertion (keys/s) | Lookup (keys/s) | Runtime |
 | --------------------------------------------------                       | ------------------ | ----------------| --------|
-| [C++ unordered_map](https://github.com/AppLovin/AxonCache)               | 23,974,084   | 12,339,851   | C++        | Unordered map
-| [Abseil flat_map](https://abseil.io/docs/cpp/guides/container)           | 39,364,395   | 33,557,516   | C++        | Abseil flat map
-| [AxonCache](https://github.com/AppLovin/AxonCache) C api                 | 14,880,666   | 16,038,310   | C++        | AxonCache
-| [Go Map](https://pkg.go.dev/builtin#map)                                 | 7,947,756    | 17,314,868   | Golang     | Native go maps
-| [AxonCache](https://github.com/AppLovin/AxonCache) Golang                | 9,099,436    | 5,117,011    | Golang     | AxonCache
-| [LMDB](https://symas.com/lmdb/)                                          | 2,327,011    | 2,367,188    | Golang     | LMDB
-| [LevelDB](https://github.com/syndtr/goleveldb) Pure Go version           | 1,334,396    | 416,734      | Golang     | LevelDB
-| [CDB](https://cr.yp.to/cdb.html) Pure Go Version with mmap support       | 14,726,040   | 13,829,871   | Golang     | CDB
-| [AxonCache](https://github.com/AppLovin/AxonCache) Python                | 4,810,141    | 3,605,357    | Python     | AxonCache
-| [LMDB](https://github.com/jnwatson/py-lmdb/) Python module               | 1,829,572    | 2,119,209    | Python     | LMDB
-| [CDB](https://github.com/bbayles/python-pure-cdb) Pure Python module     | 935,493      | 979,978      | Python     | Python CDB
-
+| [C++ unordered_map](https://github.com/AppLovin/AxonCache)               | 23,734,905         | 17,130,266      | C++     |
+| [Abseil flat_map](https://abseil.io/docs/cpp/guides/container)           | 40,186,329         | 33,574,557      | C++     |
+| [AxonCache](https://github.com/AppLovin/AxonCache) C api                 | 15,007,287         | 15,972,272      | C++     |
+| [Go Map](https://pkg.go.dev/builtin#map)                                 | 7,999,224          | 17,403,007      | Golang  |
+| [AxonCache](https://github.com/AppLovin/AxonCache) Golang                | 9,215,514          | 4,794,454       | Golang  |
+| [LMDB](https://symas.com/lmdb/)                                          | 2,316,951          | 2,282,707       | Golang  |
+| [LevelDB](https://github.com/syndtr/goleveldb) Pure Go version           | 1,210,812          | 419,816         | Golang  |
+| [CDB](https://cr.yp.to/cdb.html) Pure Go Version with mmap support       | 14,535,992         | 14,044,688      | Golang  |
+| [AxonCache](https://github.com/AppLovin/AxonCache) Python                | 4,808,068          | 4,109,021       | Python  |
+| [LMDB](https://github.com/jnwatson/py-lmdb/) Python module               | 1,917,372          | 2,140,310       | Python  |
+| [CDB](https://github.com/bbayles/python-pure-cdb) Pure Python module     | 925,059            | 979,449         | Python  |
 
 Few notes.
 
