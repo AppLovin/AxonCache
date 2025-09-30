@@ -71,6 +71,9 @@ if __name__ == "__main__":
     for stat, label in zip(stats, labels):
         print(
             "{} {:<12} | {:<12} | {:10} |".format(
-                label, stat[1], stat[2], stat[3] # Display stat[0] to make sure everything line up
+                label,
+                stat[1],
+                stat[2],
+                stat[3],  # Display stat[0] to make sure everything line up
             )
         )
