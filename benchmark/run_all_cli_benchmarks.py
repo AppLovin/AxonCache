@@ -12,6 +12,10 @@ def run_and_parse_output_from_bench_cmd(cmd, runtime):
 
     lines = []
     for line in all_lines:
+        # Skip a log line printed by go compilation that contains 'Using'
+        if "in statically linked applications requires at runtime" in line:
+            continue
+
         if "Using" in line or "Inserted" in line or "Looked up" in line:
             lines.append(line)
 

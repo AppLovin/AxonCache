@@ -70,6 +70,22 @@ The benchmark is inserting 1,000,000 small keys (key_%i, val_%i), then randomly 
 | [LMDB](https://github.com/jnwatson/py-lmdb/) Python module               | 896,988            | 1,383,006       | Python  |
 | [CDB](https://github.com/bbayles/python-pure-cdb) Pure Python module     | 288,039            | 427,231         | Python  |
 
+## AMD EPYC 7B12 (Linux)
+
+```
+| [C++ unordered_map](https://github.com/AppLovin/AxonCache)               | 3,002,962          | 3,075,348       | C++     |
+| [Abseil flat_map](https://abseil.io/docs/cpp/guides/container)           | 3,245,658          | 5,690,564       | C++     |
+| [AxonCache](https://github.com/AppLovin/AxonCache) C api                 | 3,310,459          | 2,264,290       | C++     |
+| [Go Map](https://pkg.go.dev/builtin#map)                                 | 1,406,407          | 4,258,986       | Golang  |
+| [AxonCache](https://github.com/AppLovin/AxonCache) Golang                | 1,951,137          | 1,236,280       | Golang  |
+| [LMDB](https://symas.com/lmdb/)                                          | 647,308            | 826,295         | Golang  |
+| [LevelDB](https://github.com/syndtr/goleveldb) Pure Go version           | 269,288            | 119,708         | Golang  |
+| [CDB](https://cr.yp.to/cdb.html) Pure Go Version with mmap support       | 2,839,036          | 2,267,299       | Golang  |
+| [AxonCache](https://github.com/AppLovin/AxonCache) Python                | 1,288,613          | 960,134         | Python  |
+| [LMDB](https://github.com/jnwatson/py-lmdb/) Python module               | 568,787            | 754,872         | Python  |
+| [CDB](https://github.com/bbayles/python-pure-cdb) Pure Python module     | 178,604            | 176,594         | Python  |
+```
+
 Few notes.
 
 1. Go maps are quite fast for random lookups. They have been re-implemented in Go 1.24 to use a [Swiss Table](https://go.dev/blog/swisstable), which is also the base for abseil flat_map.
