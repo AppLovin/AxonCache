@@ -72,7 +72,6 @@ The benchmark is inserting 1,000,000 small keys (key_%i, val_%i), then randomly 
 
 ## AMD EPYC 7B12 (Linux)
 
-```
 | Library                                                                  | Insertion (keys/s) | Lookup (keys/s) | Runtime |
 | --------------------------------------------------                       | ------------------ | ----------------| --------|
 | [C++ unordered_map](https://github.com/AppLovin/AxonCache)               | 3,002,962          | 3,075,348       | C++     |
@@ -86,7 +85,6 @@ The benchmark is inserting 1,000,000 small keys (key_%i, val_%i), then randomly 
 | [AxonCache](https://github.com/AppLovin/AxonCache) Python                | 1,288,613          | 960,134         | Python  |
 | [LMDB](https://github.com/jnwatson/py-lmdb/) Python module               | 568,787            | 754,872         | Python  |
 | [CDB](https://github.com/bbayles/python-pure-cdb) Pure Python module     | 178,604            | 176,594         | Python  |
-```
 
 Few notes.
 
