@@ -4,13 +4,16 @@ import re
 from collections import defaultdict
 from statistics import mean, stdev
 
+
 def latency_ns_from_qps(qps: float) -> float:
     if qps <= 0:
         return float("inf")
     return 1e9 / qps
 
+
 def parse_qps(text: str) -> int:
     return int(text.replace(",", ""))
+
 
 def run_and_parse_output_from_bench_cmd(cmd, runtime):
     """
@@ -52,6 +55,7 @@ def run_and_parse_output_from_bench_cmd(cmd, runtime):
 
     return stats
 
+
 def fmt_avg_std(avg: float, sd: float, unit: str = "", width: int = 22) -> str:
     """Formats avg ± sd with alignment and optional units."""
     if sd == 0 or sd != sd:  # NaN
@@ -59,6 +63,7 @@ def fmt_avg_std(avg: float, sd: float, unit: str = "", width: int = 22) -> str:
     else:
         s = f"{avg:,.1f}{unit} ± {sd:,.1f}{unit}"
     return f"{s:<{width}}"
+
 
 if __name__ == "__main__":
     cpp_cmd = "./build/main/axoncache_cli --bench"
@@ -103,32 +108,47 @@ if __name__ == "__main__":
         ins_lat_sd = stdev(ins_lat) if len(ins_lat) >= 2 else 0.0
         look_lat_sd = stdev(look_lat) if len(look_lat) >= 2 else 0.0
 
-        rows.append({
-            "label": label,
-            "runtime": rt,
-            "ins_qps_avg": ins_avg,
-            "ins_qps_sd": ins_sd,
-            "ins_lat_avg": ins_lat_avg,
-            "ins_lat_sd": ins_lat_sd,
-            "look_qps_avg": look_avg,
-            "look_qps_sd": look_sd,
-            "look_lat_avg": look_lat_avg,
-            "look_lat_sd": look_lat_sd,
-        })
+        rows.append(
+            {
+                "label": label,
+                "runtime": rt,
+                "ins_qps_avg": ins_avg,
+                "ins_qps_sd": ins_sd,
+                "ins_lat_avg": ins_lat_avg,
+                "ins_lat_sd": ins_lat_sd,
+                "look_qps_avg": look_avg,
+                "look_qps_sd": look_sd,
+                "look_lat_avg": look_lat_avg,
+                "look_lat_sd": look_lat_sd,
+            }
+        )
 
     # Sort by runtime, then lookup latency
     rows.sort(key=lambda r: (r["runtime"], r["look_lat_avg"]))
 
     # Print perfectly aligned Markdown table
-    header = (
-        "| {:<38} | {:<7} | {:<28} | {:<28} | {:<28} | {:<28} |".format(
-            "Implementation", "Runtime",
-            "Lookups Lat (ns ± sd)", "Lookups QPS (avg ± sd)",
-            "Inserts Lat (ns ± sd)", "Inserts QPS (avg ± sd)"
-        )
+    header = "| {:<38} | {:<7} | {:<28} | {:<28} | {:<28} | {:<28} |".format(
+        "Implementation",
+        "Runtime",
+        "Lookups Lat (ns ± sd)",
+        "Lookups QPS (avg ± sd)",
+        "Inserts Lat (ns ± sd)",
+        "Inserts QPS (avg ± sd)",
     )
     divider = (
-        "|" + "-" * 40 + "|" + "-" * 9 + "|" + "-" * 30 + "|" + "-" * 30 + "|" + "-" * 30 + "|" + "-" * 30 + "|"
+        "|"
+        + "-" * 40
+        + "|"
+        + "-" * 9
+        + "|"
+        + "-" * 30
+        + "|"
+        + "-" * 30
+        + "|"
+        + "-" * 30
+        + "|"
+        + "-" * 30
+        + "|"
     )
     print(header)
     print(divider)
@@ -136,12 +156,11 @@ if __name__ == "__main__":
     for r in rows:
         print(
             "| {:<38} | {:<7} | {:<28} | {:<28} | {:<28} | {:<28} |".format(
-                r['label'],
-                r['runtime'],
-                fmt_avg_std(r['look_lat_avg'], r['look_lat_sd'], " ns", 28).strip(),
-                fmt_avg_std(r['look_qps_avg'], r['look_qps_sd'], "", 28).strip(),
-                fmt_avg_std(r['ins_lat_avg'], r['ins_lat_sd'], " ns", 28).strip(),
-                fmt_avg_std(r['ins_qps_avg'], r['ins_qps_sd'], "", 28).strip(),
+                r["label"],
+                r["runtime"],
+                fmt_avg_std(r["look_lat_avg"], r["look_lat_sd"], " ns", 28).strip(),
+                fmt_avg_std(r["look_qps_avg"], r["look_qps_sd"], "", 28).strip(),
+                fmt_avg_std(r["ins_lat_avg"], r["ins_lat_sd"], " ns", 28).strip(),
+                fmt_avg_std(r["ins_qps_avg"], r["ins_qps_sd"], "", 28).strip(),
             )
         )
-
