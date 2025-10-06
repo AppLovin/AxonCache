@@ -40,19 +40,19 @@ The benchmark is inserting 1,000,000 small keys (key_%i, val_%i), then randomly 
 
 ## Apple M4 Max laptop (macOS)
 
-| Library                                                                  | Insertion (keys/s) | Lookup (keys/s) | Runtime |
-| --------------------------------------------------                       | ------------------ | ----------------| --------|
-| [C++ unordered_map](https://github.com/AppLovin/AxonCache)               | 17,910,969         | 10,115,937      | C++     |
-| [Abseil flat_map](https://abseil.io/docs/cpp/guides/container)           | 36,746,862         | 30,718,899      | C++     |
-| [AxonCache](https://github.com/AppLovin/AxonCache) C api                 | 13,451,761         | 13,837,095      | C++     |
-| [Go Map](https://pkg.go.dev/builtin#map)                                 | 7,792,827          | 19,493,731      | Golang  |
-| [AxonCache](https://github.com/AppLovin/AxonCache) Golang                | 8,903,104          | 4,600,516       | Golang  |
-| [LMDB](https://symas.com/lmdb/)                                          | 2,263,189          | 2,340,060       | Golang  |
-| [LevelDB](https://github.com/syndtr/goleveldb) Pure Go version           | 1,165,081          | 417,783         | Golang  |
-| [CDB](https://cr.yp.to/cdb.html) Pure Go Version with mmap support       | 13,872,808         | 14,094,333      | Golang  |
-| [AxonCache](https://github.com/AppLovin/AxonCache) Python                | 4,945,699          | 4,281,129       | Python  |
-| [LMDB](https://github.com/jnwatson/py-lmdb/) Python module               | 1,933,083          | 2,099,467       | Python  |
-| [CDB](https://github.com/bbayles/python-pure-cdb) Pure Python module     | 935,780            | 980,383         | Python  |
+| Implementation                         | Runtime | Lookups Lat (ns ± sd)        | Lookups QPS (avg ± sd)       | Inserts Lat (ns ± sd)        | Inserts QPS (avg ± sd)       |
+|----------------------------------------|---------|------------------------------|------------------------------|------------------------------|------------------------------|
+| Abseil flat map                        | C++     | 29.9 ns ± 0.6 ns             | 33,489,471.0 ± 657,374.6     | 25.0 ns ± 0.4 ns             | 40,069,664.7 ± 693,702.1     |
+| AxonCache                              | C++     | 59.6 ns ± 0.7 ns             | 16,780,129.3 ± 210,661.9     | 67.6 ns ± 1.9 ns             | 14,808,894.0 ± 411,348.6     |
+| Unordered map                          | C++     | 82.7 ns ± 2.9 ns             | 12,096,495.0 ± 421,069.3     | 41.4 ns ± 0.6 ns             | 24,186,031.7 ± 368,718.7     |
+| Native go maps                         | Golang  | 54.0 ns ± 0.2 ns             | 18,527,879.0 ± 67,390.0      | 127.2 ns ± 5.6 ns            | 7,869,449.0 ± 340,481.3      |
+| CDB                                    | Golang  | 69.0 ns ± 0.8 ns             | 14,488,158.7 ± 169,160.6     | 69.5 ns ± 1.6 ns             | 14,392,223.0 ± 323,034.5     |
+| AxonCache                              | Golang  | 189.6 ns ± 3.3 ns            | 5,275,777.0 ± 91,053.4       | 109.8 ns ± 1.9 ns            | 9,108,831.7 ± 161,727.5      |
+| LMDB                                   | Golang  | 413.7 ns ± 13.3 ns           | 2,418,565.3 ± 76,624.9       | 442.2 ns ± 8.4 ns            | 2,262,180.0 ± 43,538.2       |
+| LevelDB                                | Golang  | 2,366.2 ns ± 16.0 ns         | 422,635.7 ± 2,852.0          | 850.3 ns ± 115.2 ns          | 1,189,503.3 ± 149,606.1      |
+| AxonCache                              | Python  | 226.6 ns ± 1.5 ns            | 4,414,157.7 ± 29,872.4       | 207.2 ns ± 16.5 ns           | 4,844,875.3 ± 370,012.5      |
+| LMDB                                   | Python  | 457.4 ns ± 18.0 ns           | 2,188,279.3 ± 85,005.5       | 525.0 ns ± 16.6 ns           | 1,905,863.3 ± 59,365.3       |
+| Python CDB                             | Python  | 1,015.0 ns ± 10.2 ns         | 985,328.0 ± 9,869.8          | 1,145.9 ns ± 167.8 ns        | 884,331.0 ± 119,376.5        |
 
 ## AMD EPYC 9B14 (Linux)
 
