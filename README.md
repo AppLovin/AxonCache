@@ -73,6 +73,8 @@ The benchmark is inserting 1,000,000 small keys (key_%i, val_%i), then randomly 
 ## AMD EPYC 7B12 (Linux)
 
 ```
+| Library                                                                  | Insertion (keys/s) | Lookup (keys/s) | Runtime |
+| --------------------------------------------------                       | ------------------ | ----------------| --------|
 | [C++ unordered_map](https://github.com/AppLovin/AxonCache)               | 3,002,962          | 3,075,348       | C++     |
 | [Abseil flat_map](https://abseil.io/docs/cpp/guides/container)           | 3,245,658          | 5,690,564       | C++     |
 | [AxonCache](https://github.com/AppLovin/AxonCache) C api                 | 3,310,459          | 2,264,290       | C++     |
