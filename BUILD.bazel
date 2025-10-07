@@ -1,6 +1,8 @@
 load("//bazel:test_utils.bzl", "generate_test_suite")
+load("@rules_python//python:defs.bzl", "py_test")
+load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 
-# Bundled xxhash C library (compiled separately)
+# Bundled xxhash C library (separate target to avoid C++ flags)
 cc_library(
     name = "xxhash_bundled",
     srcs = ["src/axoncache/common/xxhash.c"],
@@ -8,23 +10,20 @@ cc_library(
         "include/axoncache/common/xxhash.h",
         "include/axoncache/common/xxh3.h",
     ],
-    includes = [
-        "include",
-        "src",
-    ],
+    includes = ["include"],
     copts = [
         "-DXXH_NAMESPACE=AXONCACHE_",
-        "-w",  # Suppress warnings for bundled code
     ],
     visibility = ["//visibility:private"],
 )
 
 # Main axoncache library
 cc_library(
-    name = "axoncache",
+    name = "axoncache_lib",
     srcs = glob([
         "src/**/*.cpp",
-    ]),
+        # Exclude xxhash.c - handled by separate target above
+    ], exclude = ["src/axoncache/common/xxhash.c"]),
     hdrs = glob([
         "include/**/*.h",
         "src/**/*.h",  # Internal headers
@@ -121,26 +120,31 @@ cc_binary(
         "//conditions:default": ["-std=c++20"],
     }),
     deps = [
-        ":axoncache",
+        ":axoncache_lib",
         "@cxxopts//:cxxopts",
     ],
 )
 
 # ===== TEST TARGETS =====
 
-# Main test binary (matches CMake axoncacheTest target) - includes ALL test sources like CMake
+# Main test binary (matches CMake axoncacheTest target)
 cc_test(
     name = "axoncacheTest",
-    srcs = glob([
-        "test/src/**/*.cpp",  # All test sources recursively (like CMake GLOB_RECURSE)
-        "test/src/**/*.h",    # All test headers recursively
-    ]),
+    srcs = [
+        "test/src/main.cpp",
+        "test/src/ResourceLoader.cpp",
+        "test/src/ResourceLoader.h",
+        "test/src/CacheTestUtils.h",
+    ],
     includes = ["test/src", "test"],
     deps = [
-        ":axoncache",
-        "@doctest//doctest:custom_main",
+        ":axoncache_lib",
+        "@doctest//doctest:doctest",
     ],
-    data = glob(["test/data/*"]),  # Include all test data files
+    data = [
+        "test/data/example_fast_data.dta",
+        "test/data/bench_cache.1758220992251.cache",
+    ],
     copts = select({
         "@platforms//os:macos": [
             "-std=c++20",
@@ -163,12 +167,149 @@ cc_test(
 )
 
 # Auto-generate all other test targets
-# Note: We use a single comprehensive test binary (like CMake) instead of individual test targets
-# This allows doctest to discover all TEST_CASE macros across all test files (matches CMake's 111 tests)
+generate_test_suite(
+    name = "all_tests",
+    test_dirs = ["test/src"],
+    exclude_files = ["test/src/main.cpp"],
+)
 
-# Convenience alias for running the main test
+# Convenience alias for running everything
 alias(
-    name = "test_all", 
-    actual = ":axoncacheTest",
+    name = "test_all",
+    actual = ":all_tests",
+    visibility = ["//visibility:public"],
+)
+
+# ===== PYTHON MODULE =====
+
+# Python extension module using pybind11
+# Uses library dependency approach for Bazel, amalgamation for CMake
+pybind_extension(
+    name = "axoncache",  # Changed from axoncache_python to match import name
+    srcs = [
+        "axoncache/axoncache.cpp",
+    ],
+    copts = [
+        "-std=c++20",
+        "-DBAZEL_BUILD",  # Enable conditional includes for Bazel
+    ],
+    deps = [
+        ":axoncache_lib",  # Link against the main C++ library (avoid naming conflict)
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Python test
+py_test(
+    name = "axoncache_python_test",
+    srcs = ["axoncache/axoncache_test.py"],
+    deps = [":axoncache_python"],
+    data = [":axoncache_python"],
+)
+
+# ===== GO MODULE =====
+
+# For Go, we'll use a simple approach with genrule since Go has complex dependencies
+# Go CLI build (using native Go toolchain)
+genrule(
+    name = "build_go_cli",
+        srcs = glob([
+            "cmd/*.go",
+            "internal/**/*.go", 
+            "*.go",
+            "go.mod",
+            "go.sum",
+        ], allow_empty = True),
+    outs = ["axoncache_go_cli"],
+    cmd = """
+        export HOME=$$(mktemp -d)
+        export GOMODCACHE=$$HOME/go/pkg/mod
+        export GOCACHE=$$HOME/.cache/go-build
+        export GOPATH=$$HOME/go
+        mkdir -p $$GOMODCACHE $$GOCACHE $$GOPATH
+        cd $$(dirname $(location go.mod))
+        go build -o $$(pwd)/$(OUTS) ./cmd/
+        rm -rf $$HOME
+    """,
+    visibility = ["//visibility:public"],
+)
+
+# Go test (using native Go toolchain)  
+sh_test(
+    name = "axoncache_go_test",
+    srcs = ["scripts/run_go_tests.sh"],
+    data = glob([
+        "**/*.go",
+        "go.mod", 
+        "go.sum",
+        "internal/core/test_data/**/*",
+    ], allow_empty = True),
+)
+
+# ===== BENCHMARK SUITE =====
+
+# Benchmark library
+cc_library(
+    name = "benchmark_utils",
+    hdrs = ["benchmark/src/CacheBenchmarkUtils.h"],
+    includes = ["benchmark/src"],
+    deps = [":axoncache"],
+    visibility = ["//visibility:private"],
+)
+
+# Individual benchmark binaries
+cc_binary(
+    name = "full_benchmark",
+    srcs = ["benchmark/src/FullBenchmark.cpp"],
+    deps = [
+        ":axoncache_lib",
+        ":benchmark_utils",
+        "@google_benchmark//:benchmark_main",
+    ],
+    copts = select({
+        "@platforms//os:macos": ["-std=c++20", "-O3"],
+        "@platforms//os:linux": ["-std=c++20", "-O3"],
+        "//conditions:default": ["-std=c++20"],
+    }),
+)
+
+cc_binary(
+    name = "perf_tests",
+    srcs = ["benchmark/src/runPerfTests.cpp"],
+    deps = [
+        ":axoncache_lib", 
+        ":benchmark_utils",
+        "@google_benchmark//:benchmark_main",
+    ],
+    copts = select({
+        "@platforms//os:macos": ["-std=c++20", "-O3"],
+        "@platforms//os:linux": ["-std=c++20", "-O3"],
+        "//conditions:default": ["-std=c++20"],
+    }),
+)
+
+cc_binary(
+    name = "alcache_perf_tests",
+    srcs = ["benchmark/src/alcachePerfTests.cpp"],
+    deps = [
+        ":axoncache_lib",
+        ":benchmark_utils", 
+        "@google_benchmark//:benchmark_main",
+    ],
+    copts = select({
+        "@platforms//os:macos": ["-std=c++20", "-O3"],
+        "@platforms//os:linux": ["-std=c++20", "-O3"],
+        "//conditions:default": ["-std=c++20"],
+    }),
+)
+
+# Benchmark suite alias
+filegroup(
+    name = "benchmarks",
+    srcs = [
+        ":full_benchmark",
+        ":perf_tests", 
+        ":alcache_perf_tests",
+    ],
     visibility = ["//visibility:public"],
 )

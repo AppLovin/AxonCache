@@ -7,11 +7,7 @@
 #ifdef BAZEL_BUILD
 #include "doctest/doctest.h"
 #else
-#ifdef BAZEL_BUILD
-#include "doctest/doctest.h"
-#else
 #include <doctest/doctest.h>
-#endif
 #endif
 
 #include <spdlog/spdlog.h>

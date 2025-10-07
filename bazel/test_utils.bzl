@@ -22,7 +22,7 @@ def generate_test_suite(name, test_dirs, exclude_files = []):
     ]
     
     common_deps = [
-        "//:axoncache",
+        "//:axoncache_lib",  # Updated target name
         "@doctest//doctest:main",
     ]
 
@@ -36,7 +36,7 @@ def generate_test_suite(name, test_dirs, exclude_files = []):
     
     all_test_files = []
     for pattern in test_patterns:
-        all_test_files.extend(native.glob([pattern]))
+        all_test_files.extend(native.glob([pattern], allow_empty = True))
     
     # Filter out excluded files and utility files
     exclude_patterns = ["TestUtils.cpp", "CacheTestUtils.cpp", "ResourceLoader.cpp", "main.cpp"] + exclude_files
@@ -61,7 +61,7 @@ def generate_test_suite(name, test_dirs, exclude_files = []):
         
         # Determine test data
         test_data = []
-        if "FullCacheTest.cpp" in test_file:
+        if "FullCacheTest.cpp" in test_file or "CacheReaderCApiTest.cpp" in test_file:
             test_data.extend([
                 "test/data/example_fast_data.dta",
                 "test/data/bench_cache.1758220992251.cache",
