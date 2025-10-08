@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 AppLovin. All rights reserved.
+
 #include <jni.h>
 
 #include <string>
