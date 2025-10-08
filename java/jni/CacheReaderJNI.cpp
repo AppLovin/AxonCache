@@ -60,13 +60,13 @@ JNIEXPORT void JNICALL Java_com_applovin_axoncache_CacheReader_nativeDeleteCppOb
  * Class:     com_applovin_axoncache_CacheReader
  * Method:    nativeContainsKey
  */
-JNIEXPORT jint JNICALL Java_com_applovin_axoncache_CacheReader_nativeContainsKey
-  (JNIEnv* env, jobject obj, jlong handle, jbyteArray key, jint keySize) {
+JNIEXPORT jboolean JNICALL Java_com_applovin_axoncache_CacheReader_nativeContainsKey
+  (JNIEnv* env, jobject obj, jlong handle, jstring key) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
-    jbyte* keyBytes = env->GetByteArrayElements(key, nullptr);
-    int result = CacheReader_ContainsKey(readerHandle, reinterpret_cast<char*>(keyBytes), keySize);
-    env->ReleaseByteArrayElements(key, keyBytes, JNI_ABORT);
-    return result;
+    std::string keyStr = convertToUtf8(env, key);
+    
+    int hasKey = CacheReader_ContainsKey(readerHandle, const_cast<char*>(keyStr.c_str()), keyStr.size());
+    return hasKey != 0;
 }
 
 /*
@@ -74,76 +74,143 @@ JNIEXPORT jint JNICALL Java_com_applovin_axoncache_CacheReader_nativeContainsKey
  * Method:    nativeGetKey
  */
 JNIEXPORT jstring JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetKey
-  (JNIEnv* env, jobject obj, jlong handle, jbyteArray key, jint keySize) {
+  (JNIEnv* env, jobject obj, jlong handle, jstring key) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
-    jbyte* keyBytes = env->GetByteArrayElements(key, nullptr);
+    std::string keyStr = convertToUtf8(env, key);
+    
     int isExist = 0;
     int valueSize = 0;
-    char* value = CacheReader_GetKey(readerHandle, reinterpret_cast<char*>(keyBytes), keySize, &isExist, &valueSize);
-    env->ReleaseByteArrayElements(key, keyBytes, JNI_ABORT);
+    char* value = CacheReader_GetKey(readerHandle, const_cast<char*>(keyStr.c_str()), keyStr.size(), &isExist, &valueSize);
     
-    if (isExist && value) {
-        jstring result = convertToUtf16(env, value, valueSize);
-        free(value);
-        return result;
+    if (isExist == 0) {
+        return nullptr;  // Key not found
     }
-    return nullptr;
+    
+    if (isExist == 1 && value == nullptr) {
+        return env->NewStringUTF("");  // Empty value
+    }
+    
+    jstring result = convertToUtf16(env, value, valueSize);
+    if (value != nullptr) {
+        free(value);
+    }
+    return result;
 }
 
 /*
  * Class:     com_applovin_axoncache_CacheReader
  * Method:    nativeGetLong
  */
-JNIEXPORT jlong JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetLong
-  (JNIEnv* env, jobject obj, jlong handle, jbyteArray key, jint keySize, jlong defaultValue) {
+JNIEXPORT jobject JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetLong
+  (JNIEnv* env, jobject obj, jlong handle, jstring key) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
-    jbyte* keyBytes = env->GetByteArrayElements(key, nullptr);
+    std::string keyStr = convertToUtf8(env, key);
+    
     int isExist = 0;
-    int64_t result = CacheReader_GetLong(readerHandle, reinterpret_cast<char*>(keyBytes), keySize, &isExist, defaultValue);
-    env->ReleaseByteArrayElements(key, keyBytes, JNI_ABORT);
-    return result;
+    int64_t result = CacheReader_GetLong(readerHandle, const_cast<char*>(keyStr.c_str()), keyStr.size(), &isExist, 0);
+    
+    if (isExist == 0) {
+        return nullptr;
+    }
+    
+    jclass longClass = env->FindClass("java/lang/Long");
+    if (longClass == nullptr) {
+        return nullptr;
+    }
+    
+    jmethodID longConstructor = env->GetMethodID(longClass, "<init>", "(J)V");
+    if (longConstructor == nullptr) {
+        return nullptr;
+    }
+    
+    return env->NewObject(longClass, longConstructor, result);
 }
 
 /*
  * Class:     com_applovin_axoncache_CacheReader
  * Method:    nativeGetInteger
  */
-JNIEXPORT jint JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetInteger
-  (JNIEnv* env, jobject obj, jlong handle, jbyteArray key, jint keySize, jint defaultValue) {
+JNIEXPORT jobject JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetInteger
+  (JNIEnv* env, jobject obj, jlong handle, jstring key) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
-    jbyte* keyBytes = env->GetByteArrayElements(key, nullptr);
+    std::string keyStr = convertToUtf8(env, key);
+    
     int isExist = 0;
-    int result = CacheReader_GetInteger(readerHandle, reinterpret_cast<char*>(keyBytes), keySize, &isExist, defaultValue);
-    env->ReleaseByteArrayElements(key, keyBytes, JNI_ABORT);
-    return result;
+    int result = CacheReader_GetInteger(readerHandle, const_cast<char*>(keyStr.c_str()), keyStr.size(), &isExist, 0);
+    
+    if (isExist == 0) {
+        return nullptr;
+    }
+    
+    jclass intClass = env->FindClass("java/lang/Integer");
+    if (intClass == nullptr) {
+        return nullptr;
+    }
+    
+    jmethodID intConstructor = env->GetMethodID(intClass, "<init>", "(I)V");
+    if (intConstructor == nullptr) {
+        return nullptr;
+    }
+    
+    return env->NewObject(intClass, intConstructor, result);
 }
 
 /*
  * Class:     com_applovin_axoncache_CacheReader
  * Method:    nativeGetDouble
  */
-JNIEXPORT jdouble JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetDouble
-  (JNIEnv* env, jobject obj, jlong handle, jbyteArray key, jint keySize, jdouble defaultValue) {
+JNIEXPORT jobject JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetDouble
+  (JNIEnv* env, jobject obj, jlong handle, jstring key) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
-    jbyte* keyBytes = env->GetByteArrayElements(key, nullptr);
+    std::string keyStr = convertToUtf8(env, key);
+    
     int isExist = 0;
-    double result = CacheReader_GetDouble(readerHandle, reinterpret_cast<char*>(keyBytes), keySize, &isExist, defaultValue);
-    env->ReleaseByteArrayElements(key, keyBytes, JNI_ABORT);
-    return result;
+    double result = CacheReader_GetDouble(readerHandle, const_cast<char*>(keyStr.c_str()), keyStr.size(), &isExist, 0.0);
+    
+    if (isExist == 0) {
+        return nullptr;
+    }
+    
+    jclass doubleClass = env->FindClass("java/lang/Double");
+    if (doubleClass == nullptr) {
+        return nullptr;
+    }
+    
+    jmethodID doubleConstructor = env->GetMethodID(doubleClass, "<init>", "(D)V");
+    if (doubleConstructor == nullptr) {
+        return nullptr;
+    }
+    
+    return env->NewObject(doubleClass, doubleConstructor, result);
 }
 
 /*
  * Class:     com_applovin_axoncache_CacheReader
  * Method:    nativeGetBool
  */
-JNIEXPORT jint JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetBool
-  (JNIEnv* env, jobject obj, jlong handle, jbyteArray key, jint keySize, jint defaultValue) {
+JNIEXPORT jobject JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetBool
+  (JNIEnv* env, jobject obj, jlong handle, jstring key) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
-    jbyte* keyBytes = env->GetByteArrayElements(key, nullptr);
+    std::string keyStr = convertToUtf8(env, key);
+    
     int isExist = 0;
-    int result = CacheReader_GetBool(readerHandle, reinterpret_cast<char*>(keyBytes), keySize, &isExist, defaultValue);
-    env->ReleaseByteArrayElements(key, keyBytes, JNI_ABORT);
-    return result;
+    int result = CacheReader_GetBool(readerHandle, const_cast<char*>(keyStr.c_str()), keyStr.size(), &isExist, 0);
+    
+    if (isExist == 0) {
+        return nullptr;
+    }
+    
+    jclass boolClass = env->FindClass("java/lang/Boolean");
+    if (boolClass == nullptr) {
+        return nullptr;
+    }
+    
+    jmethodID boolConstructor = env->GetMethodID(boolClass, "<init>", "(Z)V");
+    if (boolConstructor == nullptr) {
+        return nullptr;
+    }
+    
+    return env->NewObject(boolClass, boolConstructor, result != 0);
 }
 
 /*
@@ -151,13 +218,13 @@ JNIEXPORT jint JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetBool
  * Method:    nativeGetVector
  */
 JNIEXPORT jobjectArray JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetVector
-  (JNIEnv* env, jobject obj, jlong handle, jbyteArray key, jint keySize) {
+  (JNIEnv* env, jobject obj, jlong handle, jstring key) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
-    jbyte* keyBytes = env->GetByteArrayElements(key, nullptr);
+    std::string keyStr = convertToUtf8(env, key);
+    
     int vectorSize = 0;
     int* valueSizes = nullptr;
-    char** values = CacheReader_GetVector(readerHandle, reinterpret_cast<char*>(keyBytes), keySize, &vectorSize, &valueSizes);
-    env->ReleaseByteArrayElements(key, keyBytes, JNI_ABORT);
+    char** values = CacheReader_GetVector(readerHandle, const_cast<char*>(keyStr.c_str()), keyStr.size(), &vectorSize, &valueSizes);
     
     if (values && vectorSize > 0) {
         jclass stringClass = env->FindClass("java/lang/String");
@@ -177,6 +244,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_applovin_axoncache_CacheReader_nativeGet
         return result;
     }
     
+    if (values) free(values);
     if (valueSizes) free(valueSizes);
     return nullptr;
 }
@@ -186,12 +254,12 @@ JNIEXPORT jobjectArray JNICALL Java_com_applovin_axoncache_CacheReader_nativeGet
  * Method:    nativeGetFloatVector
  */
 JNIEXPORT jfloatArray JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetFloatVector
-  (JNIEnv* env, jobject obj, jlong handle, jbyteArray key, jint keySize) {
+  (JNIEnv* env, jobject obj, jlong handle, jstring key) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
-    jbyte* keyBytes = env->GetByteArrayElements(key, nullptr);
+    std::string keyStr = convertToUtf8(env, key);
+    
     int vectorSize = 0;
-    float* values = CacheReader_GetFloatVector(readerHandle, reinterpret_cast<char*>(keyBytes), keySize, &vectorSize);
-    env->ReleaseByteArrayElements(key, keyBytes, JNI_ABORT);
+    float* values = CacheReader_GetFloatVector(readerHandle, const_cast<char*>(keyStr.c_str()), keyStr.size(), &vectorSize);
     
     if (values && vectorSize > 0) {
         jfloatArray result = env->NewFloatArray(vectorSize);
@@ -199,6 +267,8 @@ JNIEXPORT jfloatArray JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetF
         free(values);
         return result;
     }
+    
+    if (values) free(values);
     return nullptr;
 }
 
@@ -207,12 +277,11 @@ JNIEXPORT jfloatArray JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetF
  * Method:    nativeGetVectorKeySize
  */
 JNIEXPORT jint JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetVectorKeySize
-  (JNIEnv* env, jobject obj, jlong handle, jbyteArray key, jint keySize) {
+  (JNIEnv* env, jobject obj, jlong handle, jstring key) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
-    jbyte* keyBytes = env->GetByteArrayElements(key, nullptr);
-    int result = CacheReader_GetVectorKeySize(readerHandle, reinterpret_cast<char*>(keyBytes), keySize);
-    env->ReleaseByteArrayElements(key, keyBytes, JNI_ABORT);
-    return result;
+    std::string keyStr = convertToUtf8(env, key);
+    
+    return CacheReader_GetVectorKeySize(readerHandle, const_cast<char*>(keyStr.c_str()), keyStr.size());
 }
 
 /*
@@ -220,12 +289,12 @@ JNIEXPORT jint JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetVectorKe
  * Method:    nativeGetVectorKey
  */
 JNIEXPORT jstring JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetVectorKey
-  (JNIEnv* env, jobject obj, jlong handle, jbyteArray key, jint keySize, jint index) {
+  (JNIEnv* env, jobject obj, jlong handle, jstring key, jint index) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
-    jbyte* keyBytes = env->GetByteArrayElements(key, nullptr);
+    std::string keyStr = convertToUtf8(env, key);
+    
     int valueSize = 0;
-    char* value = CacheReader_GetVectorKey(readerHandle, reinterpret_cast<char*>(keyBytes), keySize, index, &valueSize);
-    env->ReleaseByteArrayElements(key, keyBytes, JNI_ABORT);
+    char* value = CacheReader_GetVectorKey(readerHandle, const_cast<char*>(keyStr.c_str()), keyStr.size(), index, &valueSize);
     
     if (value) {
         jstring result = convertToUtf16(env, value, valueSize);
@@ -240,12 +309,12 @@ JNIEXPORT jstring JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetVecto
  * Method:    nativeGetKeyType
  */
 JNIEXPORT jstring JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetKeyType
-  (JNIEnv* env, jobject obj, jlong handle, jbyteArray key, jint keySize) {
+  (JNIEnv* env, jobject obj, jlong handle, jstring key) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
-    jbyte* keyBytes = env->GetByteArrayElements(key, nullptr);
+    std::string keyStr = convertToUtf8(env, key);
+    
     int valueSize = 0;
-    char* value = CacheReader_GetKeyType(readerHandle, reinterpret_cast<char*>(keyBytes), keySize, &valueSize);
-    env->ReleaseByteArrayElements(key, keyBytes, JNI_ABORT);
+    char* value = CacheReader_GetKeyType(readerHandle, const_cast<char*>(keyStr.c_str()), keyStr.size(), &valueSize);
     
     if (value) {
         jstring result = convertToUtf16(env, value, valueSize);

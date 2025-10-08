@@ -57,8 +57,7 @@ public class CacheReader implements AutoCloseable {
         if (nativeHandle == 0) {
             throw new IllegalStateException("CacheReader has been closed");
         }
-        byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
-        return nativeContainsKey(nativeHandle, keyBytes, keyBytes.length) != 0;
+        return nativeContainsKey(nativeHandle, key);
     }
 
     /**
@@ -71,68 +70,59 @@ public class CacheReader implements AutoCloseable {
         if (nativeHandle == 0) {
             throw new IllegalStateException("CacheReader has been closed");
         }
-        byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
-        return nativeGetKey(nativeHandle, keyBytes, keyBytes.length);
+        return nativeGetKey(nativeHandle, key);
     }
 
     /**
      * Gets the value for a long key
      * 
      * @param key The key to look up
-     * @param defaultValue The default value if key not found
-     * @return The value as a long
+     * @return The value as Long, or null if not found
      */
-    public long getLong(String key, long defaultValue) {
+    public Long getLong(String key) {
         if (nativeHandle == 0) {
             throw new IllegalStateException("CacheReader has been closed");
         }
-        byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
-        return nativeGetLong(nativeHandle, keyBytes, keyBytes.length, defaultValue);
+        return nativeGetLong(nativeHandle, key);
     }
 
     /**
      * Gets the value for an integer key
      * 
      * @param key The key to look up
-     * @param defaultValue The default value if key not found
-     * @return The value as an int
+     * @return The value as Integer, or null if not found
      */
-    public int getInteger(String key, int defaultValue) {
+    public Integer getInteger(String key) {
         if (nativeHandle == 0) {
             throw new IllegalStateException("CacheReader has been closed");
         }
-        byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
-        return nativeGetInteger(nativeHandle, keyBytes, keyBytes.length, defaultValue);
+        return nativeGetInteger(nativeHandle, key);
     }
 
     /**
      * Gets the value for a double key
      * 
      * @param key The key to look up
-     * @param defaultValue The default value if key not found
-     * @return The value as a double
+     * @return The value as Double, or null if not found
      */
-    public double getDouble(String key, double defaultValue) {
+    public Double getDouble(String key) {
         if (nativeHandle == 0) {
             throw new IllegalStateException("CacheReader has been closed");
         }
-        byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
-        return nativeGetDouble(nativeHandle, keyBytes, keyBytes.length, defaultValue);
+        return nativeGetDouble(nativeHandle, key);
     }
 
     /**
      * Gets the value for a boolean key
      * 
      * @param key The key to look up
-     * @param defaultValue The default value if key not found
-     * @return The value as a boolean
+     * @return The value as Boolean, or null if not found
      */
-    public boolean getBoolean(String key, boolean defaultValue) {
+    public Boolean getBoolean(String key) {
         if (nativeHandle == 0) {
             throw new IllegalStateException("CacheReader has been closed");
         }
-        byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
-        return nativeGetBool(nativeHandle, keyBytes, keyBytes.length, defaultValue ? 1 : 0) != 0;
+        return nativeGetBool(nativeHandle, key);
     }
 
     /**
@@ -145,8 +135,7 @@ public class CacheReader implements AutoCloseable {
         if (nativeHandle == 0) {
             throw new IllegalStateException("CacheReader has been closed");
         }
-        byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
-        return nativeGetVector(nativeHandle, keyBytes, keyBytes.length);
+        return nativeGetVector(nativeHandle, key);
     }
 
     /**
@@ -159,8 +148,7 @@ public class CacheReader implements AutoCloseable {
         if (nativeHandle == 0) {
             throw new IllegalStateException("CacheReader has been closed");
         }
-        byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
-        return nativeGetFloatVector(nativeHandle, keyBytes, keyBytes.length);
+        return nativeGetFloatVector(nativeHandle, key);
     }
 
     /**
@@ -173,8 +161,7 @@ public class CacheReader implements AutoCloseable {
         if (nativeHandle == 0) {
             throw new IllegalStateException("CacheReader has been closed");
         }
-        byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
-        return nativeGetVectorKeySize(nativeHandle, keyBytes, keyBytes.length);
+        return nativeGetVectorKeySize(nativeHandle, key);
     }
 
     /**
@@ -188,8 +175,7 @@ public class CacheReader implements AutoCloseable {
         if (nativeHandle == 0) {
             throw new IllegalStateException("CacheReader has been closed");
         }
-        byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
-        return nativeGetVectorKey(nativeHandle, keyBytes, keyBytes.length, index);
+        return nativeGetVectorKey(nativeHandle, key, index);
     }
 
     /**
@@ -202,8 +188,7 @@ public class CacheReader implements AutoCloseable {
         if (nativeHandle == 0) {
             throw new IllegalStateException("CacheReader has been closed");
         }
-        byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
-        return nativeGetKeyType(nativeHandle, keyBytes, keyBytes.length);
+        return nativeGetKeyType(nativeHandle, key);
     }
 
     @Override
@@ -220,15 +205,15 @@ public class CacheReader implements AutoCloseable {
     private native int nativeInitialize(long handle, String taskName, String destinationFolder, String timestamp, int isPreloadMemoryEnabled);
     private native void nativeFinalize(long handle);
     private native void nativeDeleteCppObject(long handle);
-    private native int nativeContainsKey(long handle, byte[] key, int keySize);
-    private native String nativeGetKey(long handle, byte[] key, int keySize);
-    private native long nativeGetLong(long handle, byte[] key, int keySize, long defaultValue);
-    private native int nativeGetInteger(long handle, byte[] key, int keySize, int defaultValue);
-    private native double nativeGetDouble(long handle, byte[] key, int keySize, double defaultValue);
-    private native int nativeGetBool(long handle, byte[] key, int keySize, int defaultValue);
-    private native String[] nativeGetVector(long handle, byte[] key, int keySize);
-    private native float[] nativeGetFloatVector(long handle, byte[] key, int keySize);
-    private native int nativeGetVectorKeySize(long handle, byte[] key, int keySize);
-    private native String nativeGetVectorKey(long handle, byte[] key, int keySize, int index);
-    private native String nativeGetKeyType(long handle, byte[] key, int keySize);
+    private native boolean nativeContainsKey(long handle, String key);
+    private native String nativeGetKey(long handle, String key);
+    private native Long nativeGetLong(long handle, String key);
+    private native Integer nativeGetInteger(long handle, String key);
+    private native Double nativeGetDouble(long handle, String key);
+    private native Boolean nativeGetBool(long handle, String key);
+    private native String[] nativeGetVector(long handle, String key);
+    private native float[] nativeGetFloatVector(long handle, String key);
+    private native int nativeGetVectorKeySize(long handle, String key);
+    private native String nativeGetVectorKey(long handle, String key, int index);
+    private native String nativeGetKeyType(long handle, String key);
 }

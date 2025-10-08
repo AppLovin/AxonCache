@@ -205,8 +205,8 @@ public class CacheExample {
                 // Check age
                 String ageKey = userId + ":age";
                 totalChecks++;
-                int age = reader.getInteger(ageKey, -1);
-                if (age != -1) {
+                Integer age = reader.getInteger(ageKey);
+                if (age != null) {
                     System.out.println("   Age: " + age);
                     successCount++;
                 } else {
@@ -216,8 +216,8 @@ public class CacheExample {
                 // Check score
                 String scoreKey = userId + ":score";
                 totalChecks++;
-                double score = reader.getDouble(scoreKey, 0.0);
-                if (reader.containsKey(scoreKey)) {
+                Double score = reader.getDouble(scoreKey);
+                if (score != null) {
                     System.out.println("   Score: " + score);
                     successCount++;
                 } else {
@@ -227,8 +227,8 @@ public class CacheExample {
                 // Check active
                 String activeKey = userId + ":active";
                 totalChecks++;
-                if (reader.containsKey(activeKey)) {
-                    boolean active = reader.getBoolean(activeKey, false);
+                Boolean active = reader.getBoolean(activeKey);
+                if (active != null) {
                     System.out.println("   Active: " + active);
                     successCount++;
                 } else {
@@ -245,6 +245,15 @@ public class CacheExample {
                 System.out.println(" Some data could not be read");
             }
             
+            // Test null return for non-existent key
+            System.out.println("\n--- Testing Non-Existent Key ---");
+            Integer nonExistent = reader.getInteger("non_existent_key");
+            if (nonExistent == null) {
+                System.out.println(" Correctly returned null for non-existent key");
+            } else {
+                System.out.println(" ERROR: Should have returned null!");
+            }
+
         } catch (Exception e) {
             System.err.println("Error during cache reading:");
             e.printStackTrace();
