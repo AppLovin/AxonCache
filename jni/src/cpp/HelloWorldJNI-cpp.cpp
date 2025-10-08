@@ -43,18 +43,6 @@ auto convertToUtf16( JNIEnv * env, const char * chars, int len ) -> jstring
 }
 }
 
-JNIEXPORT jstring JNICALL Java_com_applovin_jalcache_AlCacheJniWrapper_quietReturnString( JNIEnv * env, jobject thisObject, jstring inputName )
-{
-    std::string name = convertToUtf8( env, inputName );
-    std::string greeting = "Hello " + name + ", from C++ !!";
-    return convertToUtf16( env, greeting.c_str(), greeting.size() );
-}
-
-JNIEXPORT jint JNICALL Java_com_applovin_jalcache_AlCacheJniWrapper_quietReturnInt( JNIEnv * env, jobject thisObject, jint number )
-{
-    return number + 1;
-}
-
 //
 // Get pointer field straight from `JavaClass`
 //
@@ -72,7 +60,20 @@ jfieldID getPtrFieldId( JNIEnv * env, jobject obj )
     return ptrFieldId;
 }
 
-JNIEXPORT void JNICALL Java_com_applovin_jalcache_AlCacheJniWrapper_createHandle(
+//
+// FIXME / Java_com_mdorier_jni_HelloWorldJNI_sayHello
+
+extern "C" JNIEXPORT void JNICALL Java_com_mdorier_jni_HelloWorldJNI_sayHello(
+    JNIEnv * /* env */,
+    jobject /* obj */)
+{
+    printf( "Hello world\n" );
+}
+
+// Function name should be
+// Java_com_applovin_jalcache_AlCacheJniWrapper_createHandle(
+//
+extern "C" JNIEXPORT void JNICALL Java_com_mdorier_jni_HelloWorldJNI_createHandle(
     JNIEnv * env,
     jobject thisObject )
 {
