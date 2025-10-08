@@ -65,7 +65,7 @@ jfieldID getPtrFieldId( JNIEnv * env, jobject obj )
 
 extern "C" JNIEXPORT void JNICALL Java_com_mdorier_jni_HelloWorldJNI_sayHello(
     JNIEnv * /* env */,
-    jobject /* obj */)
+    jobject /* obj */ )
 {
     printf( "Hello world\n" );
 }
@@ -77,6 +77,8 @@ extern "C" JNIEXPORT void JNICALL Java_com_mdorier_jni_HelloWorldJNI_createHandl
     JNIEnv * env,
     jobject thisObject )
 {
+    printf( "createHandle was called\n" );
+
     // Create a new object, and store it in this object.
     auto * handle = NewCacheReaderHandle();
     env->SetLongField( thisObject, getPtrFieldId( env, thisObject ), ( jlong )handle );
