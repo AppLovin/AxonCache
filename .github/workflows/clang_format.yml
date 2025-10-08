@@ -19,7 +19,7 @@ jobs:
           set -e
           clang-format --version
           # find all .cpp/.h files and check formatting
-          files=`find . -name '*.cpp' -o -name '*.h' | grep -v fast_float | grep -v xxhash`
+          files=`find . -name '*.cpp' -o -name '*.h' | grep -v fast_float | grep -v xxhash | grep -v utf8`
           for f in $files; do
             diff -u "$f" <(clang-format "$f") || (
               echo "::error file=$f::needs reformatting"

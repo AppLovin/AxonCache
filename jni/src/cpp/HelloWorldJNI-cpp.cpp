@@ -134,7 +134,7 @@ JNIEXPORT void JNICALL Java_com_applovin_jalcache_AlCacheJniWrapper_initialize(
         std::string errorMsg( "init error code: " );
         errorMsg += std::to_string( errorCode );
         env->ThrowNew( env->FindClass( "java/lang/Exception" ), errorMsg.c_str() );
-     }
+    }
 }
 
 JNIEXPORT void JNICALL Java_com_applovin_jalcache_AlCacheJniWrapper_nonIdempotentCleanup( JNIEnv * env, jobject thisObject )
@@ -360,7 +360,7 @@ JNIEXPORT jstring JNICALL Java_com_applovin_jalcache_AlCacheJniWrapper_getKeyTyp
     auto javaStr = convertToUtf16( env, val, size );
     if ( val != nullptr )
     {
-         free( val );
+        free( val );
     }
     return javaStr;
 }
