@@ -47,3 +47,7 @@ Testing/
 
 ./bench_cache.*
 ./bench_test_cache.*
+
+# Bazel
+bazel-*
+.bazel/
