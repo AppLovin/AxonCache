@@ -6,6 +6,7 @@ option(AL_WITH_PERF_TESTS "Enable benchmark tests" OFF)
 option(USE_CCACHE_BY_DEFAULT "Enable ccache" ON)
 option(ENABLE_TEST_COVERAGE "Enable test coverage" OFF)
 option(TEST_INSTALLED_VERSION "Test the version found by find_package" OFF)
+option(AL_WITH_JNI "Enable JNI build" OFF)
 
 include(CMakeDependentOption)
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
