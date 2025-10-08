@@ -22,7 +22,7 @@ def generate_test_suite(name, test_dirs, exclude_files = []):
     ]
     
     common_deps = [
-        "//:axoncache_lib",  # Updated target name
+        "//:axoncache",  # Updated target name to match BUILD.bazel
         "@doctest//doctest:main",
     ]
 

@@ -4,6 +4,10 @@
 # ---- Modern Dependency Management ----
 common --enable_bzlmod
 
+# ---- Bazel 8.x Compatibility ----
+build --enable_workspace
+build --noincompatible_disallow_empty_glob
+
 # ---- Common C++ Settings ----
 build --cxxopt=-std=c++20
 build --host_cxxopt=-std=c++20
@@ -56,6 +60,35 @@ build:ci --experimental_repository_cache_hardlinks
 test --test_output=errors
 test --test_summary=detailed
 test --test_verbose_timeout_warnings
+
+# ---- Sanitizer Configurations (matches CMake -s flag) ----
+build:asan --copt=-fsanitize=address
+build:asan --copt=-O1
+build:asan --copt=-fno-omit-frame-pointer
+build:asan --linkopt=-fsanitize=address
+
+build:tsan --copt=-fsanitize=thread
+build:tsan --copt=-O1
+build:tsan --copt=-fno-omit-frame-pointer
+build:tsan --linkopt=-fsanitize=thread
+
+build:msan --copt=-fsanitize=memory
+build:msan --copt=-O1
+build:msan --copt=-fno-omit-frame-pointer
+build:msan --linkopt=-fsanitize=memory
+
+build:ubsan --copt=-fsanitize=undefined
+build:ubsan --copt=-O1
+build:ubsan --copt=-fno-omit-frame-pointer
+build:ubsan --linkopt=-fsanitize=undefined
+
+# ---- Coverage Configuration (matches CMake ENABLE_TEST_COVERAGE=ON) ----
+build:coverage --copt=-fprofile-arcs
+build:coverage --copt=-ftest-coverage
+build:coverage --copt=-O0
+build:coverage --copt=-g
+build:coverage --linkopt=-lgcov
+build:coverage --linkopt=--coverage
 
 # ---- Default Configuration ----
 try-import %workspace%/.bazelrc.local
