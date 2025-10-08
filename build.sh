@@ -41,6 +41,7 @@ WITH_OLD_GCC=OFF
 RUN_PERF_TESTS=OFF
 RUN_FUZZ_TESTS=OFF
 BUILD_TOOLS=OFF
+BUILD_JNI=OFF
 BUILD_NUMBER=0
 PROC_COUNT=8
 CLANG_FORMAT=0
@@ -113,6 +114,7 @@ build_project ()
     BUILD_OPTIONS="${BUILD_OPTIONS} -DAL_WITH_TESTS=${RUN_TESTS}"
     BUILD_OPTIONS="${BUILD_OPTIONS} -DAL_WITH_PERF_TESTS=${RUN_PERF_TESTS}"
     BUILD_OPTIONS="${BUILD_OPTIONS} -DAL_WITH_MAIN=${BUILD_TOOLS}"
+    BUILD_OPTIONS="${BUILD_OPTIONS} -DAL_WITH_JNI=${BUILD_JNI}"
     BUILD_OPTIONS="${BUILD_OPTIONS} -DCMAKE_UNITY_BUILD=${UNITY_BUILD}"
     BUILD_OPTIONS="${BUILD_OPTIONS} -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=${LTO_BUILD}"
     BUILD_OPTIONS="${BUILD_OPTIONS} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}"
@@ -184,7 +186,7 @@ run_clang_format ()
     return 0
 }
 
-while getopts "::h ::v ::t ::e ::c ::w ::d ::f ::z ::j :g: :s: :b: :p: ::x ::u ::U ::l ::C ::P ::n ::S ::F ::i" opt; do
+while getopts "::h ::v ::t ::e ::c ::w ::d ::f ::z ::j :g: :s: :b: :p: ::x ::j ::u ::U ::l ::C ::P ::n ::S ::F ::i" opt; do
   case $opt in
     p)
       PROC_COUNT="$OPTARG"
@@ -228,6 +230,9 @@ while getopts "::h ::v ::t ::e ::c ::w ::d ::f ::z ::j :g: :s: :b: :p: ::x ::u :
       ;;
     x)
       BUILD_TOOLS=ON
+      ;;
+    j)
+      BUILD_JNI=ON
       ;;
     c)
       rm -rf ${BUILD_DIR}
