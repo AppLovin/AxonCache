@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 public class CacheReader implements AutoCloseable {
     
     static {
-        System.loadLibrary("axoncache_jni");
+        NativeLibraryLoader.load();
     }
 
     private long nativeHandle;
