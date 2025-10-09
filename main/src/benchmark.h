@@ -49,11 +49,12 @@ void writeFile( const std::string & filename, const std::string & content )
 
 template<class T>
 auto benchModeHashTable(
+    std::string label,
     int numKeys,
     std::vector<std::string> keys,
     std::vector<std::string> vals ) -> void
 {
-    AL_LOG_INFO( "Bench mode unordered map" );
+    AL_LOG_INFO( "Using " + label );
     using clock = std::chrono::steady_clock;
 
     T cache;
@@ -83,7 +84,7 @@ auto benchModeHashTable(
         std::stringstream oss;
         oss << "Inserted " << ssKeys.str()
             << " keys in " << std::fixed << std::setprecision( 3 ) << elapsed
-            << "s (" << ssQps.str() << " keys/sec)\n";
+            << "s (" << ssQps.str() << " keys/sec)";
         AL_LOG_INFO( oss.str() );
     }
 
@@ -128,7 +129,7 @@ auto benchModeAxonCache(
     std::vector<std::string> keys,
     std::vector<std::string> vals ) -> void
 {
-    AL_LOG_INFO( "Bench mode axoncache" );
+    AL_LOG_INFO( "Using AxonCache" );
     using clock = std::chrono::steady_clock;
 
     const std::string dataPath = ".";

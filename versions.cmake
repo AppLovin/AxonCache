@@ -8,20 +8,10 @@ function(set_if_not_defined var_name var_value)
     endif()
 endfunction()
 
-# AppLovin Libraries
-set_if_not_defined(alcommons_version "v4897")
-
-# Third party libraries
-set(xxhash_version "v0.8.1")
-
-# test libraries
+# Versions of libraries used by unittests and cli, not by the C++ AxonCache lib itself.
+# Those versions will be used by cmake when it does fetch dependencies through CPM (CMake Package Manager).
 set(cxxopts_version "3.0.0")
 set(doctest_version "2.4.12")
-set(cmake_format_version "1.7.3")
 set(package_project_version "1.9.0")
 set(benchmark_version "1.6.1")
 set(spdlog_version "1.13.0")
-
-# static build
-set(unwind_version "v1.5")
-set(mimalloc_version "v2.0.5")
