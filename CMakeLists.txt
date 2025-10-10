@@ -52,4 +52,8 @@ if(PROJECT_IS_TOP_LEVEL)
   if(AL_WITH_PERF_TESTS)
     add_subdirectory(benchmark)
   endif()
+
+  if(AL_WITH_JAVA)
+    add_subdirectory(java)
+  endif()
 endif()

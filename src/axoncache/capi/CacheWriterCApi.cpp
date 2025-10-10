@@ -536,5 +536,15 @@ int8_t CacheWriter_FinishAddDuplicateValues( CacheWriterHandle * handle )
     return handle->src->finishAddDuplicateValues();
 }
 
+void CacheWriter_SetCacheType( CacheWriterHandle * handle, int cacheType )
+{
+    handle->src->setCacheType( cacheType );
+}
+
+void CacheWriter_SetOffsetBits( CacheWriterHandle * handle, int offsetBits )
+{
+    handle->src->setOffsetBits( offsetBits );
+}
+
 // NOLINTEND(cppcoreguidelines-pro-type-cstyle-cast)
 // NOLINTEND(modernize-use-trailing-return-type)

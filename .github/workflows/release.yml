@@ -1,0 +1,152 @@
+name: Release AxonCache Java
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-natives:
+    strategy:
+      matrix:
+        include:
+          - os: macos-14
+            platform: osx-aarch64
+            cmake-arch: arm64
+          - os: ubuntu-22.04
+            platform: linux-x86_64
+            cmake-arch: x86_64
+          - os: ubuntu-22.04
+            platform: linux-aarch64
+            cmake-arch: aarch64
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build
+      
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install cmake ninja
+      
+      - name: Install cross-compilation tools (Linux ARM64)
+        if: matrix.platform == 'linux-aarch64'
+        run: |
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+      
+      - name: Build native library
+        run: |
+          mkdir -p build
+          cd build
+          
+          if [ "${{ matrix.platform }}" = "linux-aarch64" ]; then
+            cmake .. -GNinja \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DAL_WITH_JAVA=ON \
+              -DCMAKE_SYSTEM_NAME=Linux \
+              -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
+              -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
+              -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++
+          else
+            cmake .. -GNinja \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DAL_WITH_JAVA=ON
+          fi
+          
+          cmake --build . --target axoncache_jni
+      
+      - name: Prepare artifact
+        run: |
+          mkdir -p artifacts/${{ matrix.platform }}
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            cp build/src/libaxoncache.dylib artifacts/${{ matrix.platform }}/
+            cp build/java/libaxoncache_jni.dylib artifacts/${{ matrix.platform }}/
+          else
+            cp build/src/libaxoncache.so artifacts/${{ matrix.platform }}/
+            cp build/java/libaxoncache_jni.so artifacts/${{ matrix.platform }}/
+          fi
+      
+      - name: Upload native library
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.platform }}
+          path: artifacts/${{ matrix.platform }}/*
+
+  package-jar:
+    needs: build-natives
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      
+      - name: Download all native libraries
+        uses: actions/download-artifact@v4
+        with:
+          path: natives-download
+      
+      - name: Organize native libraries
+        run: |
+          mkdir -p java/src/main/resources/natives/osx-aarch64
+          mkdir -p java/src/main/resources/natives/linux-x86_64
+          mkdir -p java/src/main/resources/natives/linux-aarch64
+          
+          cp natives-download/native-osx-aarch64/* java/src/main/resources/natives/osx-aarch64/
+          cp natives-download/native-linux-x86_64/* java/src/main/resources/natives/linux-x86_64/
+          cp natives-download/native-linux-aarch64/* java/src/main/resources/natives/linux-aarch64/
+      
+      - name: Build JAR with Maven
+        run: |
+          cd java
+          mvn clean package
+      
+      - name: Upload JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: axoncache-java-jar
+          path: java/target/axoncache-java-*.jar
+
+  create-release:
+    needs: package-jar
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: axoncache-java-jar
+          path: release-artifacts
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release-artifacts/*.jar
+          body: |
+            AxonCache Java Bindings Release ${{ github.ref_name }}
+            
+            Supported Platforms:
+            - macOS ARM64 (Apple Silicon)
+            - Linux x86_64 (AMD64)
+            - Linux ARM64 (aarch64)
+            
+            Usage:
+            Add the JAR to your project classpath. Native libraries will be loaded automatically.
+          draft: false
+          prerelease: false
+
