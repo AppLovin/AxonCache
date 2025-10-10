@@ -54,10 +54,9 @@ target_include_directories(axoncache_jni
 
 target_link_libraries(axoncache_jni
     PRIVATE
-        axoncache               # Main AxonCache library
-        axoncache_java-native   # Generated JNI headers
-        ${JNI_LIBRARIES}
-        utf8cpp                 # UTF-8/UTF-16 conversion
+        axoncache
+        axoncache_java-native
+        utf8cpp
 )
 
 set_target_properties(axoncache_jni PROPERTIES
