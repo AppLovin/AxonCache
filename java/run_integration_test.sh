@@ -12,7 +12,7 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 BUILD_DIR="$PROJECT_ROOT/build"
 
 # Check if build exists
-if [ ! -f "$BUILD_DIR/java/axoncache-2.5.0.jar" ]; then
+if [ ! -f "$BUILD_DIR/java/axoncache.jar" ]; then
     echo "Error: JAR file not found. Please run build_and_run.sh first."
     exit 1
 fi
@@ -32,6 +32,6 @@ fi
 # Run the integrated example (write + read)
 echo "Running integrated write/read test..."
 cd "$SCRIPT_DIR/examples"
-java -cp "$BUILD_DIR/java/CacheExample.jar:$BUILD_DIR/java/axoncache-2.5.0.jar" \
+java -cp "$BUILD_DIR/java/CacheExample.jar:$BUILD_DIR/java/axoncache.jar" \
      -Djava.library.path="$BUILD_DIR/java:$BUILD_DIR/src" \
      CacheExample
