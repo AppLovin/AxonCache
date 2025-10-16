@@ -54,7 +54,7 @@ The benchmark is inserting 1,000,000 small keys (key_%i, val_%i), then randomly 
 | [CDB](https://github.com/bbayles/python-pure-cdb) Pure Python module         | Python  | 1,033.6 ns ± 19.2 ns         | 967,702.7 ± 17,931.6         | 1,135.5 ns ± 55.4 ns         | 882,103.3 ± 43,045.7         |
 | [LevelDB](https://github.com/syndtr/goleveldb) Pure Go version               | Golang  | 2,500.2 ns ± 131.1 ns        | 400,692.7 ± 20,518.9         | 888.7 ns ± 124.0 ns          | 1,139,202.7 ± 150,820.3      |
 
-## Google Arm-based Axion CPUs, 2023 (Linux)
+## Google Arm-based Axion CPUs, 4th generation, 2024 (Linux)
 
 | Implementation                                                               | Runtime | Lookups Lat (ns ± sd)        | Lookups QPS (avg ± sd)       | Inserts Lat (ns ± sd)        | Inserts QPS (avg ± sd)       |
 |------------------------------------------------------------------------------|---------|------------------------------|------------------------------|------------------------------|------------------------------|
