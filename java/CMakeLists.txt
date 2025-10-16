@@ -34,6 +34,7 @@ add_jar(axoncache_java
     SOURCES
         src/main/java/com/applovin/axoncache/CacheReader.java
         src/main/java/com/applovin/axoncache/CacheWriter.java
+        src/main/java/com/applovin/axoncache/NativeLibraryLoader.java
     GENERATE_NATIVE_HEADERS axoncache_java-native
     OUTPUT_NAME axoncache
 )
@@ -53,10 +54,9 @@ target_include_directories(axoncache_jni
 
 target_link_libraries(axoncache_jni
     PRIVATE
-        axoncache               # Main AxonCache library
-        axoncache_java-native   # Generated JNI headers
-        ${JNI_LIBRARIES}
-        utf8cpp                 # UTF-8/UTF-16 conversion
+        axoncache
+        axoncache_java-native
+        utf8cpp
 )
 
 set_target_properties(axoncache_jni PROPERTIES
@@ -64,6 +64,28 @@ set_target_properties(axoncache_jni PROPERTIES
     CXX_STANDARD_REQUIRED ON
     POSITION_INDEPENDENT_CODE ON
     UNITY_BUILD OFF  # Disable unity build due to JNI helper functions
+)
+
+# Detect platform and copy native library to resources directory for Maven
+if(APPLE)
+    set(PLATFORM_DIR "osx-aarch64")
+    set(LIB_SUFFIX "dylib")
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+    set(PLATFORM_DIR "linux-aarch64")
+    set(LIB_SUFFIX "so")
+else()
+    set(PLATFORM_DIR "linux-x86_64")
+    set(LIB_SUFFIX "so")
+endif()
+
+add_custom_command(TARGET axoncache_jni POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+        $<TARGET_FILE:axoncache>
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/main/resources/natives/${PLATFORM_DIR}/libaxoncache.${LIB_SUFFIX}
+    COMMAND ${CMAKE_COMMAND} -E copy
+        $<TARGET_FILE:axoncache_jni>
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/main/resources/natives/${PLATFORM_DIR}/libaxoncache_jni.${LIB_SUFFIX}
+    COMMENT "Copying core and JNI native libraries to Maven resources directory"
 )
 
 # Optional: Build examples

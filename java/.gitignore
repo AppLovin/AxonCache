@@ -1,33 +1,9 @@
-# Compiled class files
-*.class
-
-# Build directories
-classes/
-target/
-
-# JAR files (except dependency jars)
 *.jar
-!*-deps.jar
-
-# CMake generated files
-CMakeFiles/
-cmake_install.cmake
-Makefile
-
-# JNI generated headers
-jni_headers/
-
-# Cache output
+build/
+target/
 cache_output/
-
-# IDE specific
-.idea/
-.vscode/
-*.iml
-.classpath
-.project
-.settings/
-
-# OS specific
-.DS_Store
-Thumbs.db
+src/main/resources/natives/*/libaxoncache.so
+src/main/resources/natives/*/libaxoncache.dylib
+src/main/resources/natives/*/libaxoncache_jni.so
+src/main/resources/natives/*/libaxoncache_jni.dylib
+cache_output/
