@@ -1,0 +1,28 @@
+name: Java bindings integration test
+
+on:
+  pull_request:
+    branches: [ master ]   # CI on PRs targeting master
+  push:
+    branches: [ master ]   # CI on merge commits to master only
+
+jobs:
+  unittest:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'corretto' # See 'Supported distributions' for available options
+          java-version: '17'
+
+      - uses: threeal/cmake-action@v2.1.0
+        with:
+          generator: Ninja
+          options: |
+            AL_WITH_MAIN=OFF
+            AL_WITH_TESTS=OFF
+            AL_WITH_JAVA=ON
+
+      - run: sh java/run_example.sh
