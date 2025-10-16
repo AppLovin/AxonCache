@@ -38,7 +38,7 @@ python3 axoncache/bench.py
 
 The benchmark is inserting 1,000,000 small keys (key_%i, val_%i), then randomly looking them up.
 
-## Apple M4 Max laptop (macOS)
+### Apple M4 Max laptop (macOS)
 
 | Implementation                                                               | Runtime | Lookups Lat (ns ± sd)        | Lookups QPS (avg ± sd)       | Inserts Lat (ns ± sd)        | Inserts QPS (avg ± sd)       |
 |------------------------------------------------------------------------------|---------|------------------------------|------------------------------|------------------------------|------------------------------|
@@ -54,7 +54,7 @@ The benchmark is inserting 1,000,000 small keys (key_%i, val_%i), then randomly 
 | [CDB](https://github.com/bbayles/python-pure-cdb) Pure Python module         | Python  | 1,033.6 ns ± 19.2 ns         | 967,702.7 ± 17,931.6         | 1,135.5 ns ± 55.4 ns         | 882,103.3 ± 43,045.7         |
 | [LevelDB](https://github.com/syndtr/goleveldb) Pure Go version               | Golang  | 2,500.2 ns ± 131.1 ns        | 400,692.7 ± 20,518.9         | 888.7 ns ± 124.0 ns          | 1,139,202.7 ± 150,820.3      |
 
-## Google Arm-based Axion CPUs, 4th generation, 2024 (Linux)
+### Google Arm-based Axion CPUs, 4th generation, 2024 (Linux)
 
 | Implementation                                                               | Runtime | Lookups Lat (ns ± sd)        | Lookups QPS (avg ± sd)       | Inserts Lat (ns ± sd)        | Inserts QPS (avg ± sd)       |
 |------------------------------------------------------------------------------|---------|------------------------------|------------------------------|------------------------------|------------------------------|
@@ -70,7 +70,7 @@ The benchmark is inserting 1,000,000 small keys (key_%i, val_%i), then randomly 
 | [CDB](https://github.com/bbayles/python-pure-cdb) Pure Python module         | Python  | 2,258.9 ns ± 18.3 ns         | 442,703.3 ± 3,576.9          | 2,471.7 ns ± 11.1 ns         | 404,588.7 ± 1,810.2          |
 | [LevelDB](https://github.com/syndtr/goleveldb) Pure Go version               | Golang  | 4,603.3 ns ± 46.0 ns         | 217,251.3 ± 2,181.5          | 2,060.2 ns ± 125.5 ns        | 486,623.7 ± 30,118.3         |
 
-## AMD EPYC 9B14, 2023 (Linux) 
+### AMD EPYC 9B14, 2023 (Linux) 
 
 | Implementation                                                               | Runtime | Lookups Lat (ns ± sd)        | Lookups QPS (avg ± sd)       | Inserts Lat (ns ± sd)        | Inserts QPS (avg ± sd)       |
 |------------------------------------------------------------------------------|---------|------------------------------|------------------------------|------------------------------|------------------------------|
@@ -86,7 +86,7 @@ The benchmark is inserting 1,000,000 small keys (key_%i, val_%i), then randomly 
 | [CDB](https://github.com/bbayles/python-pure-cdb) Pure Python module         | Python  | 2,334.4 ns ± 55.5 ns         | 428,544.7 ± 10,329.8         | 3,354.3 ns ± 109.9 ns        | 298,341.0 ± 9,966.3          |
 | [LevelDB](https://github.com/syndtr/goleveldb) Pure Go version               | Golang  | 5,910.8 ns ± 520.9 ns        | 170,020.0 ± 14,258.3         | 2,627.0 ns ± 497.5 ns        | 389,164.7 ± 67,401.6         |
 
-## AMD EPYC 7B12 (Linux)
+### AMD EPYC 7B12 (Linux)
 
 | Implementation                                                               | Runtime | Lookups Lat (ns ± sd)        | Lookups QPS (avg ± sd)       | Inserts Lat (ns ± sd)        | Inserts QPS (avg ± sd)       |
 |------------------------------------------------------------------------------|---------|------------------------------|------------------------------|------------------------------|------------------------------|
@@ -108,6 +108,15 @@ Few notes.
 2. std::unordered_map are fast for insertion but not as good for lookup. It is a known issue that they are not the fastest, Abseil flat_map is much faster.
 3. Pure implementation of the CDB algorithm does not perform well in Python, even if using mmap, showing the overhead of this language.
 4. Linux performance are not great, but it can be linked to the glibc malloc which is lagging behind other allocators, and also this AMD processor is much older than the recent Apple Max processor. Insertion speed in abseil flat_map is 7x slower.
+
+### C Api Axon Cache only
+
+| Processor    | Lookups                      | QPS                          |  Speed ratio versus N2D processor type  |
+|--------------|------------------------------|------------------------------|-----------------------------------------|
+| Apple Max    | 71.7 ns ± 8.9 ns             | 14,088,554.7 ± 1,638,238.6   |  5.89x                                  |
+| Google Axion | 217.6 ns ± 7.1 ns            | 4,599,040.3 ± 151,279.1      |  1.94x                                  |
+| C3D          | 262.9 ns ± 15.7 ns           | 3,812,584.3 ± 227,097.6      |  1.6x                                   |
+| N2D          | 422.8 ns ± 15.5 ns           | 2,367,359.3 ± 86,098.0       |  1                                      |
 
 ## C++ build steps.
 
