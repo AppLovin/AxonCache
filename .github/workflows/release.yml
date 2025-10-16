@@ -66,10 +66,8 @@ jobs:
         run: |
           mkdir -p artifacts/${{ matrix.platform }}
           if [ "${{ runner.os }}" = "macOS" ]; then
-            cp build/src/libaxoncache.dylib artifacts/${{ matrix.platform }}/
             cp build/java/libaxoncache_jni.dylib artifacts/${{ matrix.platform }}/
           else
-            cp build/src/libaxoncache.so artifacts/${{ matrix.platform }}/
             cp build/java/libaxoncache_jni.so artifacts/${{ matrix.platform }}/
           fi
       
