@@ -16,7 +16,6 @@ public class NativeLibraryLoader {
             tempDir.mkdirs();
             tempDir.deleteOnExit();
             
-            System.load(extract(platform, "libaxoncache" + suffix, tempDir).getAbsolutePath());
             System.load(extract(platform, "libaxoncache_jni" + suffix, tempDir).getAbsolutePath());
             
             loaded = true;
