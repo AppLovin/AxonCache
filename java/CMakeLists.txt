@@ -41,6 +41,7 @@ add_jar(axoncache_java
 
 # Build JNI shared library
 add_library(axoncache_jni SHARED
+    ../AxonCache.cpp
     jni/CacheReaderJNI.cpp
     jni/CacheWriterJNI.cpp
 )
@@ -54,7 +55,6 @@ target_include_directories(axoncache_jni
 
 target_link_libraries(axoncache_jni
     PRIVATE
-        axoncache
         axoncache_java-native
         utf8cpp
 )
@@ -80,12 +80,9 @@ endif()
 
 add_custom_command(TARGET axoncache_jni POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-        $<TARGET_FILE:axoncache>
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/main/resources/natives/${PLATFORM_DIR}/libaxoncache.${LIB_SUFFIX}
-    COMMAND ${CMAKE_COMMAND} -E copy
         $<TARGET_FILE:axoncache_jni>
         ${CMAKE_CURRENT_SOURCE_DIR}/src/main/resources/natives/${PLATFORM_DIR}/libaxoncache_jni.${LIB_SUFFIX}
-    COMMENT "Copying core and JNI native libraries to Maven resources directory"
+    COMMENT "Copying JNI native libraries to Maven resources directory"
 )
 
 # Optional: Build examples
