@@ -25,4 +25,4 @@ jobs:
             AL_WITH_TESTS=OFF
             AL_WITH_JAVA=ON
 
-      - run: sh java/run_integration_test.sh
+      - run: bash java/run_integration_test.sh
