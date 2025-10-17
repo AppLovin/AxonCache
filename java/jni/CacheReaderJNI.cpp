@@ -10,22 +10,15 @@
 using axoncache::jni::convertToUtf8;
 using axoncache::jni::convertToUtf16;
 
-extern "C" {
+extern "C"
+{
 
-/*
- * Class:     com_applovin_axoncache_CacheReader
- * Method:    nativeNewCacheReaderHandle
- */
 JNIEXPORT jlong JNICALL Java_com_applovin_axoncache_CacheReader_nativeNewCacheReaderHandle
   (JNIEnv* env, jobject obj) {
     CacheReaderHandle* handle = NewCacheReaderHandle();
     return reinterpret_cast<jlong>(handle);
 }
 
-/*
- * Class:     com_applovin_axoncache_CacheReader
- * Method:    nativeInitialize
- */
 JNIEXPORT jint JNICALL Java_com_applovin_axoncache_CacheReader_nativeInitialize
   (JNIEnv* env, jobject obj, jlong handle, jstring taskName, jstring destinationFolder, jstring timestamp, jint isPreloadMemoryEnabled) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
@@ -36,30 +29,18 @@ JNIEXPORT jint JNICALL Java_com_applovin_axoncache_CacheReader_nativeInitialize
     return CacheReader_Initialize(readerHandle, taskNameStr.c_str(), destinationFolderStr.c_str(), timestampStr.c_str(), isPreloadMemoryEnabled);
 }
 
-/*
- * Class:     com_applovin_axoncache_CacheReader
- * Method:    nativeFinalize
- */
 JNIEXPORT void JNICALL Java_com_applovin_axoncache_CacheReader_nativeFinalize
   (JNIEnv* env, jobject obj, jlong handle) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
     CacheReader_Finalize(readerHandle);
 }
 
-/*
- * Class:     com_applovin_axoncache_CacheReader
- * Method:    nativeDeleteCppObject
- */
 JNIEXPORT void JNICALL Java_com_applovin_axoncache_CacheReader_nativeDeleteCppObject
   (JNIEnv* env, jobject obj, jlong handle) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
     CacheReader_DeleteCppObject(readerHandle);
 }
 
-/*
- * Class:     com_applovin_axoncache_CacheReader
- * Method:    nativeContainsKey
- */
 JNIEXPORT jboolean JNICALL Java_com_applovin_axoncache_CacheReader_nativeContainsKey
   (JNIEnv* env, jobject obj, jlong handle, jstring key) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
@@ -69,10 +50,6 @@ JNIEXPORT jboolean JNICALL Java_com_applovin_axoncache_CacheReader_nativeContain
     return hasKey != 0;
 }
 
-/*
- * Class:     com_applovin_axoncache_CacheReader
- * Method:    nativeGetKey
- */
 JNIEXPORT jstring JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetKey
   (JNIEnv* env, jobject obj, jlong handle, jstring key) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
@@ -97,10 +74,6 @@ JNIEXPORT jstring JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetKey
     return result;
 }
 
-/*
- * Class:     com_applovin_axoncache_CacheReader
- * Method:    nativeGetLong
- */
 JNIEXPORT jobject JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetLong
   (JNIEnv* env, jobject obj, jlong handle, jstring key) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
@@ -126,10 +99,6 @@ JNIEXPORT jobject JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetLong
     return env->NewObject(longClass, longConstructor, result);
 }
 
-/*
- * Class:     com_applovin_axoncache_CacheReader
- * Method:    nativeGetInteger
- */
 JNIEXPORT jobject JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetInteger
   (JNIEnv* env, jobject obj, jlong handle, jstring key) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
@@ -155,10 +124,6 @@ JNIEXPORT jobject JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetInteg
     return env->NewObject(intClass, intConstructor, result);
 }
 
-/*
- * Class:     com_applovin_axoncache_CacheReader
- * Method:    nativeGetDouble
- */
 JNIEXPORT jobject JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetDouble
   (JNIEnv* env, jobject obj, jlong handle, jstring key) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
@@ -184,10 +149,6 @@ JNIEXPORT jobject JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetDoubl
     return env->NewObject(doubleClass, doubleConstructor, result);
 }
 
-/*
- * Class:     com_applovin_axoncache_CacheReader
- * Method:    nativeGetBool
- */
 JNIEXPORT jobject JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetBool
   (JNIEnv* env, jobject obj, jlong handle, jstring key) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
@@ -213,10 +174,6 @@ JNIEXPORT jobject JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetBool
     return env->NewObject(boolClass, boolConstructor, result != 0);
 }
 
-/*
- * Class:     com_applovin_axoncache_CacheReader
- * Method:    nativeGetVector
- */
 JNIEXPORT jobjectArray JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetVector
   (JNIEnv* env, jobject obj, jlong handle, jstring key) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
@@ -249,10 +206,6 @@ JNIEXPORT jobjectArray JNICALL Java_com_applovin_axoncache_CacheReader_nativeGet
     return nullptr;
 }
 
-/*
- * Class:     com_applovin_axoncache_CacheReader
- * Method:    nativeGetFloatVector
- */
 JNIEXPORT jfloatArray JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetFloatVector
   (JNIEnv* env, jobject obj, jlong handle, jstring key) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
@@ -272,10 +225,6 @@ JNIEXPORT jfloatArray JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetF
     return nullptr;
 }
 
-/*
- * Class:     com_applovin_axoncache_CacheReader
- * Method:    nativeGetVectorKeySize
- */
 JNIEXPORT jint JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetVectorKeySize
   (JNIEnv* env, jobject obj, jlong handle, jstring key) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
@@ -284,10 +233,6 @@ JNIEXPORT jint JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetVectorKe
     return CacheReader_GetVectorKeySize(readerHandle, const_cast<char*>(keyStr.c_str()), keyStr.size());
 }
 
-/*
- * Class:     com_applovin_axoncache_CacheReader
- * Method:    nativeGetVectorKey
- */
 JNIEXPORT jstring JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetVectorKey
   (JNIEnv* env, jobject obj, jlong handle, jstring key, jint index) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
@@ -304,10 +249,6 @@ JNIEXPORT jstring JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetVecto
     return nullptr;
 }
 
-/*
- * Class:     com_applovin_axoncache_CacheReader
- * Method:    nativeGetKeyType
- */
 JNIEXPORT jstring JNICALL Java_com_applovin_axoncache_CacheReader_nativeGetKeyType
   (JNIEnv* env, jobject obj, jlong handle, jstring key) {
     CacheReaderHandle* readerHandle = reinterpret_cast<CacheReaderHandle*>(handle);
