@@ -123,18 +123,6 @@ extern "C" JNIEXPORT jbyte JNICALL Java_com_applovin_axoncache_CacheWriter_nativ
     return CacheWriter_FinishCacheCreation( writerHandle );
 }
 
-extern "C" JNIEXPORT void JNICALL Java_com_applovin_axoncache_CacheWriter_nativeSetCacheType( JNIEnv * env, jobject obj, jlong handle, jint cacheType )
-{
-    CacheWriterHandle * writerHandle = reinterpret_cast<CacheWriterHandle *>( handle );
-    CacheWriter_SetCacheType( writerHandle, cacheType );
-}
-
-extern "C" JNIEXPORT void JNICALL Java_com_applovin_axoncache_CacheWriter_nativeSetOffsetBits( JNIEnv * env, jobject obj, jlong handle, jint offsetBits )
-{
-    CacheWriterHandle * writerHandle = reinterpret_cast<CacheWriterHandle *>( handle );
-    CacheWriter_SetOffsetBits( writerHandle, offsetBits );
-}
-
 extern "C" JNIEXPORT jstring JNICALL Java_com_applovin_axoncache_CacheWriter_nativeGetLastError( JNIEnv * env, jobject obj, jlong handle )
 {
     CacheWriterHandle * writerHandle = reinterpret_cast<CacheWriterHandle *>( handle );
