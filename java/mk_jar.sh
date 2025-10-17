@@ -18,8 +18,10 @@ do
     cp build/java/libaxoncache_jni.* build/java_sandbox/java/src/main/resources/natives/$arch/
 done
 
-# now run maven
-(cd java && mvn clean package)
+OUTPUT_DIR=$PWD/build/java
 
-cp build/java_sandbox/java/target/axoncache-java-1.0.0.jar build/java/axoncache.jar
+# now run maven
+(cd java && \
+    mvn clean package && \
+    cp target/axoncache-java-1.0.0.jar $OUTPUT_DIR/axoncache.jar)
 
