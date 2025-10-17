@@ -4,7 +4,11 @@
 #include <string_view>
 #include <utility>
 #include <axoncache/domain/CacheValue.h>
+#ifdef BAZEL_BUILD
+#include "doctest/doctest.h"
+#else
 #include <doctest/doctest.h>
+#endif
 #include <sstream>
 #include <string>
 #include <vector>
