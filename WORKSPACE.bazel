@@ -3,5 +3,4 @@ workspace(name = "axoncache")
 # Load external dependencies
 load("//bazel:deps.bzl", "axoncache_deps")
 
-# Load minimal external dependencies (no Python/Go, no cpp-commons)
 axoncache_deps()
