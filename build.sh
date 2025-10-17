@@ -27,6 +27,7 @@ where:
 -n  build with ninja
 -S  build with static libs
 -i  run tests and then switch branch and run backward compatibility tests
+-J  build with Java JNI bindings
 "
 
 # Setup default values
@@ -53,6 +54,7 @@ BACKWARD_COMPATIBILITY_TESTS=OFF
 PROD_GIT_REF=master
 VERBOSE_FLAGS=
 FRESH_FLAG=
+BUILD_JAVA=OFF
 
 case `uname -s` in
     Linux)
@@ -113,6 +115,7 @@ build_project ()
     BUILD_OPTIONS="${BUILD_OPTIONS} -DAL_WITH_TESTS=${RUN_TESTS}"
     BUILD_OPTIONS="${BUILD_OPTIONS} -DAL_WITH_PERF_TESTS=${RUN_PERF_TESTS}"
     BUILD_OPTIONS="${BUILD_OPTIONS} -DAL_WITH_MAIN=${BUILD_TOOLS}"
+    BUILD_OPTIONS="${BUILD_OPTIONS} -DAL_WITH_JAVA=${BUILD_JAVA}"
     BUILD_OPTIONS="${BUILD_OPTIONS} -DCMAKE_UNITY_BUILD=${UNITY_BUILD}"
     BUILD_OPTIONS="${BUILD_OPTIONS} -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=${LTO_BUILD}"
     BUILD_OPTIONS="${BUILD_OPTIONS} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}"
@@ -132,6 +135,10 @@ build_project ()
     cmake --build build -j${PROC_COUNT}
     test $RUN_TESTS = ON && {
         env CTEST_PARALLEL_LEVEL=$CTEST_PARALLEL_LEVEL cmake --build build -j${PROC_COUNT} --target test
+    }
+
+    test $BUILD_JAVA = ON && {
+        sh java/mk_jar.sh
     }
 
     return 0
@@ -184,7 +191,7 @@ run_clang_format ()
     return 0
 }
 
-while getopts "::h ::v ::t ::e ::c ::w ::d ::f ::z ::j :g: :s: :b: :p: ::x ::u ::U ::l ::C ::P ::n ::S ::F ::i" opt; do
+while getopts "::h ::v ::t ::e ::c ::w ::d ::f ::z ::j :g: :s: :b: :p: ::x ::u ::U ::l ::C ::P ::n ::S ::F ::i ::J" opt; do
   case $opt in
     p)
       PROC_COUNT="$OPTARG"
@@ -263,6 +270,9 @@ while getopts "::h ::v ::t ::e ::c ::w ::d ::f ::z ::j :g: :s: :b: :p: ::x ::u :
     i)
       RUN_TESTS=ON
       BACKWARD_COMPATIBILITY_TESTS=ON
+      ;;
+    J)
+      BUILD_JAVA=ON
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2

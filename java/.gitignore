@@ -1,0 +1,9 @@
+*.jar
+build/
+target/
+cache_output/
+src/main/resources/natives/*/libaxoncache.so
+src/main/resources/natives/*/libaxoncache.dylib
+src/main/resources/natives/*/libaxoncache_jni.so
+src/main/resources/natives/*/libaxoncache_jni.dylib
+cache_output/

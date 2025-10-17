@@ -43,8 +43,6 @@ extern "C"
     uint64_t CacheWriter_GetMaxCollisions( CacheWriterHandle * handle );
     char * CacheWriter_GetCollisionsCounter( CacheWriterHandle * handle );
     int8_t CacheWriter_FinishCacheCreation( CacheWriterHandle * handle );
-    void CacheWriter_SetCacheType( CacheWriterHandle * handle, int cacheType );
-    void CacheWriter_SetOffsetBits( CacheWriterHandle * handle, int offsetBits );
     char * CacheWriter_GetLastError( CacheWriterHandle * handle );
 
 #ifdef __cplusplus
