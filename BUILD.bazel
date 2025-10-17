@@ -1,6 +1,4 @@
 # AxonCache Bazel Build
-# Core library, CLI, and tests - no Python/Go components
-# Based on developer feedback: remove Python/Go but keep necessary external deps
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_binary", "cc_test")
 load("//bazel:test_utils.bzl", "generate_test_suite")
