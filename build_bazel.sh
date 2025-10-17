@@ -164,8 +164,8 @@ build_project_bazel ()
     fi
     
     # Build the main library
-    echo "Building //:axoncache_lib..."
-    $BAZEL_BIN build $BAZEL_ARGS //:axoncache_lib
+    echo "Building //:axoncache..."
+    $BAZEL_BIN build $BAZEL_ARGS //:axoncache
     
     # Build CLI if requested
     if [[ $BUILD_TOOLS == "ON" ]]; then
@@ -173,9 +173,6 @@ build_project_bazel ()
         $BAZEL_BIN build $BAZEL_ARGS //:axoncache_cli
     fi
     
-    # Build Python module
-    echo "Building Python module..."
-    $BAZEL_BIN build $BAZEL_ARGS //:axoncache
     
     # Run tests if requested
     if [[ $RUN_TESTS == "ON" || $ENABLE_TESTING == "ON" ]]; then
