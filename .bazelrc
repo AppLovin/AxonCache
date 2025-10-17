@@ -1,5 +1,4 @@
 # AxonCache Bazel Configuration  
-# Based on Cpp-Commons proven patterns
 
 # ---- Modern Dependency Management ----
 common --enable_bzlmod
