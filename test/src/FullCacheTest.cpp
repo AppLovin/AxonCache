@@ -442,7 +442,7 @@ TEST_CASE( "GenerateCacheFromFileAndVerify" )
 {
     std::cout << "Current path = " << std::filesystem::current_path().string() << " \n";
 #ifdef BAZEL_BUILD
-    const std::string inputFolder = "test/data";  // Bazel makes test data available directly
+    const std::string inputFolder = "test/data"; // Bazel makes test data available directly
 #else
     const std::string inputFolder = axoncache::test_utils::resolveResourcePath( "../../test/data", __FILE__ );
 #endif
@@ -477,7 +477,7 @@ TEST_CASE( "GenerateCacheFromFileAndVerify" )
 TEST_CASE( "LoadCacheFromTmpAndVerify" )
 {
 #ifdef BAZEL_BUILD
-    const std::string inputFolder = "test/data";  // Bazel makes test data available directly
+    const std::string inputFolder = "test/data"; // Bazel makes test data available directly
 #else
     const std::string inputFolder = axoncache::test_utils::resolveResourcePath( "../../test/data", __FILE__ );
 #endif

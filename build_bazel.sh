@@ -408,3 +408,4 @@ if [[ $CLANG_FORMAT == 1 ]]
 then
     run_clang_format
 fi
+
