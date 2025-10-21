@@ -94,9 +94,15 @@ if(BUILD_JAVA_EXAMPLES)
         INCLUDE_JARS axoncache_java
         OUTPUT_NAME CacheExample
     )
+
+    add_jar(CacheBenchmark
+        SOURCES benchmark/CacheBenchmark.java
+        INCLUDE_JARS axoncache_java
+        OUTPUT_NAME CacheBenchmark
+    )
     
     add_custom_target(java_examples ALL
-        DEPENDS CacheExample
+      DEPENDS CacheExample CacheBenchmark
     )
 endif()
 
