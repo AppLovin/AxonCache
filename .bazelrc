@@ -1,21 +1,42 @@
-# AxonCache Bazel Configuration  
+# AxonCache Bazel Configuration
+#
+# This configuration file defines build settings for AxonCache across different environments.
+# It provides optimized configurations for local development, CI builds, and release builds.
+#
+# Key Features:
+# - Bazel 8.0.1 LTS compatibility with bzlmod support
+# - Multi-platform support (macOS, Linux)
+# - Performance-optimized build configurations
+# - Comprehensive warning and error reporting
+# - Sanitizer support for debugging
 
 # ---- Modern Dependency Management ----
+# Enable bzlmod for modern, reproducible dependency management
+# This is the future of Bazel dependency management, replacing WORKSPACE files
 common --enable_bzlmod
 
-# ---- Bazel 8.x Compatibility ----
+# ---- Bazel 8.x LTS Compatibility ----
+# Enable WORKSPACE support for legacy dependencies during migration period
+# WORKSPACE will be removed in Bazel 9 (late 2025), providing migration time
 build --enable_workspace
+# Allow empty globs in external dependencies that haven't been updated yet
 build --noincompatible_disallow_empty_glob
 
 # ---- Common C++ Settings ----
+# Use C++20 standard for modern language features and performance improvements
+# Applied to both target and host builds for consistency
 build --cxxopt=-std=c++20
 build --host_cxxopt=-std=c++20
 
-# ---- Analysis Cache Performance ----
+# ---- Build Performance Optimizations ----
+# Use hardlinks for repository cache to reduce disk usage and improve performance
 build --experimental_repository_cache_hardlinks
+# Retain test configuration across testonly builds to avoid redundant analysis
 build --experimental_retain_test_configuration_across_testonly
 
 # ---- Local Development Configuration ----
+# Optimized for developer productivity with fast incremental builds and debugging support
+# Usage: bazel build --config=local //...
 build:local --compilation_mode=dbg
 build:local --copt=-g3
 build:local --copt=-ggdb
@@ -36,6 +57,8 @@ build:local --verbose_failures
 build:local --show_timestamps
 
 # ---- Release Configuration ----
+# Optimized for production deployment with maximum performance and minimal binary size
+# Usage: bazel build --config=release //...
 build:release --compilation_mode=opt
 build:release --copt=-fno-strict-aliasing
 build:release --copt=-DNDEBUG
@@ -47,15 +70,19 @@ build:release --strip=always
 # Platform-specific settings (linkopts, copts) are automatically 
 # handled in BUILD.bazel via select() statements based on @platforms//os
 
-# ---- CI Configuration ----
+# ---- Continuous Integration Configuration ----
+# Optimized for CI environments with comprehensive error reporting and caching
+# Usage: bazel build --config=ci //... (used in GitHub Actions)
 build:ci --config=release
-# CI automatically detects platform
+# CI automatically detects platform (Linux in GitHub Actions, configurable in Argo)
 build:ci --verbose_failures
 build:ci --show_timestamps
 build:ci --announce_rc
 build:ci --experimental_repository_cache_hardlinks
 
 # ---- Test Configuration ----
+# Comprehensive test execution settings for reliable CI and local testing
+# Provides detailed output and proper resource management for test execution
 test --test_output=errors
 test --test_summary=detailed
 test --test_verbose_timeout_warnings

@@ -1,6 +1,25 @@
+# AxonCache Workspace Configuration
+#
+# This WORKSPACE file defines the root workspace for AxonCache and loads external dependencies.
+# It serves as a compatibility layer during the migration to bzlmod (MODULE.bazel).
+#
+# Migration Status:
+# - Primary dependency management: MODULE.bazel (bzlmod)
+# - Legacy support: WORKSPACE.bazel (for dependencies not yet in BCR)
+# - Future: WORKSPACE will be removed when all dependencies support bzlmod
+#
+# External Dependencies:
+# - Managed via bazel/deps.bzl for centralized dependency configuration
+# - Includes C++ libraries: doctest, spdlog, cxxopts, abseil-cpp
+# - All dependencies are pinned to specific versions for reproducible builds
+
 workspace(name = "axoncache")
 
-# Load external dependencies
+# Load External Dependencies
+# Centralized dependency management through bazel/deps.bzl
+# This approach allows easy dependency updates and version management
 load("//bazel:deps.bzl", "axoncache_deps")
 
+# Initialize all external dependencies
+# This function call loads and configures all third-party libraries
 axoncache_deps()
