@@ -249,10 +249,6 @@ public class CacheBenchmark {
 
             long start = System.nanoTime();
 
-            List<String> randomizedKeys = Arrays.asList(keys);
-            Collections.shuffle(randomizedKeys);
-
-            
             // Shuffle the array in place (Fisher–Yates algorithm)
             Random rand = new Random(); // or new Random(42) for reproducibility
             for (int i = maxKeys - 1; i > 0; i--) {
