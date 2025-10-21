@@ -30,7 +30,7 @@ elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
 fi
 
 # Run the integrated example (write + read)
-echo "Running integrated write/read test..."
+echo "Running benchmark...\n"
 cd "$SCRIPT_DIR/examples"
 java -cp "$BUILD_DIR/java/CacheBenchmark.jar:$BUILD_DIR/java/axoncache.jar" \
      -Djava.library.path="$BUILD_DIR/java:$BUILD_DIR/src" \

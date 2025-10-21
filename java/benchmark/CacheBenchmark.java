@@ -40,7 +40,7 @@ public class CacheBenchmark {
     }
 
     private static void benchAxonCache(int maxKeys, String[] keys, String[] vals) {
-        System.out.println("=== AxonCache Benchmark ===");
+        System.out.println("Using AxonCache");
         
         // Setup test environment
         setupTestDirectory();
@@ -54,10 +54,11 @@ public class CacheBenchmark {
         }
         
         lookupAllKeys(timestamp, maxKeys, keys);
+        System.out.println("");
     }
 
     private static void benchJavaMap(int maxKeys, String[] keys, String[] vals) {
-        System.out.println("=== Java Map Benchmark ===");
+        System.out.println("Using HashMap");
         
         // Declare and create the HashMap
         Map<String, String> map = new HashMap<>();
@@ -110,6 +111,8 @@ public class CacheBenchmark {
             elapsed,
             nf.format((long) qps)
         );
+
+        System.out.println("");
     }
     
     private static void setupTestDirectory() {

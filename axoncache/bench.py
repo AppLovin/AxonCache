@@ -18,7 +18,7 @@ import random
 
 import axoncache
 import lmdb
-import cdblib
+import cdblib  # pure-cdb
 import humanize
 
 

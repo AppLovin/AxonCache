@@ -68,7 +68,7 @@ RAW_TO_PRETTY = {
     (
         "C++",
         "Unordered map",
-    ): "[C++ unordered_map](https://cppreference.net/cpp/container/unordered_map.html)",
+    ): "[unordered_map](https://cppreference.net/cpp/container/unordered_map.html)",
     (
         "C++",
         "Abseil flat map",
@@ -97,6 +97,14 @@ RAW_TO_PRETTY = {
         "Python",
         "Python CDB",
     ): "[CDB](https://github.com/bbayles/python-pure-cdb) Pure Python module",
+    (
+        "Java",
+        "HashMap",
+    ): "[HashMap](https://www.baeldung.com/java-hashmap) Java HashMap",
+    (
+        "Java",
+        "AxonCache",
+    ): "[AxonCache](https://github.com/AppLovin/AxonCache) Java",
 }
 
 # ---------- Main ----------
@@ -104,14 +112,16 @@ if __name__ == "__main__":
     cpp_cmd = "./build/main/axoncache_cli --bench"
     go_cmd = "go run cmd/benchmark.go cmd/kv_scanner.go cmd/main.go cmd/progress.go benchmark"
     python_cmd = "python3 axoncache/bench.py"
+    java_cmd = "bash java/run_benchmark.sh"
 
     cmds = [
         (cpp_cmd, "C++"),
         (go_cmd, "Golang"),
         (python_cmd, "Python"),
+        (java_cmd, "Java"),
     ]
 
-    runs = 3
+    runs = 1
 
     # aggregates[pretty_label] = lists + runtime + first-seen execution order
     aggregates = defaultdict(
