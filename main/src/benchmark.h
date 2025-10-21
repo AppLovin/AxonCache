@@ -137,8 +137,8 @@ auto benchModeAxonCache(
 
     std::ostringstream oss;
     oss << "ccache.destination_folder=" << dataPath << "\n";
-    oss << "ccache.type=5" << dataPath << "\n";
-    oss << "ccache.offset.bits=28" << dataPath << "\n";
+    oss << "ccache.type=5" << "\n";
+    oss << "ccache.offset.bits=28" << "\n";
     writeFile( settingsPath, oss.str() );
 
     {
