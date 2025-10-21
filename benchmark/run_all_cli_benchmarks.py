@@ -135,16 +135,22 @@ if __name__ == "__main__":
 
     order_counter = 0  # increases in the exact order rows are parsed/executed
 
+    total_iterations = len(RAW_TO_PRETTY) * runs
+    idx = 1
+
     # Collect
     for _ in range(runs):
         for cmd, runtime in cmds:
             for raw_label, ins_qps, look_qps, rt in run_and_parse_output_from_bench_cmd(
                 cmd, runtime
             ):
+                print("Step %d out of %d" % (idx, total_iterations))
+                idx += 1
+
                 pretty = RAW_TO_PRETTY.get((rt, raw_label))
                 if not pretty:
                     # Unmapped: skip (or print a warning if you prefer)
-                    # print(f"Unmapped label seen: ({rt}, {raw_label})")
+                    print(f"Unmapped label seen: ({rt}, {raw_label})")
                     continue
                 a = aggregates[pretty]
                 a["runtime"] = rt
