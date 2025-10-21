@@ -482,7 +482,7 @@ auto createMode( axoncache::SharedSettingsProvider * settings, const cxxopts::Pa
     auto fileName = result["create"].as<std::string>();
     auto cacheName = result["name"].as<std::string>();
     auto outputDir = result["output_dir"].as<std::string>();
-    auto quiet = result["quiet"].as<bool>();
+    [[maybe_unused]] auto quiet = result["quiet"].as<bool>();
     if ( cacheName.empty() || fileName.empty() || outputDir.empty() )
     {
         std::cerr << "Some parameters missing. Example: --create sample_input_file.txt  --slot 10000 --name test_cache --output_dir /tmp/\n";

@@ -1,32 +1,10 @@
 # AxonCache Bazel Build Configuration
-# 
-# This file defines the build targets for AxonCache, a high-performance caching library.
-# The build is structured to provide:
-# - Core C++ library with minimal dependencies
-# - Command-line interface (CLI) binary
-# - Comprehensive test suite with automated test discovery
-# - Multi-platform support (macOS, Linux)
-#
-# Architecture:
-# - xxhash_bundled: Isolated C library for hashing (avoids C++ flag conflicts)
-# - axoncache: Main C++ library with all core functionality
-# - axoncache_cli: Command-line interface for cache operations
-# - Automated test targets: Generated from test source files
-#
-# External Dependencies:
-# - cxxopts: Command-line argument parsing
-# - spdlog: High-performance logging
-# - doctest: Lightweight testing framework
-# - abseil-cpp: Google's C++ common libraries
+# Defines build targets for the core library, CLI, and tests
 
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_binary", "cc_test")
 load("//bazel:test_utils.bzl", "generate_test_suite")
 
-# xxhash Hashing Library
-# 
-# Bundled xxhash implementation compiled as pure C to avoid C++ compiler flag conflicts.
-# Uses AXONCACHE_ namespace prefix to prevent symbol collisions with other xxhash users.
-# This is a critical performance component for cache key hashing operations.
+# xxhash library (compiled as C to avoid flag conflicts)
 cc_library(
     name = "xxhash_bundled",
     srcs = ["src/axoncache/common/xxhash.c"],
@@ -41,21 +19,7 @@ cc_library(
     visibility = ["//visibility:private"],
 )
 
-# AxonCache Core Library
-#
-# The main AxonCache library providing high-performance caching functionality.
-# Features:
-# - Zero-copy cache operations where possible
-# - Multi-threaded safe access patterns
-# - Configurable cache backends (memory-mapped files, malloc-based)
-# - Support for various data types and serialization formats
-# - Cross-platform compatibility (macOS, Linux)
-#
-# Build Configuration:
-# - C++20 standard for modern language features
-# - Platform-specific optimizations and linking
-# - Strict aliasing disabled for performance-critical code paths
-# - Comprehensive warning coverage for code quality
+# AxonCache core library
 cc_library(
     name = "axoncache",
     srcs = glob([
@@ -70,25 +34,9 @@ cc_library(
         "include",
         "src",
     ],
-    copts = select({
-        "@platforms//os:macos": [
-            "-std=c++20",
-            "-fno-strict-aliasing",
-            "-Wall",
-            "-Wno-variadic-macros",
-            "-Wno-deprecated-declarations",
-            "-DXXH_NAMESPACE=AXONCACHE_",
-        ],
-        "@platforms//os:linux": [
-            "-std=c++20",
-            "-fno-strict-aliasing", 
-            "-Wall",
-            "-Wno-deprecated-declarations",
-            "-Wno-variadic-macros",
-            "-DXXH_NAMESPACE=AXONCACHE_",
-        ],
-        "//conditions:default": ["-std=c++20"],
-    }),
+    copts = [
+        "-DXXH_NAMESPACE=AXONCACHE_",
+    ],
     linkopts = select({
         "@platforms//os:macos": [
             "-framework CoreFoundation",
@@ -105,21 +53,7 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
-# AxonCache Command-Line Interface
-#
-# Interactive CLI tool for cache operations and debugging.
-# Provides command-line access to all AxonCache functionality including:
-# - Cache creation and manipulation
-# - Data import/export operations
-# - Performance benchmarking utilities
-# - Cache inspection and debugging tools
-#
-# Dependencies:
-# - cxxopts: Modern C++ command-line argument parsing
-# - spdlog: Structured logging with multiple output formats
-# - abseil-cpp: Efficient hash map implementations
-#
-# This target maintains compatibility with the CMake axoncache_cli target.
+# AxonCache CLI application
 cc_binary(
     name = "axoncache_cli",
     srcs = glob([
@@ -127,23 +61,7 @@ cc_binary(
         "main/src/*.h",
     ]),
     includes = ["main/src"],
-    copts = select({
-        "@platforms//os:macos": [
-            "-std=c++20",
-            "-fno-strict-aliasing",
-            "-Wall",
-            "-Wno-variadic-macros",
-            "-Wno-deprecated-declarations",
-        ],
-        "@platforms//os:linux": [
-            "-std=c++20",
-            "-fno-strict-aliasing", 
-            "-Wall",
-            "-Wno-deprecated-declarations",
-            "-Wno-variadic-macros",
-        ],
-        "//conditions:default": ["-std=c++20"],
-    }),
+    # No additional copts needed - using global .bazelrc settings
     deps = [
         ":axoncache",
         "@cxxopts//:cxxopts",
@@ -152,22 +70,9 @@ cc_binary(
     ],
 )
 
-# ===== TEST TARGETS =====
-#
-# Comprehensive test suite for AxonCache functionality.
-# Tests are organized into two categories:
-# 1. Main test binary: Integration tests and core functionality
-# 2. Auto-generated test targets: Unit tests discovered from source files
-#
-# Test Framework: doctest (lightweight, header-only C++ testing framework)
-# Test Data: Located in test/data/ directory, accessible via Bazel data attribute
-# Coverage: All public APIs, edge cases, and performance characteristics
+# Test targets
 
-# Main Integration Test Binary
-#
-# Primary test executable containing integration tests and core functionality validation.
-# Includes test utilities and resource loading capabilities for data-driven tests.
-# This target maintains compatibility with the CMake axoncacheTest target.
+# Main test binary (CMake compatibility)
 cc_test(
     name = "axoncacheTest",
     srcs = [
@@ -186,51 +91,19 @@ cc_test(
         "test/data/example_fast_data.dta",
         "test/data/bench_cache.1758220992251.cache",
     ],
-    copts = select({
-        "@platforms//os:macos": [
-            "-std=c++20",
-            "-fno-strict-aliasing",
-            "-Wall",
-            "-Wno-variadic-macros",
-            "-Wno-deprecated-declarations",
-            "-DBAZEL_BUILD",
-        ],
-        "@platforms//os:linux": [
-            "-std=c++20",
-            "-fno-strict-aliasing",
-            "-Wall",
-            "-Wno-deprecated-declarations",
-            "-Wno-variadic-macros",
-            "-DBAZEL_BUILD",
-        ],
-        "//conditions:default": ["-std=c++20", "-DBAZEL_BUILD"],
-    }),
+    copts = [
+        "-DBAZEL_BUILD",
+    ],
 )
 
-# Automated Unit Test Discovery
-#
-# Automatically generates individual test targets for each test source file.
-# This approach provides:
-# - Parallel test execution for faster CI builds
-# - Granular test failure reporting
-# - Individual test debugging capabilities
-# - Automatic discovery of new test files
-#
-# Configuration:
-# - Scans test/src directory for test source files
-# - Excludes main.cpp (handled by axoncacheTest target above)
-# - Each test file becomes an independent cc_test target
-# - All tests are grouped under the "all_tests" test_suite
+# Auto-generated individual test targets
 generate_test_suite(
     name = "all_tests",
     test_dirs = ["test/src"],
     exclude_files = ["test/src/main.cpp"],
 )
 
-# Convenience Test Alias
-#
-# Provides a simple way to run all tests with a memorable target name.
-# Usage: bazel test //:test_all
+# Test alias
 alias(
     name = "test_all",
     actual = ":all_tests",

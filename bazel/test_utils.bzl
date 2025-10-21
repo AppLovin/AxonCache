@@ -1,65 +1,13 @@
-"""Test Utility Macros for AxonCache
-    
-This module provides automated test target generation for AxonCache.
-It scans specified directories for test source files and creates individual
-cc_test targets for each file, enabling parallel test execution and granular
-failure reporting.
-
-Key Features:
-- Automatic test discovery from source directories
-- Individual test targets for parallel execution
-- Configurable exclusion of specific test files
-- Consistent test configuration across all targets
-- Integration with doctest framework
-
-Usage:
-    generate_test_suite(
-        name = "all_tests",
-        test_dirs = ["test/src"],
-        exclude_files = ["test/src/main.cpp"],
-    )
-"""
+"""Test utility macros for automatic test target generation."""
 
 load("@rules_cc//cc:defs.bzl", "cc_test")
 
 def generate_test_suite(name, test_dirs, exclude_files = []):
-    """Generates individual cc_test targets for all test files in specified directories.
-    
-    This function automatically discovers test source files and creates separate
-    cc_test targets for each file. This approach provides several benefits:
-    - Parallel test execution for faster CI builds
-    - Granular failure reporting (know exactly which test file failed)
-    - Individual test debugging capabilities
-    - Automatic discovery of new test files
+    """Generates individual cc_test targets for all test files in specified directories."""
 
-    Args:
-        name: The name of the test suite that groups all generated tests
-        test_dirs: List of directories to recursively search for test files
-        exclude_files: List of specific test files to skip during generation
-        
-    Generated Targets:
-        - Individual cc_test targets named after each test file
-        - A test_suite target with the specified name containing all tests
-    """
-
-    # Common Test Configuration
-    # Compiler options shared across all generated test targets
-    # These settings ensure consistent behavior and compatibility
-    common_copts = [
-        "-std=c++20",                    # Use C++20 standard for modern features
-        "-fno-strict-aliasing",          # Disable strict aliasing for performance code
-        "-Wall",                         # Enable comprehensive warnings
-        "-Wno-variadic-macros",          # Suppress variadic macro warnings (doctest uses these)
-        "-Wno-deprecated-declarations",  # Suppress deprecated API warnings from dependencies
-        "-DBAZEL_BUILD",                 # Define macro for Bazel-specific code paths
-    ]
-    
-    # Common Dependencies
-    # Dependencies shared across all generated test targets
-    common_deps = [
-        "//:axoncache",              # Main AxonCache library under test
-        "@doctest//doctest:main",    # Doctest framework with main() function
-    ]
+    # Common test configuration
+    common_copts = ["-DBAZEL_BUILD"]
+    common_deps = ["//:axoncache", "@doctest//doctest:main"]
 
     test_patterns = []
     for test_dir in test_dirs:

@@ -1,0 +1,7 @@
+prefix=/usr/local
+includedir=${prefix}/include
+
+Name: cxxopts
+Description: 
+Version: 3.0.0
+Cflags: -I${includedir}

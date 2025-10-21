@@ -1,0 +1,8 @@
+Computing main repo mapping: 
+Loading: 
+Loading: 0 packages loaded
+ERROR: error loading package under directory '': error loading package 'cmake-build/_deps/absl-src/absl/memory': Label '//absl:copts/configure_copts.bzl' is invalid because 'absl' is not a package; perhaps you meant to put the colon here: '//:absl/copts/configure_copts.bzl'?
+INFO: Elapsed time: 0.554s
+INFO: 0 processes.
+ERROR: Build did NOT complete successfully
+ERROR: Couldn't start the build. Unable to run tests

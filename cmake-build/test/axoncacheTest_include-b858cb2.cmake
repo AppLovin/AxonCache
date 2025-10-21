@@ -1,0 +1,5 @@
+if(EXISTS "/Users/erolkeskiner/Playground/bidderserver-bazelification/AxonCache/cmake-build/test/axoncacheTest_tests-b858cb2.cmake")
+  include("/Users/erolkeskiner/Playground/bidderserver-bazelification/AxonCache/cmake-build/test/axoncacheTest_tests-b858cb2.cmake")
+else()
+  add_test(axoncacheTest_NOT_BUILT-b858cb2 axoncacheTest_NOT_BUILT-b858cb2)
+endif()
