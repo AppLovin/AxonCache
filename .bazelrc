@@ -17,7 +17,6 @@ common --enable_bzlmod
 
 # ---- Bazel 8.x LTS Compatibility ----
 # Enable WORKSPACE support for legacy dependencies during migration period
-# WORKSPACE will be removed in Bazel 9 (late 2025), providing migration time
 build --enable_workspace
 # Allow empty globs in external dependencies that haven't been updated yet
 build --noincompatible_disallow_empty_glob
