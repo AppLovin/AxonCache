@@ -137,8 +137,8 @@ auto benchModeAxonCache(
 
     std::ostringstream oss;
     oss << "ccache.destination_folder=" << dataPath << "\n";
-    oss << "ccache.type=5" << dataPath << "\n";
-    oss << "ccache.offset.bits=28" << dataPath << "\n";
+    oss << "ccache.type=5" << "\n";
+    oss << "ccache.offset.bits=28" << "\n";
     writeFile( settingsPath, oss.str() );
 
     {
@@ -151,7 +151,9 @@ auto benchModeAxonCache(
                                                 2 * numKeys );
         if ( errorCode != 0 )
         {
-            throw std::runtime_error( "Error initializing writer" );
+            std::ostringstream oss;
+            oss << "Error initializing writer: " << errorCode;
+            throw std::runtime_error( oss.str().c_str() );
         }
 
         for ( int idx = 0; idx < numKeys; ++idx )
