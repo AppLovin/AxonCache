@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2025 AppLovin. All rights reserved.
 
@@ -7,7 +7,7 @@
 set -e  # Exit on error
 
 # Get the script directory
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 BUILD_DIR="$PROJECT_ROOT/build"
 
@@ -23,11 +23,14 @@ if [ ! -f "$BUILD_DIR/java/CacheExample.jar" ]; then
 fi
 
 # Set library path (JNI library is in build/java/, C++ library in build/src/)
-if [[ "$OSTYPE" == "darwin"* ]]; then
+case "$(uname)" in
+  Darwin*)
     export DYLD_LIBRARY_PATH="$BUILD_DIR/java:$BUILD_DIR/src:$DYLD_LIBRARY_PATH"
-elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    ;;
+  Linux*)
     export LD_LIBRARY_PATH="$BUILD_DIR/java:$BUILD_DIR/src:$LD_LIBRARY_PATH"
-fi
+    ;;
+esac
 
 # Run the integrated example (write + read)
 echo "Running integrated write/read test..."

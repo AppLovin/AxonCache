@@ -112,7 +112,7 @@ if __name__ == "__main__":
     cpp_cmd = "./build/main/axoncache_cli --bench"
     go_cmd = "go run cmd/benchmark.go cmd/kv_scanner.go cmd/main.go cmd/progress.go benchmark"
     python_cmd = "python3 axoncache/bench.py"
-    java_cmd = "bash java/run_benchmark.sh"
+    java_cmd = "sh java/run_benchmark.sh"
 
     cmds = [
         (cpp_cmd, "C++"),

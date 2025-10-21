@@ -36,6 +36,11 @@ sh axoncache/build_python_module.sh
 python3 axoncache/bench.py 
 ```
 
+```
+# Java
+./build.sh -J -b Release
+```
+
 The benchmark is inserting 1,000,000 small keys (key_%i, val_%i), then randomly looking them up.
 
 ### Apple M4 Max laptop (macOS)
