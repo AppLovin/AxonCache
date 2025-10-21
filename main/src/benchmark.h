@@ -151,7 +151,9 @@ auto benchModeAxonCache(
                                                 2 * numKeys );
         if ( errorCode != 0 )
         {
-            throw std::runtime_error( "Error initializing writer" );
+            std::ostringstream oss;
+            oss << "Error initializing writer: " << errorCode;
+            throw std::runtime_error( oss.str().c_str() );
         }
 
         for ( int idx = 0; idx < numKeys; ++idx )
