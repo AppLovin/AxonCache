@@ -39,6 +39,12 @@ python3 axoncache/bench.py
 ```
 # Java
 ./build.sh -J -b Release
+sh java/run_benchmark.sh
+```
+
+```
+# Running all benchmarks
+python3 benchmark/run_all_cli_benchmarks.py 
 ```
 
 The benchmark is inserting 1,000,000 small keys (key_%i, val_%i), then randomly looking them up.
