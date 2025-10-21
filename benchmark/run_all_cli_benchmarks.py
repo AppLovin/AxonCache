@@ -121,7 +121,7 @@ if __name__ == "__main__":
         (java_cmd, "Java"),
     ]
 
-    runs = 1
+    runs = 3
 
     # aggregates[pretty_label] = lists + runtime + first-seen execution order
     aggregates = defaultdict(
