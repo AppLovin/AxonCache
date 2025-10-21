@@ -137,6 +137,13 @@ Use the following commands from the project root directory to run the test suite
 ./build.sh -t
 ```
 
+## Bindings build steps
+
+```
+sudo apt install openjdk-17-jdk
+sudo apt install maven
+```
+
 ### Sanitizers
 
 Sanitizers can be enabled by configuring CMake with `-DUSE_SANITIZER=<Address | Memory | MemoryWithOrigins | Undefined | Thread | Leak | 'Address;Undefined'>`.
