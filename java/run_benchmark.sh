@@ -17,7 +17,7 @@ if [ ! -f "$BUILD_DIR/java/axoncache.jar" ]; then
     exit 1
 fi
 
-if [ ! -f "$BUILD_DIR/java/CacheExample.jar" ]; then
+if [ ! -f "$BUILD_DIR/java/CacheBenchmark.jar" ]; then
     echo "Error: Example JAR file not found. Please run build_and_run.sh first."
     exit 1
 fi
@@ -33,8 +33,8 @@ case "$(uname)" in
 esac
 
 # Run the integrated example (write + read)
-echo "Running integrated write/read test..."
+echo "Running benchmark...\n"
 cd "$SCRIPT_DIR/examples"
-java -cp "$BUILD_DIR/java/CacheExample.jar:$BUILD_DIR/java/axoncache.jar" \
+java -cp "$BUILD_DIR/java/CacheBenchmark.jar:$BUILD_DIR/java/axoncache.jar" \
      -Djava.library.path="$BUILD_DIR/java:$BUILD_DIR/src" \
-     CacheExample
+     CacheBenchmark
