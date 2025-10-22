@@ -6,11 +6,7 @@
 #include <memory>
 #include <utility>
 #include <axoncache/reader/DataFileReader.h>
-#ifdef BAZEL_BUILD
 #include "doctest/doctest.h"
-#else
-#include <doctest/doctest.h>
-#endif
 #include <exception>
 #include <iostream>
 #include <fstream>

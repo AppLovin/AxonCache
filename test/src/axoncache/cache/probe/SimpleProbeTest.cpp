@@ -3,11 +3,7 @@
 
 #include <string_view>
 #include <axoncache/cache/probe/SimpleProbe.h>
-#ifdef BAZEL_BUILD
 #include "doctest/doctest.h"
-#else
-#include <doctest/doctest.h>
-#endif
 #include <stdint.h>
 #include "axoncache/cache/CacheType.h"
 

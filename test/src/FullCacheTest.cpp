@@ -18,11 +18,7 @@
 
 #include "CacheTestUtils.h"
 
-#ifdef BAZEL_BUILD
 #include "doctest/doctest.h"
-#else
-#include <doctest/doctest.h>
-#endif
 
 #include <iostream>
 #include <string>

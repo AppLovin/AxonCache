@@ -5,11 +5,7 @@
 #include <string_view>
 #include <axoncache/Constants.h>
 #include <axoncache/parser/CacheValueParser.h>
-#ifdef BAZEL_BUILD
 #include "doctest/doctest.h"
-#else
-#include <doctest/doctest.h>
-#endif
 #include "axoncache/common/SharedSettingsProvider.h"
 #include "axoncache/domain/CacheValue.h"
 

@@ -3,11 +3,7 @@
 
 #include <axoncache/cache/value/ChainedValue.h>
 #include <axoncache/memory/MallocMemoryHandler.h>
-#ifdef BAZEL_BUILD
 #include "doctest/doctest.h"
-#else
-#include <doctest/doctest.h>
-#endif
 #include <stdint.h>
 #include <stdlib.h>
 #include <map>

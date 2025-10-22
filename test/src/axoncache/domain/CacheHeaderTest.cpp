@@ -3,11 +3,7 @@
 
 #include <axoncache/Constants.h>
 #include <axoncache/domain/CacheHeader.h>
-#ifdef BAZEL_BUILD
 #include "doctest/doctest.h"
-#else
-#include <doctest/doctest.h>
-#endif
 #include <cstring>
 #include <sstream>
 #include <string>

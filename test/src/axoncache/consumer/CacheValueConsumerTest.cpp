@@ -8,11 +8,7 @@
 #include <axoncache/cache/MapCache.h>
 #include <axoncache/consumer/CacheValueConsumer.h>
 #include <axoncache/memory/MallocMemoryHandler.h>
-#ifdef BAZEL_BUILD
 #include "doctest/doctest.h"
-#else
-#include <doctest/doctest.h>
-#endif
 #include <stdint.h>
 #include <vector>
 #include "axoncache/cache/CacheType.h"
