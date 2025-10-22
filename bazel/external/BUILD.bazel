@@ -2,13 +2,7 @@
 # This file makes the bazel/external/ directory a valid Bazel package
 
 exports_files([
-    # Cpp-Commons dependencies
-    "rapidjson.BUILD",
-    "libdeflate.BUILD", 
-    "zstd.BUILD",
-    "utf8cpp.BUILD",
     # AxonCache dependencies
     "spdlog.BUILD",
-    # Note: jsoncpp and magic_enum now use native Bazel builds
     # Note: xxhash, cxxopts, doctest removed (bundled, native, or BCR respectively)
 ])
