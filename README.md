@@ -53,19 +53,20 @@ The benchmark is inserting 1,000,000 small keys (key_%i, val_%i), then randomly 
 
 | Implementation                                                               | Runtime | Lookups Lat (ns ± sd)        | Lookups QPS (avg ± sd)       | Inserts Lat (ns ± sd)        | Inserts QPS (avg ± sd)       |
 |------------------------------------------------------------------------------|---------|------------------------------|------------------------------|------------------------------|------------------------------|
-| [Abseil flat_map](https://abseil.io/docs/cpp/guides/container)               | C++     | 30.6 ns ± 0.1 ns             | 32,664,146.3 ± 98,348.0      | 25.5 ns ± 0.1 ns             | 39,241,034.0 ± 141,835.1     |
-| [HashMap](https://www.baeldung.com/java-hashmap) Java HashMap                | Java    | 35.9 ns ± 0.5 ns             | 27,875,008.7 ± 352,948.2     | 30.4 ns ± 0.3 ns             | 32,906,509.3 ± 373,295.6     |
-| [Go Map](https://pkg.go.dev/builtin#map)                                     | Golang  | 53.9 ns ± 1.4 ns             | 18,569,613.0 ± 463,594.9     | 134.8 ns ± 5.7 ns            | 7,429,249.3 ± 306,823.8      |
-| [AxonCache](https://github.com/AppLovin/AxonCache) C api                     | C++     | 66.0 ns ± 0.4 ns             | 15,160,769.7 ± 83,733.7      | 69.3 ns ± 2.6 ns             | 14,435,342.3 ± 541,383.1     |
-| [CDB](https://cr.yp.to/cdb.html) Pure Go Version with mmap support           | Golang  | 73.1 ns ± 0.3 ns             | 13,685,964.0 ± 65,446.9      | 69.6 ns ± 3.2 ns             | 14,384,526.0 ± 660,514.4     |
-| [unordered_map](https://cppreference.net/cpp/container/unordered_map.html)   | C++     | 91.0 ns ± 1.9 ns             | 10,987,436.7 ± 225,389.9     | 45.3 ns ± 1.3 ns             | 22,075,885.3 ± 617,544.6     |
-| [AxonCache](https://github.com/AppLovin/AxonCache) Golang                    | Golang  | 212.0 ns ± 9.9 ns            | 4,722,746.0 ± 216,146.0      | 113.0 ns ± 5.3 ns            | 8,865,249.0 ± 406,407.1      |
-| [AxonCache](https://github.com/AppLovin/AxonCache) Python                    | Python  | 241.2 ns ± 2.9 ns            | 4,146,007.7 ± 49,462.0       | 195.7 ns ± 1.5 ns            | 5,109,433.7 ± 39,996.5       |
-| [LMDB](https://symas.com/lmdb/)                                              | Golang  | 441.2 ns ± 6.4 ns            | 2,267,028.7 ± 32,444.6       | 446.7 ns ± 10.6 ns           | 2,239,677.0 ± 52,445.3       |
-| [LMDB](https://github.com/jnwatson/py-lmdb/) Python module                   | Python  | 462.1 ns ± 11.5 ns           | 2,164,712.7 ± 54,219.2       | 477.7 ns ± 4.5 ns            | 2,093,383.7 ± 19,586.7       |
-| [AxonCache](https://github.com/AppLovin/AxonCache) Java                      | Java    | 466.0 ns ± 3.9 ns            | 2,146,012.7 ± 18,042.4       | 352.5 ns ± 2.7 ns            | 2,837,011.7 ± 21,579.6       |
-| [CDB](https://github.com/bbayles/python-pure-cdb) Pure Python module         | Python  | 1,032.5 ns ± 12.2 ns         | 968,610.0 ± 11,478.7         | 1,058.9 ns ± 8.9 ns          | 944,382.3 ± 7,998.7          |
-| [LevelDB](https://github.com/syndtr/goleveldb) Pure Go version               | Golang  | 2,385.5 ns ± 2.7 ns          | 419,204.3 ± 468.6            | 802.7 ns ± 45.6 ns           | 1,248,558.0 ± 71,474.1       |
+| [Abseil flat_map](https://abseil.io/docs/cpp/guides/container)               | C++     | 30.3 ns ± 0.1 ns             | 32,980,574.3 ± 85,392.4      | 25.9 ns ± 0.2 ns             | 38,595,871.3 ± 317,950.2     |
+| [AxonCache](https://github.com/AppLovin/AxonCache) C++ api                   | C++     | 35.0 ns ± 0.5 ns             | 28,550,738.0 ± 378,753.4     | 71.0 ns ± 3.9 ns             | 14,105,436.3 ± 773,987.7     |
+| [HashMap](https://www.baeldung.com/java-hashmap) Java HashMap                | Java    | 35.5 ns ± 0.3 ns             | 28,156,638.0 ± 211,436.8     | 31.1 ns ± 0.7 ns             | 32,216,312.3 ± 746,667.3     |
+| [Go Map](https://pkg.go.dev/builtin#map)                                     | Golang  | 54.8 ns ± 0.4 ns             | 18,263,583.7 ± 143,258.5     | 132.0 ns ± 2.0 ns            | 7,574,165.3 ± 115,968.0      |
+| [AxonCache](https://github.com/AppLovin/AxonCache) C api                     | C++     | 64.4 ns ± 0.6 ns             | 15,531,983.0 ± 153,817.7     | 74.5 ns ± 7.0 ns             | 13,503,343.3 ± 1,276,015.8   |
+| [CDB](https://cr.yp.to/cdb.html) Pure Go Version with mmap support           | Golang  | 74.4 ns ± 4.4 ns             | 13,470,030.0 ± 764,286.8     | 72.8 ns ± 6.1 ns             | 13,791,817.7 ± 1,167,396.0   |
+| [unordered_map](https://cppreference.net/cpp/container/unordered_map.html)   | C++     | 87.3 ns ± 3.9 ns             | 11,466,906.3 ± 499,163.2     | 45.4 ns ± 1.6 ns             | 22,048,264.3 ± 778,087.3     |
+| [AxonCache](https://github.com/AppLovin/AxonCache) Golang                    | Golang  | 202.7 ns ± 2.6 ns            | 4,934,997.0 ± 62,211.2       | 114.2 ns ± 1.6 ns            | 8,761,327.7 ± 121,883.2      |
+| [AxonCache](https://github.com/AppLovin/AxonCache) Python                    | Python  | 238.1 ns ± 3.7 ns            | 4,200,177.0 ± 64,997.6       | 195.5 ns ± 5.9 ns            | 5,117,427.7 ± 151,715.8      |
+| [LMDB](https://symas.com/lmdb/)                                              | Golang  | 423.7 ns ± 7.1 ns            | 2,360,526.3 ± 39,496.7       | 438.2 ns ± 7.9 ns            | 2,282,780.3 ± 41,408.5       |
+| [AxonCache](https://github.com/AppLovin/AxonCache) Java                      | Java    | 439.7 ns ± 1.3 ns            | 2,274,098.3 ± 6,872.6        | 349.9 ns ± 10.9 ns           | 2,859,482.3 ± 88,095.7       |
+| [LMDB](https://github.com/jnwatson/py-lmdb/) Python module                   | Python  | 472.8 ns ± 12.9 ns           | 2,116,127.7 ± 58,284.0       | 481.9 ns ± 4.0 ns            | 2,075,374.0 ± 17,348.5       |
+| [CDB](https://github.com/bbayles/python-pure-cdb) Pure Python module         | Python  | 1,012.1 ns ± 4.9 ns          | 988,054.7 ± 4,789.5          | 1,046.0 ns ± 7.4 ns          | 956,043.0 ± 6,785.1          |
+| [LevelDB](https://github.com/syndtr/goleveldb) Pure Go version               | Golang  | 2,343.0 ns ± 44.2 ns         | 426,908.3 ± 8,121.8          | 794.9 ns ± 18.8 ns           | 1,258,499.7 ± 29,485.8       |
 
 ### Google Arm-based Axion CPUs, 4th generation, 2024 (Linux)
 
