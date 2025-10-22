@@ -6,8 +6,8 @@ module(
 # External dependencies from Bazel Central Registry (BCR)
 bazel_dep(name = "rules_cc", version = "0.0.16")
 bazel_dep(name = "platforms", version = "0.0.10")
-bazel_dep(name = "doctest", version = "2.4.11")
+bazel_dep(name = "doctest", version = "2.4.12")
 bazel_dep(name = "abseil-cpp", version = "20240116.1")
 
 # Note: spdlog, cxxopts handled via WORKSPACE compatibility mode in deps.bzl
-# because the BCR versions don't match our specific build requirements or aren't available
+# because the BCR versions don't match our CMake versions or aren't available
