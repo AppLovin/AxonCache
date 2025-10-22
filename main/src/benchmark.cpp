@@ -260,7 +260,7 @@ auto benchModeAxonCacheCppApi(
         cacheAbsolutePath += "/";
         cacheAbsolutePath += cacheName;
 
-        auto cache =loader.loadAbsolutePath<axoncache::LinearProbeDedupCache>( cacheName, cacheAbsolutePath, true );
+        auto cache = loader.loadAbsolutePath<axoncache::LinearProbeDedupCache>( cacheName, cacheAbsolutePath, true );
 
         for ( int idx = 0; idx < numKeys; ++idx )
         {

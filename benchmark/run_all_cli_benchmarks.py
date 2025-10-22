@@ -73,8 +73,14 @@ RAW_TO_PRETTY = {
         "C++",
         "Abseil flat map",
     ): "[Abseil flat_map](https://abseil.io/docs/cpp/guides/container)",
-    ("C++", "AxonCacheCApi"): "[AxonCache](https://github.com/AppLovin/AxonCache) C api",
-    ("C++", "AxonCacheCppApi"): "[AxonCache](https://github.com/AppLovin/AxonCache) C++ api",
+    (
+        "C++",
+        "AxonCacheCApi",
+    ): "[AxonCache](https://github.com/AppLovin/AxonCache) C api",
+    (
+        "C++",
+        "AxonCacheCppApi",
+    ): "[AxonCache](https://github.com/AppLovin/AxonCache) C++ api",
     ("Golang", "Native go maps"): "[Go Map](https://pkg.go.dev/builtin#map)",
     (
         "Golang",
