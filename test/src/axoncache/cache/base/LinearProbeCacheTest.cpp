@@ -8,11 +8,7 @@
 #include <axoncache/Constants.h>
 #include <axoncache/cache/LinearProbeCache.h>
 #include <axoncache/memory/MallocMemoryHandler.h>
-#ifdef BAZEL_BUILD
 #include "doctest/doctest.h"
-#else
-#include <doctest/doctest.h>
-#endif
 #include <cstdint>
 #include <map>
 #include <ostream>

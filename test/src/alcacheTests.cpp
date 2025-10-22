@@ -4,11 +4,7 @@
 #include <string>
 #include <string_view>
 #include <axoncache/version.h>
-#ifdef BAZEL_BUILD
 #include "doctest/doctest.h"
-#else
-#include <doctest/doctest.h>
-#endif
 
 TEST_CASE( "AxonCache version" )
 {
