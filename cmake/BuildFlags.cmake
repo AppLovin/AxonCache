@@ -1,6 +1,6 @@
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
   set(X86_FLAGS
-    "-msse -msse2 -msse3 -mssse3 -mno-sse4a -maes -mpopcnt -mavx -mavx2 -msse4.2 -msse4.1 -mlzcnt"
+    "-march=native"
   )
 endif()
 
