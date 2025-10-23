@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
-#/ Copyright (c) 2025 AppLovin. All rights reserved.
+# / Copyright (c) 2025 AppLovin. All rights reserved.
 
 import subprocess
 import re
