@@ -87,24 +87,6 @@ The benchmark is inserting 1,000,000 small keys (key_%i, val_%i), then randomly 
 | [CDB](https://github.com/bbayles/python-pure-cdb) Pure Python module         | Python  | 2,301.6 ns ± 18.6 ns         | 434,495.3 ± 3,502.5          | 2,493.8 ns ± 3.9 ns          | 400,992.0 ± 631.5            |
 | [LevelDB](https://github.com/syndtr/goleveldb) Pure Go version               | Golang  | 4,714.8 ns ± 12.1 ns         | 212,099.0 ± 544.6            | 2,197.5 ns ± 3.1 ns          | 455,068.3 ± 651.6            |
 
-### AMD EPYC 9B14, 2023 (Linux) 
-
-| Implementation                                                               | Runtime | Lookups Lat (ns ± sd)        | Lookups QPS (avg ± sd)       | Inserts Lat (ns ± sd)        | Inserts QPS (avg ± sd)       |
-|------------------------------------------------------------------------------|---------|------------------------------|------------------------------|------------------------------|------------------------------|
-| [HashMap](https://www.baeldung.com/java-hashmap) Java HashMap                | Java    | 108.4 ns ± 3.3 ns            | 9,234,725.0 ± 289,826.6      | 81.7 ns ± 3.5 ns             | 12,261,440.0 ± 517,465.1     |
-| [Abseil flat_map](https://abseil.io/docs/cpp/guides/container)               | C++     | 109.3 ns ± 4.8 ns            | 9,160,685.7 ± 394,750.1      | 180.1 ns ± 3.8 ns            | 5,555,499.0 ± 116,995.3      |
-| [Go Map](https://pkg.go.dev/builtin#map)                                     | Golang  | 121.8 ns ± 4.4 ns            | 8,214,028.7 ± 295,543.2      | 438.4 ns ± 23.4 ns           | 2,285,261.3 ± 119,988.0      |
-| [unordered_map](https://cppreference.net/cpp/container/unordered_map.html)   | C++     | 195.2 ns ± 5.7 ns            | 5,124,893.0 ± 147,590.7      | 210.2 ns ± 7.5 ns            | 4,762,472.7 ± 173,526.7      |
-| [CDB](https://cr.yp.to/cdb.html) Pure Go Version with mmap support           | Golang  | 232.0 ns ± 4.7 ns            | 4,311,994.3 ± 86,746.6       | 248.3 ns ± 7.4 ns            | 4,029,494.3 ± 120,875.4      |
-| [AxonCache](https://github.com/AppLovin/AxonCache) C api                     | C++     | 249.9 ns ± 23.2 ns           | 4,025,945.7 ± 382,301.7      | 309.4 ns ± 104.3 ns          | 3,567,297.0 ± 1,493,332.5    |
-| [AxonCache](https://github.com/AppLovin/AxonCache) Golang                    | Golang  | 572.7 ns ± 13.8 ns           | 1,746,638.0 ± 41,517.5       | 439.9 ns ± 135.3 ns          | 2,401,900.3 ± 627,479.0      |
-| [AxonCache](https://github.com/AppLovin/AxonCache) Python                    | Python  | 647.8 ns ± 11.8 ns           | 1,544,017.0 ± 28,155.0       | 475.6 ns ± 13.7 ns           | 2,103,907.3 ± 61,123.4       |
-| [LMDB](https://symas.com/lmdb/)                                              | Golang  | 760.2 ns ± 20.5 ns           | 1,316,093.7 ± 35,843.7       | 1,233.2 ns ± 245.2 ns        | 835,068.3 ± 182,968.1        |
-| [LMDB](https://github.com/jnwatson/py-lmdb/) Python module                   | Python  | 770.9 ns ± 30.0 ns           | 1,298,435.7 ± 49,833.3       | 1,320.8 ns ± 453.6 ns        | 813,748.0 ± 250,161.7        |
-| [AxonCache](https://github.com/AppLovin/AxonCache) Java                      | Java    | 788.7 ns ± 24.3 ns           | 1,268,719.3 ± 38,968.4       | 442.9 ns ± 10.3 ns           | 2,258,602.0 ± 53,368.5       |
-| [CDB](https://github.com/bbayles/python-pure-cdb) Pure Python module         | Python  | 2,361.5 ns ± 43.4 ns         | 423,550.3 ± 7,840.4          | 3,274.9 ns ± 7.1 ns          | 305,351.3 ± 660.9            |
-| [LevelDB](https://github.com/syndtr/goleveldb) Pure Go version               | Golang  | 6,033.6 ns ± 664.0 ns        | 167,006.3 ± 17,280.9         | 2,724.0 ns ± 620.5 ns        | 378,696.0 ± 76,347.0         |
-
 ### AMD EPYC 7B12 (Linux)
 
 | Implementation                                                               | Runtime | Lookups Lat (ns ± sd)        | Lookups QPS (avg ± sd)       | Inserts Lat (ns ± sd)        | Inserts QPS (avg ± sd)       |
@@ -137,7 +119,6 @@ Few notes.
 |--------------|------------------------------|------------------------------|-----------------------------------------|
 | Apple Max    | 71.7 ns ± 8.9 ns             | 14,088,554.7 ± 1,638,238.6   |  5.89x                                  |
 | Google Axion | 217.6 ns ± 7.1 ns            | 4,599,040.3 ± 151,279.1      |  1.94x                                  |
-| C3D          | 262.9 ns ± 15.7 ns           | 3,812,584.3 ± 227,097.6      |  1.6x                                   |
 | N2D          | 422.8 ns ± 15.5 ns           | 2,367,359.3 ± 86,098.0       |  1                                      |
 
 ## C++ build steps.
