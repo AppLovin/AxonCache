@@ -32,9 +32,6 @@ extern "C"
     void CacheReader_Finalize( CacheReaderHandle * handle );
     void CacheReader_DeleteCppObject( CacheReaderHandle * handle );
 
-    // ccache creation (needed ?)
-    void CacheReader_SetCacheType( CacheReaderHandle * handle, int cacheType );
-
     // Query
     int CacheReader_GetVectorKeySize( CacheReaderHandle * handle, char * key, size_t keySize );
     int CacheReader_ContainsKey( CacheReaderHandle * handle, char * key, size_t keySize );
