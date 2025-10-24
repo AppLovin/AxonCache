@@ -11,19 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v46
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          since_last_remote_commit: false
-      - name: Filter Python files and set environment variable
-        run: |
-          FILES_TO_LINT=$(echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr " " "\n" | grep '\.py$' | tr "\n" " " || true)
-          echo "FILES_TO_LINT=$FILES_TO_LINT"
-          echo "FILES_TO_LINT=$FILES_TO_LINT" >> $GITHUB_ENV
-      - name: Run Black Formatter
-        if: ${{ env.FILES_TO_LINT != '' }}
-        uses: psf/black@stable
+          python-version: '3.11'
+
+      - name: Install Black
+        run: pip install black
+
+      - name: Run Black formatter
+        run: black .
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          src: ${{ env.FILES_TO_LINT }}
-          check: true
+          commit_message: "style: format code with Black"

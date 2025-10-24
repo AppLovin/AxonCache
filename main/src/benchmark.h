@@ -1,12 +1,10 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 AppLovin. All rights reserved.
+//
 #pragma once
 
 #include <axoncache/logger/Logger.h>
-#include "axoncache/capi/CacheWriterCApi.h"
-#include "axoncache/capi/CacheReaderCApi.h"
 
-#include "absl/container/flat_hash_map.h"
-
-#include <fstream>
 #include <string>
 #include <chrono>
 #include <iomanip>
@@ -14,8 +12,15 @@
 #include <sstream>
 #include <random>
 
-namespace
-{
+auto benchModeAxonCacheCppApi(
+    int numKeys,
+    std::vector<std::string> keys,
+    std::vector<std::string> vals ) -> void;
+
+auto benchModeAxonCacheCApi(
+    int numKeys,
+    std::vector<std::string> keys,
+    std::vector<std::string> vals ) -> void;
 
 // custom facet to add thousands separators
 struct comma_numpunct : std::numpunct<char>
@@ -31,25 +36,11 @@ struct comma_numpunct : std::numpunct<char>
     } // NOLINT
 };
 
-void writeFile( const std::string & filename, const std::string & content )
-{
-    std::ofstream out( filename, std::ios::out | std::ios::trunc );
-    if ( !out )
-    {
-        throw std::runtime_error( "Failed to open file for writing: " + filename );
-    }
-    out << content;
-    if ( !out )
-    {
-        throw std::runtime_error( "Failed to write to file: " + filename );
-    }
-}
-
-}
+void writeFile( const std::string & filename, const std::string & content );
 
 template<class T>
 auto benchModeHashTable(
-    std::string label,
+    const std::string & label,
     int numKeys,
     std::vector<std::string> keys,
     std::vector<std::string> vals ) -> void
@@ -102,131 +93,6 @@ auto benchModeHashTable(
         for ( int idx = 0; idx < numKeys; ++idx )
         {
             auto val = cache[keys[idx]];
-        }
-
-        auto end = clock::now();
-        double elapsed = std::chrono::duration<double>( end - start ).count();
-        double qps = static_cast<double>( numKeys ) / elapsed;
-
-        std::stringstream ssKeys;
-        std::stringstream ssQps;
-        ssKeys.imbue( std::locale( std::locale::classic(), new comma_numpunct ) );
-        ssQps.imbue( std::locale( std::locale::classic(), new comma_numpunct ) );
-
-        ssKeys << numKeys;
-        ssQps << static_cast<int64_t>( qps );
-
-        std::stringstream oss;
-        oss << "Looked up " << ssKeys.str()
-            << " keys in " << std::fixed << std::setprecision( 3 ) << elapsed
-            << "s (" << ssQps.str() << " keys/sec)\n";
-        AL_LOG_INFO( oss.str() );
-    }
-}
-
-auto benchModeAxonCache(
-    int numKeys,
-    std::vector<std::string> keys,
-    std::vector<std::string> vals ) -> void
-{
-    AL_LOG_INFO( "Using AxonCache" );
-    using clock = std::chrono::steady_clock;
-
-    const std::string dataPath = ".";
-    const std::string settingsPath = dataPath + "/test.settings";
-
-    std::ostringstream oss;
-    oss << "ccache.destination_folder=" << dataPath << "\n";
-    oss << "ccache.type=5" << "\n";
-    oss << "ccache.offset.bits=28" << "\n";
-    writeFile( settingsPath, oss.str() );
-
-    {
-        auto start = clock::now();
-
-        auto * handle = NewCacheWriterHandle();
-        int errorCode = CacheWriter_Initialize( handle,
-                                                "bench_cli_test",
-                                                settingsPath.c_str(),
-                                                2 * numKeys );
-        if ( errorCode != 0 )
-        {
-            std::ostringstream oss;
-            oss << "Error initializing writer: " << errorCode;
-            throw std::runtime_error( oss.str().c_str() );
-        }
-
-        for ( int idx = 0; idx < numKeys; ++idx )
-        {
-            if ( CacheWriter_InsertKey( handle,
-                                        keys[idx].data(), keys[idx].size(),
-                                        vals[idx].data(), vals[idx].size(), 0 ) != 0 )
-            {
-                throw std::runtime_error( "Error inserting key" );
-            }
-        }
-
-        // Write/Flush the cache
-        CacheWriter_FinishCacheCreation( handle );
-        CacheWriter_Finalize( handle );
-        CacheWriter_DeleteCppObject( handle );
-
-        std::string filePath = dataPath + "/bench_cli_test.cache";
-        std::string newFilePath = dataPath + "/bench_cli_test.1690484217134.cache";
-        ::rename( filePath.c_str(), newFilePath.c_str() );
-
-        auto end = clock::now();
-        double elapsed = std::chrono::duration<double>( end - start ).count();
-        double qps = static_cast<double>( numKeys ) / elapsed;
-
-        std::stringstream ssKeys;
-        std::stringstream ssQps;
-        ssKeys.imbue( std::locale( std::locale::classic(), new comma_numpunct ) );
-        ssQps.imbue( std::locale( std::locale::classic(), new comma_numpunct ) );
-
-        ssKeys << numKeys;
-        ssQps << static_cast<int64_t>( qps );
-
-        std::ostringstream oss;
-        oss << "Inserted " << ssKeys.str()
-            << " keys in " << std::fixed << std::setprecision( 3 ) << elapsed
-            << "s (" << ssQps.str() << " keys/sec)\n";
-        AL_LOG_INFO( oss.str() );
-    }
-
-    // Create a random generator seeded with a non-deterministic value
-    std::random_device randomDevice;
-    std::mt19937 gen( randomDevice() );
-
-    // Shuffle in place
-    std::shuffle( keys.begin(), keys.end(), gen );
-
-    // Now create a reader and do some lookups
-    {
-        auto * handle = NewCacheReaderHandle();
-        int errorCode = CacheReader_Initialize( handle,
-                                                "bench_cli_test",
-                                                dataPath.c_str(),
-                                                "1690484217134",
-                                                1 );
-        if ( errorCode != 0 )
-        {
-            throw std::runtime_error( "Error initializing reader" );
-        }
-
-        auto start = clock::now();
-
-        for ( int idx = 0; idx < numKeys; ++idx )
-        {
-            int size = 0;
-            int isExist = 0;
-            CacheReader_GetKey( handle,
-                                keys[idx].data(), keys[idx].size(),
-                                &isExist, &size );
-            if ( isExist != 1 )
-            {
-                throw std::runtime_error( "Error looking up valuereader" );
-            }
         }
 
         auto end = clock::now();

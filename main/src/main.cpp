@@ -16,6 +16,8 @@
 #include "axoncache/writer/CacheFileWriter.h"
 #include "axoncache/common/StringViewUtils.h"
 
+#include "absl/container/flat_hash_map.h"
+
 #include <cxxopts.hpp>
 #include <spdlog/spdlog.h>
 #include <iostream>
@@ -663,9 +665,10 @@ auto main( int argc, char ** argv ) -> int
                 vals.emplace_back( "val_" + std::to_string( idx ) );
             }
 
+            benchModeAxonCacheCppApi( numKeys, keys, vals );
+            benchModeAxonCacheCApi( numKeys, keys, vals );
             benchModeHashTable<std::unordered_map<std::string, std::string>>( "Unordered map", numKeys, keys, vals );
             benchModeHashTable<absl::flat_hash_map<std::string, std::string>>( "Abseil flat map", numKeys, keys, vals );
-            benchModeAxonCache( numKeys, keys, vals );
         }
         else
         {
