@@ -56,4 +56,8 @@ if(PROJECT_IS_TOP_LEVEL)
   if(AL_WITH_JAVA)
     add_subdirectory(java)
   endif()
+
+  if(AL_WITH_RUST)
+    add_subdirectory(rust)
+  endif()
 endif()
