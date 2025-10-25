@@ -1,0 +1,8 @@
+# External dependency BUILD files
+# This file makes the bazel/external/ directory a valid Bazel package
+
+exports_files([
+    # AxonCache dependencies
+    "spdlog.BUILD",
+    # Note: xxhash, cxxopts, doctest removed (bundled, native, or BCR respectively)
+])

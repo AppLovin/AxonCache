@@ -4,7 +4,7 @@
 #include <string_view>
 #include <axoncache/cache/probe/LinearProbe.h>
 #include <axoncache/memory/MallocMemoryHandler.h>
-#include <doctest/doctest.h>
+#include "doctest/doctest.h"
 #include <stdint.h>
 #include "axoncache/Constants.h"
 #include "axoncache/Math.h"

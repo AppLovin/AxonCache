@@ -3,7 +3,7 @@
 
 #include <axoncache/cache/value/ChainedValue.h>
 #include <axoncache/memory/MallocMemoryHandler.h>
-#include <doctest/doctest.h>
+#include "doctest/doctest.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <map>

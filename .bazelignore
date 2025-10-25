@@ -1,0 +1,10 @@
+# Ignore CMake build artifacts that conflict with Bazel
+build/
+cmake-build*/
+
+# Ignore other common build directories
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

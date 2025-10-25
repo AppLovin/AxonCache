@@ -5,7 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <cstdio>
-#include <doctest/doctest.h>
+#include "doctest/doctest.h"
 #include "axoncache/capi/CacheWriterCApi.h"
 #include "axoncache/capi/CacheReaderCApi.h"
 

@@ -4,7 +4,7 @@
 #include <string>
 #include <string_view>
 #include <axoncache/version.h>
-#include <doctest/doctest.h>
+#include "doctest/doctest.h"
 
 TEST_CASE( "AxonCache version" )
 {

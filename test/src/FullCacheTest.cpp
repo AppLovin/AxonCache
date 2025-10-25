@@ -18,7 +18,7 @@
 
 #include "CacheTestUtils.h"
 
-#include <doctest/doctest.h>
+#include "doctest/doctest.h"
 
 #include <iostream>
 #include <string>
@@ -437,7 +437,11 @@ TEST_CASE( "LinearProbeDedupSetDuplicatedValues" )
 TEST_CASE( "GenerateCacheFromFileAndVerify" )
 {
     std::cout << "Current path = " << std::filesystem::current_path().string() << " \n";
+#ifdef BAZEL_BUILD
+    const std::string inputFolder = "test/data"; // Bazel makes test data available directly
+#else
     const std::string inputFolder = axoncache::test_utils::resolveResourcePath( "../../test/data", __FILE__ );
+#endif
     const std::string inputFile = "example_fast_data.dta";
     const std::string cacheName = "generated_cache.cache";
     auto cacheType = axoncache::CacheType::LINEAR_PROBE_DEDUP;
@@ -468,7 +472,11 @@ TEST_CASE( "GenerateCacheFromFileAndVerify" )
 
 TEST_CASE( "LoadCacheFromTmpAndVerify" )
 {
+#ifdef BAZEL_BUILD
+    const std::string inputFolder = "test/data"; // Bazel makes test data available directly
+#else
     const std::string inputFolder = axoncache::test_utils::resolveResourcePath( "../../test/data", __FILE__ );
+#endif
     const std::string inputFile = "example_fast_data.dta";
     const std::string cacheName = "generated_cache.cache";
     auto cacheType = axoncache::CacheType::LINEAR_PROBE_DEDUP;

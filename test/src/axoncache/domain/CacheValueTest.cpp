@@ -4,7 +4,7 @@
 #include <string_view>
 #include <utility>
 #include <axoncache/domain/CacheValue.h>
-#include <doctest/doctest.h>
+#include "doctest/doctest.h"
 #include <sstream>
 #include <string>
 #include <vector>

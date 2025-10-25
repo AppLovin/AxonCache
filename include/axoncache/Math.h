@@ -12,7 +12,9 @@ namespace math
 
 [[maybe_unused]] [[nodiscard]] static auto roundUpToPowerOfTwo( uint64_t number ) -> uint64_t
 {
-    return number == 1 ? 1 : 1 << ( 64UL - __builtin_clzl( number - 1UL ) );
+    if ( number <= 1 )
+        return 1;
+    return 1UL << ( 64UL - __builtin_clzl( number - 1UL ) );
 }
 
 }

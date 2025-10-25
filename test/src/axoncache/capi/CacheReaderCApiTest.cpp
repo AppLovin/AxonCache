@@ -6,7 +6,7 @@
 #include <filesystem>
 #include <axoncache/cache/LinearProbeDedupCache.h>
 #include <axoncache/memory/MallocMemoryHandler.h>
-#include <doctest/doctest.h>
+#include "doctest/doctest.h"
 #include <cstdint>
 #include "axoncache/capi/CacheReaderCApi.h"
 #include <axoncache/writer/CacheFileWriter.h>
@@ -23,7 +23,11 @@ TEST_CASE( "CacheReaderCApiBasicTest" ) // NOLINT
     //
     // Test file lives here "test/data/bench_cache.1758220992251.cache";
     //
+#ifdef BAZEL_BUILD
+    auto dataPath = std::string( "test/data" ); // Bazel makes test data available directly
+#else
     auto dataPath = axoncacheTest::resolveResourcePath( "../../../data", __FILE__ );
+#endif
 
     auto * handle = NewCacheReaderHandle();
     int errorCode = CacheReader_Initialize( handle,

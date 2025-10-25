@@ -1,0 +1,111 @@
+# AxonCache Bazel Build Configuration
+# Defines build targets for the core library, CLI, and tests
+
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_binary", "cc_test")
+load("//bazel:test_utils.bzl", "generate_test_suite")
+
+# xxhash library (compiled as C to avoid flag conflicts)
+cc_library(
+    name = "xxhash_bundled",
+    srcs = ["src/axoncache/common/xxhash.c"],
+    hdrs = [
+        "include/axoncache/common/xxhash.h",
+        "include/axoncache/common/xxh3.h",
+    ],
+    includes = ["include"],
+    copts = [
+        "-DXXH_NAMESPACE=AXONCACHE_",
+    ],
+    visibility = ["//visibility:private"],
+)
+
+# AxonCache core library
+cc_library(
+    name = "axoncache",
+    srcs = glob([
+        "src/**/*.cpp",
+        # Exclude xxhash.c - handled by separate target above
+    ], exclude = ["src/axoncache/common/xxhash.c"]),
+    hdrs = glob([
+        "include/**/*.h",
+        "src/**/*.h",  # Internal headers
+    ]),
+    includes = [
+        "include",
+        "src",
+    ],
+    copts = [
+        "-DXXH_NAMESPACE=AXONCACHE_",
+    ],
+    linkopts = select({
+        "@platforms//os:macos": [
+            "-framework CoreFoundation",
+        ],
+        "@platforms//os:linux": [
+            "-lpthread",
+            "-ldl", 
+        ],
+        "//conditions:default": [],
+    }),
+    deps = [
+        ":xxhash_bundled",  # Only dependency is bundled xxhash
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# AxonCache CLI application
+cc_binary(
+    name = "axoncache_cli",
+    srcs = glob([
+        "main/src/*.cpp",
+        "main/src/*.h",
+    ]),
+    includes = ["main/src"],
+    # No additional copts needed - using global .bazelrc settings
+    deps = [
+        ":axoncache",
+        "@cxxopts//:cxxopts",
+        "@spdlog//:spdlog",
+        "@abseil-cpp//absl/container:flat_hash_map",
+    ],
+)
+
+# Test targets
+
+# Main test binary (CMake compatibility)
+cc_test(
+    name = "axoncacheTest",
+    srcs = [
+        "test/src/main.cpp",
+        "test/src/ResourceLoader.cpp",
+        "test/src/ResourceLoader.h",
+        "test/src/CacheTestUtils.h",
+    ],
+    includes = ["test/src", "test"],
+    deps = [
+        ":axoncache",
+        "@doctest//doctest:doctest",
+        "@spdlog//:spdlog",
+    ],
+    data = [
+        "test/data/example_fast_data.dta",
+        "test/data/bench_cache.1758220992251.cache",
+    ],
+    copts = [
+        "-DBAZEL_BUILD",
+    ],
+)
+
+# Auto-generated individual test targets
+generate_test_suite(
+    name = "all_tests",
+    test_dirs = ["test/src"],
+    exclude_files = ["test/src/main.cpp"],
+)
+
+# Test alias
+alias(
+    name = "test_all",
+    actual = ":all_tests",
+    visibility = ["//visibility:public"],
+)
