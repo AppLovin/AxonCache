@@ -17,7 +17,6 @@ on:
     branches: [ master ]
 
 permissions:
-  contents: write  # Need write access for git tagging
   pull-requests: write
 
 concurrency:
@@ -58,63 +57,6 @@ jobs:
           echo "## 🎯 Bazel C++ Build Results" >> $GITHUB_STEP_SUMMARY
           echo "✅ **C++ build and test completed**" >> $GITHUB_STEP_SUMMARY
           bazel test //... --config=ci 2>&1 | grep -E "test cases|assertions" >> $GITHUB_STEP_SUMMARY || true
-
-
-
-  # Git Tagging Job (only on master pushes after successful build)
-  git-tagging:
-    needs: [bazel-cpp]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master' && needs.bazel-cpp.result == 'success'
-    name: "Git Release Tagging"
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Need full history for tagging
-          
-      - name: Generate version tag
-        id: version
-        run: |
-          TIMESTAMP=$(date +%s)
-          SHORT_SHA=$(git rev-parse --short HEAD)
-          BRANCH_NAME=$(echo "${GITHUB_REF#refs/heads/}" | sed 's/[^a-zA-Z0-9]/-/g')
-          
-          # Create version tag: axoncache-v{timestamp}-{branch}-{sha}
-          VERSION="${TIMESTAMP}-${BRANCH_NAME}-${SHORT_SHA}"
-          TAG="axoncache-v${VERSION}"
-          
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
-          echo "short-sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
-          
-          echo "## 🏷️ Generated Release Tag" >> $GITHUB_STEP_SUMMARY
-          echo "**Tag**: \`${TAG}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Version**: \`${VERSION}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit**: \`${SHORT_SHA}\`" >> $GITHUB_STEP_SUMMARY
-          
-      - name: Create and push git tag
-        run: |
-          TAG="${{ steps.version.outputs.tag }}"
-          VERSION="${{ steps.version.outputs.version }}"
-          SHORT_SHA="${{ steps.version.outputs.short-sha }}"
-          
-          # Configure git
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "GitHub Actions"
-          
-          # Create annotated tag
-          git tag -a "${TAG}" -m "AxonCache release ${VERSION}
-
-          Built from commit: ${SHORT_SHA}
-          Build URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          
-          
-          # Push tag
-          git push origin "${TAG}"
-          
-          echo "✅ Successfully created and pushed tag: ${TAG}" >> $GITHUB_STEP_SUMMARY
 
   # Summary Job
   build-summary:
