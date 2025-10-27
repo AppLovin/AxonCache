@@ -7,7 +7,7 @@
 #include <utility>
 #include <axoncache/cache/MapCache.h>
 #include <axoncache/memory/MallocMemoryHandler.h>
-#include <doctest/doctest.h>
+#include "doctest/doctest.h"
 #include <stdint.h>
 #include <iosfwd>
 #include <map>

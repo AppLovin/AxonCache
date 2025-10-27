@@ -6,7 +6,7 @@
 #include <memory>
 #include <utility>
 #include <axoncache/reader/DataFileReader.h>
-#include <doctest/doctest.h>
+#include "doctest/doctest.h"
 #include <exception>
 #include <iostream>
 #include <fstream>

@@ -1,0 +1,59 @@
+# Bazel Configuration for AxonCache
+# Defines build settings for local development, CI, and release builds
+
+# Enable bzlmod and WORKSPACE for Bazel 8.x compatibility
+common --enable_bzlmod
+build --enable_workspace
+build --noincompatible_disallow_empty_glob
+
+# Common C++ settings
+build --cxxopt=-std=c++20
+build --host_cxxopt=-std=c++20
+build --copt=-fno-strict-aliasing
+build --copt=-Wall
+build --copt=-Wno-variadic-macros
+build --copt=-Wno-deprecated-declarations
+
+# Performance optimizations
+build --experimental_repository_cache_hardlinks
+build --experimental_retain_test_configuration_across_testonly
+
+# Local development (debug build)
+build:local --compilation_mode=dbg
+build:local --copt=-g3
+build:local --copt=-ggdb
+build:local --copt=-O0
+build:local --copt=-DDEBUG
+build:local --copt=-fdiagnostics-color=always
+build:local --copt=-Wno-deprecated-copy
+build:local --verbose_failures
+build:local --show_timestamps
+
+# Release build (optimized)
+build:release --compilation_mode=opt
+build:release --copt=-DNDEBUG
+build:release --copt=-O3
+build:release --strip=always
+
+# CI configuration
+build:ci --config=release
+build:ci --verbose_failures
+build:ci --show_timestamps
+build:ci --announce_rc
+build:ci --experimental_repository_cache_hardlinks
+
+# Test settings
+test --test_output=errors
+test --test_summary=detailed
+test --test_verbose_timeout_warnings
+
+# Sanitizer configurations
+build:asan --copt=-fsanitize=address --copt=-O1 --copt=-fno-omit-frame-pointer --linkopt=-fsanitize=address
+build:tsan --copt=-fsanitize=thread --copt=-O1 --copt=-fno-omit-frame-pointer --linkopt=-fsanitize=thread
+build:msan --copt=-fsanitize=memory --copt=-O1 --copt=-fno-omit-frame-pointer --linkopt=-fsanitize=memory
+build:ubsan --copt=-fsanitize=undefined --copt=-O1 --copt=-fno-omit-frame-pointer --linkopt=-fsanitize=undefined
+
+# Coverage configuration
+build:coverage --copt=-fprofile-arcs --copt=-ftest-coverage --copt=-O0 --copt=-g --linkopt=-lgcov --linkopt=--coverage
+
+try-import %workspace%/.bazelrc.local

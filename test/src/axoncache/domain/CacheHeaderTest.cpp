@@ -3,7 +3,7 @@
 
 #include <axoncache/Constants.h>
 #include <axoncache/domain/CacheHeader.h>
-#include <doctest/doctest.h>
+#include "doctest/doctest.h"
 #include <cstring>
 #include <sstream>
 #include <string>

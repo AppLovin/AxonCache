@@ -10,7 +10,7 @@
 #include <axoncache/memory/MallocMemoryHandler.h>
 #include <axoncache/writer/CacheFileWriter.h>
 #include <axoncache/writer/detail/GenerateHeader.h>
-#include <doctest/doctest.h>
+#include "doctest/doctest.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <iosfwd>

@@ -8,7 +8,7 @@
 #include <axoncache/Constants.h>
 #include <axoncache/cache/BucketChainCache.h>
 #include <axoncache/memory/MallocMemoryHandler.h>
-#include <doctest/doctest.h>
+#include "doctest/doctest.h"
 #include <stdint.h>
 #include <sstream>
 #include <map>

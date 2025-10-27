@@ -8,7 +8,7 @@
 #include <axoncache/Constants.h>
 #include <axoncache/cache/LinearProbeCache.h>
 #include <axoncache/memory/MallocMemoryHandler.h>
-#include <doctest/doctest.h>
+#include "doctest/doctest.h"
 #include <cstdint>
 #include <map>
 #include <ostream>

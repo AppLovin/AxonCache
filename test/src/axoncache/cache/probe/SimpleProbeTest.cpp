@@ -3,7 +3,7 @@
 
 #include <string_view>
 #include <axoncache/cache/probe/SimpleProbe.h>
-#include <doctest/doctest.h>
+#include "doctest/doctest.h"
 #include <stdint.h>
 #include "axoncache/cache/CacheType.h"
 

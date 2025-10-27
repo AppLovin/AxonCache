@@ -5,7 +5,7 @@
 #include <string_view>
 #include <axoncache/Constants.h>
 #include <axoncache/parser/CacheValueParser.h>
-#include <doctest/doctest.h>
+#include "doctest/doctest.h"
 #include "axoncache/common/SharedSettingsProvider.h"
 #include "axoncache/domain/CacheValue.h"
 

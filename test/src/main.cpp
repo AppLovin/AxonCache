@@ -4,7 +4,7 @@
 // define has to happen before the doctest include
 #define DOCTEST_CONFIG_IMPLEMENT
 
-#include <doctest/doctest.h>
+#include "doctest/doctest.h"
 
 #include <spdlog/spdlog.h>
 #include <axoncache/Constants.h>
