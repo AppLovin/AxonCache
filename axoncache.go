@@ -516,6 +516,14 @@ func (e *OffSetBitsError) Error() string {
 	return fmt.Sprintf("✋ offset bits error: %s", e.Err)
 }
 
+type KeySpaceIsFullError struct {
+	Err error
+}
+
+func (e *KeySpaceIsFullError) Error() string {
+	return fmt.Sprintf("✋ keyspace is full error: %s", e.Err)
+}
+
 func NewCacheWriter(options *CacheWriterOptions) (*CacheWriter, error) {
 	handle := C.NewCacheWriterHandle()
 
@@ -601,6 +609,8 @@ func (c *CacheWriter) InsertKey(k []byte, v []byte, keyType int8) error {
 		// Special case error so that we can act on it
 		if ret == 2 {
 			return &OffSetBitsError{Err: err, OffsetBits: c.OffsetBits}
+		} else if ret == 3 {
+			return &KeySpaceIsFullError{Err: err}
 		} else {
 			return err
 		}

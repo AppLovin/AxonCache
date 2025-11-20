@@ -178,6 +178,12 @@ class AxonCacheWriter
         return true;
     }
 
+    // FIXME: string matching is fragile, we should throw a custom exception when this happens
+    bool isKeySpaceIsFullError()
+    {
+        return mLastError.find( "keySpace is full" ) != std::string::npos;
+    }
+
     int8_t insertScalarKey( char * key, size_t keySize, char * value, size_t valueSize, int8_t type )
     {
         CacheKeyValue keyValuePair;
@@ -231,7 +237,18 @@ class AxonCacheWriter
         catch ( std::exception & e )
         {
             mLastError = e.what();
-            return isOffsetBitsInsertError() ? 2 : 1;
+            if ( isOffsetBitsInsertError() )
+            {
+                return 2;
+            }
+            else if ( isKeySpaceIsFullError() )
+            {
+                return 3;
+            }
+            else
+            {
+                return 1;
+            }
         }
 
         return 0;
@@ -267,7 +284,18 @@ class AxonCacheWriter
         catch ( std::exception & e )
         {
             mLastError = e.what();
-            return isOffsetBitsInsertError() ? 2 : 1;
+            if ( isOffsetBitsInsertError() )
+            {
+                return 2;
+            }
+            else if ( isKeySpaceIsFullError() )
+            {
+                return 3;
+            }
+            else
+            {
+                return 1;
+            }
         }
 
         return 0;
