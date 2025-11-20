@@ -601,3 +601,53 @@ func TestCacheWriterSetOffsetBitsBelowLimits(t *testing.T) {
 		assert.Equal(ErrUnInitialized, err)
 	}
 }
+
+func TestCacheWriterKeyspaceFull(t *testing.T) {
+	var err error
+	assert := assert.New(t)
+
+	taskName := "super_cache"
+	destinationFolder := t.TempDir()
+
+	cache, err := NewCacheWriter(
+		&CacheWriterOptions{
+			TaskName:              taskName,
+			DestinationFolder:     destinationFolder,
+			SettingsLocation:      "",
+			NumberOfKeySlots:      1000,
+			GenerateTimestampFile: false,
+			RenameCacheFile:       true,
+			OffsetBits:            27,
+			// Min value 16, max 38
+		})
+	defer cache.Delete()
+
+	assert.Equal(nil, err)
+
+	cache.AddDuplicateValue("val_1", 0)
+	cache.FinishAddDuplicateValues()
+
+	expectedError := false
+	const keys = 5000 // with offsetbits = 16, not enough space
+
+	for i := 1; i < keys; i++ {
+		key := fmt.Sprintf("key_%d", i)
+		val := fmt.Sprintf("val_%d", i)
+		if err = cache.InsertKey([]byte(key), []byte(val), 0); err != nil {
+			expectedError = true
+
+			switch err.(type) {
+			case *KeySpaceIsFullError:
+				fmt.Println("Expected KeySpaceIsFullError error")
+			default:
+				t.Fatal("We should have errored")
+			}
+
+			break
+		}
+	}
+
+	if !expectedError {
+		t.Fatal("We should have errored")
+	}
+}
