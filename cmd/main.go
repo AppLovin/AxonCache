@@ -464,6 +464,43 @@ func Benchmark(cmd *cobra.Command, args []string) {
 	RunBenchmark()
 }
 
+func Generate(cmd *cobra.Command, args []string) {
+	path := args[0]
+	settingsLocation := args[1]
+
+	numberOfKeySlots, err := cmd.Flags().GetInt("number_of_key_slots")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	destinationFolder := "/tmp"
+	taskName := "cli_generated_cache"
+
+	cacheWriter, err := axoncache.NewCacheWriter(
+		&axoncache.CacheWriterOptions{
+			TaskName:              taskName,
+			DestinationFolder:     destinationFolder,
+			SettingsLocation:      settingsLocation,
+			NumberOfKeySlots:      uint64(numberOfKeySlots),
+			GenerateTimestampFile: true,
+			RenameCacheFile:       true,
+		})
+	defer cacheWriter.Delete()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	scanner := NewKeyValueFileScanner()
+	defer scanner.Close()
+
+	cacheCreator := NewCacheCreator()
+	err = cacheCreator.InsertAllKeysAndValues(*cacheWriter, scanner, path, "dummy_arg")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func main() {
 	log.SetLevel(log.DebugLevel)
 
@@ -529,6 +566,14 @@ func main() {
 		Args:  cobra.MinimumNArgs(0),
 	}
 
+	var generate = &cobra.Command{
+		Use:   "generate",
+		Run:   Generate,
+		Short: "generate a cache",
+		Args:  cobra.MinimumNArgs(2),
+	}
+	generate.Flags().Int("number_of_key_slots", 10*1000, "max number of keys")
+
 	rootCmd.AddCommand(kvScan)
 	rootCmd.AddCommand(kvSplit)
 	rootCmd.AddCommand(comparo)
@@ -537,6 +582,7 @@ func main() {
 	rootCmd.AddCommand(getKey)
 	rootCmd.AddCommand(download)
 	rootCmd.AddCommand(benchmark)
+	rootCmd.AddCommand(generate)
 
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal("failed when executing root axoncache_cli command: " + err.Error())
