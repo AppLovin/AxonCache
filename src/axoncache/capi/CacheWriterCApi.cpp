@@ -313,6 +313,24 @@ class AxonCacheWriter
         }
     }
 
+    char * insertKeyWithError( char * key, size_t keySize, char * value, size_t valueSize, int8_t keyType, int8_t & errorCode, size_t * errorMsgSize )
+    {
+        errorCode = insertKey( key, keySize, value, valueSize, keyType );
+        if ( errorCode != 0 && !mLastError.empty() )
+        {
+            if ( errorMsgSize != nullptr )
+            {
+                *errorMsgSize = mLastError.size();
+            }
+            return strdup( mLastError.c_str() );
+        }
+        if ( errorMsgSize != nullptr )
+        {
+            *errorMsgSize = 0;
+        }
+        return nullptr;
+    }
+
     int8_t finishCacheCreation()
     {
         mCacheInfo.setTotalKeys( mCacheFileBuilder->cache()->numberOfEntries() );
@@ -517,6 +535,17 @@ void CacheWriter_Finalize( CacheWriterHandle * handle )
 int8_t CacheWriter_InsertKey( CacheWriterHandle * handle, char * key, size_t keySize, char * value, size_t valueSize, int8_t keyType )
 {
     return handle->src->insertKey( key, keySize, value, valueSize, keyType );
+}
+
+char * CacheWriter_InsertKeyWithError( CacheWriterHandle * handle, char * key, size_t keySize, char * value, size_t valueSize, int8_t keyType, int8_t * errorCode, size_t * errorMsgSize )
+{
+    int8_t error = 0;
+    char * errorMsg = handle->src->insertKeyWithError( key, keySize, value, valueSize, keyType, error, errorMsgSize );
+    if ( errorCode != nullptr )
+    {
+        *errorCode = error;
+    }
+    return errorMsg;
 }
 
 const char * CacheWriter_GetVersion( CacheWriterHandle * handle )

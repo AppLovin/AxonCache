@@ -589,27 +589,38 @@ func (c *CacheWriter) InsertKey(k []byte, v []byte, keyType int8) error {
 		return errors.New("Empty key")
 	}
 
-	var ret C.int8_t
+	var errorCode C.int8_t
+	var errorMsgSize C.size_t
+	var cErrorMsg *C.char
+
 	if len(v) == 0 {
-		ret = C.CacheWriter_InsertKey(c.Handle,
+		cErrorMsg = C.CacheWriter_InsertKeyWithError(c.Handle,
 			(*C.char)(unsafe.Pointer(&k[0])), C.size_t(len(k)),
 			nil, C.size_t(0),
-			C.int8_t(keyType))
+			C.int8_t(keyType),
+			&errorCode, &errorMsgSize)
 	} else {
-		ret = C.CacheWriter_InsertKey(c.Handle,
+		cErrorMsg = C.CacheWriter_InsertKeyWithError(c.Handle,
 			(*C.char)(unsafe.Pointer(&k[0])), C.size_t(len(k)),
 			(*C.char)(unsafe.Pointer(&v[0])), C.size_t(len(v)),
-			C.int8_t(keyType))
+			C.int8_t(keyType),
+			&errorCode, &errorMsgSize)
 	}
 
-	if ret != 0 {
-		msg := fmt.Sprintf("Error inserting key '%s' : error code %d", string(k), ret)
-		err := errors.New(msg)
+	if errorCode != 0 {
+		var err error
+		msg := fmt.Sprintf("Error inserting key '%s' : error code %d", string(k), errorCode)
+		if cErrorMsg != nil {
+			errorMsg := C.GoStringN(cErrorMsg, C.int(errorMsgSize))
+			C.free(unsafe.Pointer(cErrorMsg))
+			msg += " error message " + errorMsg
+		}
+		err = errors.New(msg)
 
 		// Special case error so that we can act on it
-		if ret == 2 {
+		if errorCode == 2 {
 			return &OffSetBitsError{Err: err, OffsetBits: c.OffsetBits}
-		} else if ret == 3 {
+		} else if errorCode == 3 {
 			return &KeySpaceIsFullError{Err: err}
 		} else {
 			return err
