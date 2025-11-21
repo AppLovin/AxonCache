@@ -34,6 +34,7 @@ extern "C"
     void CacheWriter_DeleteCppObject( CacheWriterHandle * handle );
 
     int8_t CacheWriter_InsertKey( CacheWriterHandle * handle, char * key, size_t keySize, char * value, size_t valueSize, int8_t keyType );
+    char * CacheWriter_InsertKeyWithError( CacheWriterHandle * handle, char * key, size_t keySize, char * value, size_t valueSize, int8_t keyType, int8_t * errorCode, size_t * errorMsgSize );
     void CacheWriter_AddDuplicateValue( CacheWriterHandle * handle, const char * value, int8_t keyType );
     int8_t CacheWriter_FinishAddDuplicateValues( CacheWriterHandle * handle );
 
