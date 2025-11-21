@@ -558,6 +558,14 @@ func TestCacheWriterSetOffsetBitsTooSmallForDataSize(t *testing.T) {
 		val := fmt.Sprintf("val_%d", i)
 		if err = cache.InsertKey([]byte(key), []byte(val), 0); err != nil {
 			expectedError = true
+			switch err.(type) {
+			case *OffSetBitsError:
+				fmt.Println("Expected OffsetBits error")
+			default:
+				t.Fatal("We should have errored")
+			}
+
+			break
 		}
 	}
 

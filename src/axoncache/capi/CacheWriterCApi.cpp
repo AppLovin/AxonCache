@@ -94,6 +94,7 @@ class AxonCacheWriter
         ccacheOptions->maxNumberOfKeys = settings.getInt( "ccache.number_of_hash_keys", kNumHashKeys );
         ccacheOptions->cacheType = settings.getInt( "ccache.type", 5 );          // Linear probe dedup typed
         ccacheOptions->offsetBits = settings.getInt( "ccache.offset.bits", 35 ); // Linear probe dedup typed
+        mOffsetBits = ccacheOptions->offsetBits;
 
         const auto & cCacheName = taskName;
         ccacheOptions->mmapName = settings.getString( "ccache.mmap_file", cCacheName.c_str() );
@@ -163,19 +164,12 @@ class AxonCacheWriter
     // FIXME: string matching is fragile, we should throw a custom exception when this happens
     bool isOffsetBitsInsertError()
     {
-        if ( mLastError.find( "offset bits " ) == std::string::npos )
-        {
-            return false;
-        }
-        if ( mLastError.find( std::to_string( mOffsetBits ) ) == std::string::npos )
-        {
-            return false;
-        }
-        if ( mLastError.find( "too short" ) == std::string::npos )
-        {
-            return false;
-        }
-        return true;
+        std::ostringstream oss;
+        oss << "offset bits ";
+        oss << mOffsetBits;
+        oss << " too short";
+
+        return mLastError.find( oss.str() ) != std::string::npos;
     }
 
     // FIXME: string matching is fragile, we should throw a custom exception when this happens
