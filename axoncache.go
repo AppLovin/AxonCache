@@ -106,7 +106,7 @@ func NewCacheReader(options *CacheReaderOptions) (*CacheReader, error) {
 	}
 
 	if options.DownloadAtInit {
-		err := alcacheReader.maybeDownload()
+		err := alcacheReader.maybeDownloadWithRetry()
 		if err != nil {
 			return alcacheReader, fmt.Errorf("Error downloading alcache file %s: %v", alcacheReader.TaskName, err)
 		}
@@ -214,6 +214,38 @@ func (c *CacheReader) maybeDownload() error {
 	downloader := core.NewDownloader(downloaderOptions)
 	_, err := downloader.Run()
 	return err
+}
+
+// maybeDownloadWithRetry attempts to download with retries for the first download
+// This is used when DownloadAtInit is true to handle transient network issues
+func (c *CacheReader) maybeDownloadWithRetry() error {
+	if len(c.BaseUrls) == 0 {
+		return nil
+	}
+
+	const maxRetries = 3
+	const retryDelay = 2 * time.Second
+
+	var lastErr error
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			log.Infof("Retrying download for %s (attempt %d/%d)...", c.TaskName, attempt+1, maxRetries)
+			time.Sleep(retryDelay)
+		}
+
+		err := c.maybeDownload()
+		if err == nil {
+			if attempt > 0 {
+				log.Infof("Download succeeded for %s after %d retries", c.TaskName, attempt)
+			}
+			return nil
+		}
+
+		lastErr = err
+		log.Warnf("Download attempt %d/%d failed for %s: %v", attempt+1, maxRetries, c.TaskName, err)
+	}
+
+	return fmt.Errorf("failed to download after %d attempts: %v", maxRetries, lastErr)
 }
 
 func (c *CacheReader) checkForNewFiles() {
