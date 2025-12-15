@@ -198,9 +198,8 @@ func (c *CacheReader) getLatestTimestamp() (int64, error) {
 	return timestamp, nil
 }
 
-// If we have a non empty base urls, we will try to fetch the file ourself directly
-// from datamover-proxy (or anywhere)
-func (c *CacheReader) maybeDownload() error {
+// maybeDownloadWithTimeout attempts to download with a specific timeout
+func (c *CacheReader) maybeDownloadWithTimeout(timeout time.Duration) error {
 	if len(c.BaseUrls) == 0 {
 		return nil
 	}
@@ -208,7 +207,7 @@ func (c *CacheReader) maybeDownload() error {
 		Basename:          c.TaskName + ".cache",
 		DestinationFolder: c.DestinationFolder,
 		AllUrls:           c.BaseUrls,
-		Timeout:           time.Second,
+		Timeout:           timeout,
 	}
 
 	downloader := core.NewDownloader(downloaderOptions)
@@ -216,24 +215,45 @@ func (c *CacheReader) maybeDownload() error {
 	return err
 }
 
+// If we have a non empty base urls, we will try to fetch the file ourself directly
+// from datamover-proxy (or anywhere)
+func (c *CacheReader) maybeDownload() error {
+	return c.maybeDownloadWithTimeout(3 * time.Second)
+}
+
 // maybeDownloadWithRetry attempts to download with retries for the first download
 // This is used when DownloadAtInit is true to handle transient network issues
+// Each retry uses an increased timeout to handle slow network conditions
 func (c *CacheReader) maybeDownloadWithRetry() error {
 	if len(c.BaseUrls) == 0 {
 		return nil
 	}
 
-	const maxRetries = 3
+	const maxRetries = 5
 	const retryDelay = 2 * time.Second
+	const initialTimeout = 3 * time.Second
+
+	// Timeout progression: 3s, 5s, 8s, 12s, 18s
+	timeouts := []time.Duration{
+		initialTimeout,
+		5 * time.Second,
+		8 * time.Second,
+		12 * time.Second,
+		18 * time.Second,
+	}
 
 	var lastErr error
 	for attempt := 0; attempt < maxRetries; attempt++ {
+		timeout := timeouts[attempt]
+
 		if attempt > 0 {
-			log.Infof("Retrying download for %s (attempt %d/%d)...", c.TaskName, attempt+1, maxRetries)
+			log.Infof("Retrying download for %s (attempt %d/%d) with timeout %v...", c.TaskName, attempt+1, maxRetries, timeout)
 			time.Sleep(retryDelay)
+		} else {
+			log.Infof("Attempting download for %s with timeout %v...", c.TaskName, timeout)
 		}
 
-		err := c.maybeDownload()
+		err := c.maybeDownloadWithTimeout(timeout)
 		if err == nil {
 			if attempt > 0 {
 				log.Infof("Download succeeded for %s after %d retries", c.TaskName, attempt)
@@ -242,7 +262,7 @@ func (c *CacheReader) maybeDownloadWithRetry() error {
 		}
 
 		lastErr = err
-		log.Warnf("Download attempt %d/%d failed for %s: %v", attempt+1, maxRetries, c.TaskName, err)
+		log.Warnf("Download attempt %d/%d failed for %s (timeout %v): %v", attempt+1, maxRetries, c.TaskName, timeout, err)
 	}
 
 	return fmt.Errorf("failed to download after %d attempts: %v", maxRetries, lastErr)
