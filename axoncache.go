@@ -231,9 +231,9 @@ func (c *CacheReader) maybeDownloadWithRetry() error {
 
 	const maxRetries = 5
 	const retryDelay = 2 * time.Second
-	const initialTimeout = 3 * time.Second
+	const initialTimeout = 1 * time.Second
 
-	// Timeout progression: 3s, 5s, 8s, 12s, 18s
+	// Timeout progression: 1s, 5s, 8s, 12s, 18s
 	timeouts := []time.Duration{
 		initialTimeout,
 		5 * time.Second,
