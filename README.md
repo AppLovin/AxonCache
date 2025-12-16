@@ -145,7 +145,7 @@ Sanitizers can be enabled by configuring CMake with `-DUSE_SANITIZER=<Address | 
 ### Docker build
 
 ```
-docker build -t alcache --network=host ./
+docker build -t alcache ./
 docker run --rm --network=host alcache
 ```
 
