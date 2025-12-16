@@ -16,25 +16,29 @@ jobs:
         with:
           fetch-depth: 0   # need full history + tags
 
-      - name: Get next simple tag
+      - name: Get next patch tag
         id: vars
         run: |
-          # Get the latest tag matching v<number>.0.0 , default to v0.0.0 if none
-          latest=$(git tag --list "v[0-9]*.0.0" | sort -V | tail -n1)
+          # Get the latest tag matching v<number>.<number>.<number>
+          latest=$(git tag --list "v[0-9]*.[0-9]*.[0-9]*" | sort -V | tail -n1)
+
+          # Default if no tag exists
           if [ -z "$latest" ]; then
             latest="v0.0.0"
           fi
           echo "Latest tag: $latest"
 
-          # Extract major version only — strip leading v and remove ".0.0"
-          major=${latest#v}
-          major=${major%.0.0}
+          # Strip leading v
+          version=${latest#v}
 
-          # Increment the major version
-          next_major=$((major + 1))
+          # Extract major, minor, patch
+          IFS='.' read -r major minor patch <<< "$version"
 
-          # Construct the new tag
-          new="v${next_major}.0.0"
+          # Increment patch version
+          next_patch=$((patch + 1))
+
+          # Generate new tag
+          new="v${major}.${minor}.${next_patch}"
           echo "New tag: $new"
 
           echo "tag=$new" >> $GITHUB_OUTPUT
