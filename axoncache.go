@@ -276,7 +276,7 @@ func (c *CacheReader) checkForNewFiles() {
 			case <-c.Stop:
 				log.Info("Stopping condition checker...")
 				return
-			default:
+			case <-time.After(c.UpdatePeriod):
 				err := c.maybeDownload()
 				if err != nil {
 					log.Errorf("Error downloading alcache file %s: %v", c.TaskName, err)
@@ -295,8 +295,6 @@ func (c *CacheReader) checkForNewFiles() {
 						}
 					}
 				}
-
-				time.Sleep(c.UpdatePeriod)
 			}
 		}
 	}()
