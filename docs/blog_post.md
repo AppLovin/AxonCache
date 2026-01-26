@@ -8,7 +8,7 @@ AxonCache is a production-ready, high-performance key-value store designed for m
 
 - **Rich Data Types**: Supports strings, integers, booleans, floats, and lists of strings/floats
 - **Memory-Mapped**: Zero-copy access via `mmap`, enabling instant loading without parsing
-- **Sub-microsecond Lookups**: Measured at 230ns in benchmarks, orders of magnitude faster than network calls
+- **Sub-microsecond Lookups**: Measured at 35ns in benchmarks, orders of magnitude faster than network calls
 - **Multi-Language Bindings**: C++, Go, Java, Python, and Rust support
 - **Production-Tested**: Used in production for over 10 years
 - **Value Deduplication**: Optional deduplication to reduce memory footprint
