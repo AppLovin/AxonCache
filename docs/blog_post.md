@@ -2,7 +2,7 @@
 
 ## Introduction
 
-AxonCache is a production-ready, high-performance key-value store designed for massive datasets. Unlike traditional in-memory hash tables that require parsing and loading entire datasets into RAM, AxonCache uses memory-mapped files to provide near-instant access to data without the memory overhead. This makes it ideal for applications dealing with datasets that exceed available RAM (our production datasets exceed 20GB).
+AxonCache is a production-ready, high-performance key-value store designed for large datasets. Unlike traditional in-memory hash tables that require parsing and loading entire datasets into RAM, AxonCache uses memory-mapped files to provide near-instant access to data without the memory overhead. This makes it ideal for applications dealing with datasets that exceed available RAM (our production datasets exceed 20GB).
 
 ### Key Features
 
@@ -401,8 +401,9 @@ CPU Cache Hierarchy:
 └─────────────────────────────────────────────────────────┘
 
 KeySpace (8MB) fits entirely in L3 cache!
-→ Most lookups hit L3 cache (10-20ns)
-→ Only DataSpace access may go to RAM (100ns)
+→ Most lookups hit L3 cache (~5ns for KeySpace access)
+→ DataSpace access typically in cache (~25ns), RAM fallback (~100ns)
+→ Total lookup time: ~35ns (measured on Apple M4 Max)
 ```
 
 #### 2. Minimal Memory Accesses
@@ -420,10 +421,10 @@ AxonCache lookup:
 ```
 1. Hash key (1 CPU cycle)
 2. Calculate slot (1 cycle)
-3. Read KeySpace slot (1 memory access, ~10ns if in cache)
+3. Read KeySpace slot (1 memory access, ~5ns if in L3 cache)
 4. Compare hashcode (1 cycle, no memory access)
-5. Read DataSpace record (1 memory access, ~100ns)
-Total: ~110ns + minimal overhead
+5. Read DataSpace record (1 memory access, ~25ns if in cache)
+Total: ~35ns (measured on Apple M4 Max)
 ```
 
 #### 3. No Virtual Function Overhead
@@ -461,13 +462,13 @@ XXH3 is specifically designed for speed:
 
 AxonCache consistently outperforms other key-value stores, especially for large datasets:
 
-| Implementation | Lookup Latency | Lookups QPS | Notes |
-|----------------|----------------|-------------|-------|
-| AxonCache C++ API | 35.0 ns | 28.5M | Native C++ |
-| AxonCache Go | 202.7 ns | 4.9M | Through CGO bridge |
-| Go Map | 54.8 ns | 18.3M | In-memory only |
-| LMDB | 423.7 ns | 2.4M | B-tree based |
-| LevelDB | 2,343.0 ns | 427K | LSM-tree based |
+| Implementation    | Lookup Latency | Lookups QPS | Notes              |
+|----------------   |----------------|-------------|--------------------|
+| AxonCache C++ API | 35.0 ns        | 28.5M       | Native C++         |
+| AxonCache Go      | 202.7 ns       | 4.9M        | Through CGO bridge |
+| Go Map            | 54.8 ns        | 18.3M       | In-memory only     |
+| LMDB              | 423.7 ns       | 2.4M        | B-tree based       |
+| LevelDB           | 2,343.0 ns     | 427K        | LSM-tree based     |
 
 *Benchmarks on Apple M4 Max, 1M keys*
 
@@ -556,6 +557,8 @@ AxonCache:
 ```
 
 ## Deep Dive: AxonCache Data Structure
+
+This section provides detailed, byte-level information about AxonCache's internal data structures. For high-level flow diagrams and visual representations, see the "Data Structure Visualization" section below.
 
 ### Memory Layout in Detail
 
@@ -679,84 +682,9 @@ KeySpace[3847245] = 0x3D1F970D00001234
                      └─ Hashcode for fast comparison
 ```
 
-### Lookup Process Step-by-Step
-
-```
-Request: Get("user_123")
-─────────────────────────────────────────────────────────────
-
-1. Hash the key
-   hash("user_123") = 0x7A3F2E1B9C4D5E6F
-
-2. Calculate slot
-   Slot = hashcode % numberOfKeySlots
-   Slot = 0x3D1F970D % 1,000,000 = 3,847,245
-
-3. Read KeySpace slot (single memory access)
-   KeySpace[3847245] = 0x3D1F970D00001234
-   
-4. Extract and compare hashcode
-   Stored hashcode: 0x3D1F970D
-   Our hashcode:    0x3D1F970D
-   Match! ✓
-
-5. Extract offset
-   Offset = 0x00001234
-
-6. Read DataSpace record (single memory access)
-   DataSpace[0x1234]:
-     keySize: 8
-     valSize: 8
-     type: String (0)
-     key: "user_123" ✓
-     value: "John Doe"
-
-7. Return value
-   Result: "John Doe" (230ns total)
-```
-
-### Collision Handling Visualization
-
-When a collision occurs, linear probing searches adjacent slots:
-
-```
-Initial Hash: Slot 3,847,245
-    │
-    ├─ Check slot 3,847,245
-    │  KeySpace[3847245] = [hashcode_A][offset_A]
-    │  Compare hashcode_A with our hashcode
-    │  No match → Collision!
-    │
-    ├─ Probe slot 3,847,246
-    │  KeySpace[3847246] = [hashcode_B][offset_B]
-    │  Compare hashcode_B with our hashcode
-    │  No match → Continue probing
-    │
-    ├─ Probe slot 3,847,247
-    │  KeySpace[3847247] = [hashcode_C][offset_C]
-    │  Compare hashcode_C with our hashcode
-    │  Match! ✓
-    │
-    └─ Read DataSpace[offset_C]
-       Return value
-```
-
-**Probe Sequence Visualization**:
-```
-KeySpace Layout:
-┌─────────────┬─────────────┬─────────────┬─────────────┐
-│ Slot 3847244│ Slot 3847245│ Slot 3847246│ Slot 3847247│
-│   [empty]   │ [hashcode_A]│ [hashcode_B]│ [hashcode_C]│
-│             │   [offset_A]│   [offset_B]│   [offset_C]│
-│             │   ✗ mismatch│   ✗ mismatch│   ✓ match!  │
-└─────────────┴─────────────┴─────────────┴─────────────┘
-                    │              │              │
-                    │              │              └─ Found!
-                    │              └─ Probe +1
-                    └─ Probe +1
-```
-
 ## Data Structure Visualization
+
+This section provides high-level flow diagrams and visual representations of how AxonCache operates. For detailed byte-level structure information, see the "Deep Dive: AxonCache Data Structure" section above.
 
 ### Complete File Layout
 
@@ -831,7 +759,7 @@ DataSpace[0x1234]:
   value: "John Doe"
     │
     ▼
-Return: "John Doe" (230ns total)
+Return: "John Doe" (35ns total)
 ```
 
 ### Collision Resolution Flow
