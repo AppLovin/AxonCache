@@ -234,7 +234,7 @@ Memory Layout:
 ├──────────┼──────────┼──────────┼──────────────┼──────────────┤
 │ keySize  │ type     │ valSize  │ key data     │ value data   │
 │ 0x0008   │ 0x00     │ 0x000008 │ "user_123"   │ "John Doe"   │
-│ (8 bytes)│ (String) │ (8 bytes)│ (8 bytes)    │ (8 bytes)     │
+│ (8 bytes)│ (String) │ (8 bytes)│ (8 bytes)    │ (8 bytes)    │
 └──────────┴──────────┴──────────┴──────────────┴──────────────┘
 
 Total: 6 (header) + 8 (key) + 8 (value) = 22 bytes
@@ -281,22 +281,22 @@ Application                    Kernel                    Disk
 
 #### Memory-Mapped Approach (Fast)
 ```
-Application                    Kernel                    Disk
-    │                            │                        │
-    │  mmap(file)                 │                       │
-    ├───────────────────────────►│                        │
-    │                            │  Create page table     │
-    │                            │  entries (no data copy)│
-    │  Virtual address returned   │                       │
-    │◄───────────────────────────┤                        │
-    │                            │                        │
-    │  Access data directly       │                       │
-    │  (page fault on first access)│                      │
-    │                            │  Load page from disk   │
-    │                            ├───────────────────────►│
-    │                            │                        │
-    │  Data available immediately │                       │
-    │  (subsequent accesses cached)│                      │
+Application                      Kernel                    Disk
+    │                              │                        │
+    │  mmap(file)                  │                        │
+    ├─────────────────────────────►│                        │
+    │                              │  Create page table     │
+    │                              │  entries (no data copy)│
+    │  Virtual address returned    │                        │
+    │◄─────────────────────────────┤                        │
+    │                              │                        │
+    │  Access data directly        │                        │
+    │  (page fault on first access)│                        │
+    │                              │  Load page from disk   │
+    │                              ├───────────────────────►│
+    │                              │                        │
+    │  Data available immediately  │                        │
+    │  (subsequent accesses cached)│                        │
 ```
 
 **Benefits**:
