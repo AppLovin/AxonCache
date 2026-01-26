@@ -27,26 +27,26 @@ A hash table is a data structure that maps keys to values using a hash function.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    Hash Table                            │
+│                    Hash Table                           │
 ├─────────────────────────────────────────────────────────┤
-│                                                          │
+│                                                         │
 │  Key: "user_123"                                        │
-│    │                                                     │
+│    │                                                    │
 │    │ Hash Function                                      │
-│    ▼                                                     │
+│    ▼                                                    │
 │  hash("user_123") → 0x7A3F2E1B                          │
-│    │                                                     │
+│    │                                                    │
 │    │ Modulo Operation                                   │
-│    ▼                                                     │
-│  0x7A3F2E1B % 8 = 3                                      │
-│    │                                                     │
-│    ▼                                                     │
-│  ┌─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┐   │
-│  │  0  │  1  │  2  │  3  │  4  │  5  │  6  │  7  │   │
-│  └─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┘   │
-│                    ▲                                     │
-│                    │                                     │
-│              Value stored here                           │
+│    ▼                                                    │
+│  0x7A3F2E1B % 8 = 3                                     │
+│    │                                                    │
+│    ▼                                                    │
+│  ┌─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┐      │
+│  │  0  │  1  │  2  │  3  │  4  │  5  │  6  │  7  │      │
+│  └─────┴─────┴─────┴─────┴─────┴─────┴─────┴─────┘      │
+│                    ▲                                    │
+│                    │                                    │
+│              Value stored here                          │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -98,29 +98,29 @@ AxonCache's file structure is carefully designed for optimal memory-mapped acces
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    AxonCache File Layout                     │
+│                    AxonCache File Layout                    │
 ├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  ┌────────────────────────────────────────────────────┐    │
-│  │              CacheHeader (64 bytes)                 │    │
-│  │  - Magic number, version, metadata                  │    │
-│  │  - Hash function ID, offset bits                    │    │
-│  │  - Number of key slots, entries, data size          │    │
-│  └────────────────────────────────────────────────────┘    │
-│                                                              │
-│  ┌────────────────────────────────────────────────────┐    │
-│  │              KeySpace (8 bytes × N slots)           │    │
-│  │  Each slot: 64-bit value                            │    │
-│  │  - High bits: Hash code (for fast comparison)      │    │
-│  │  - Low bits:  Offset to data in DataSpace           │    │
-│  └────────────────────────────────────────────────────┘    │
-│                                                              │
-│  ┌────────────────────────────────────────────────────┐    │
-│  │              DataSpace (variable size)              │    │
-│  │  Stores actual key-value pairs:                     │    │
-│  │  [key_size][value_size][type][key_data][value_data]│    │
-│  └────────────────────────────────────────────────────┘    │
-│                                                              │
+│                                                             │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │              CacheHeader (64 bytes)                │     │
+│  │  - Magic number, version, metadata                 │     │
+│  │  - Hash function ID, offset bits                   │     │
+│  │  - Number of key slots, entries, data size         │     │
+│  └────────────────────────────────────────────────────┘     │
+│                                                             │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │              KeySpace (8 bytes × N slots)          │     │
+│  │  Each slot: 64-bit value                           │     │
+│  │  - High bits: Hash code (for fast comparison)      │     │
+│  │  - Low bits:  Offset to data in DataSpace          │     │
+│  └────────────────────────────────────────────────────┘     │
+│                                                             │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │              DataSpace (variable size)             │     │
+│  │  Stores actual key-value pairs:                    │     │
+│  │  [key_size][value_size][type][key_data][value_data]│     │
+│  └────────────────────────────────────────────────────┘     │
+│                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -166,18 +166,18 @@ Step 4: Check KeySpace slot
   ┌─────────────────────────────────────┐
   │ Slot 3,847,245:                     │
   │   Hashcode: 0x3D1F970D ✓            │
-  │   Offset:   0x00001234               │
-  │   → Points to DataSpace at offset    │
+  │   Offset:   0x00001234              │
+  │   → Points to DataSpace at offset   │
   └─────────────────────────────────────┘
          │
          ▼
   ┌─────────────────────────────────────┐
-  │ DataSpace[0x1234]:                   │
-  │   Key size: 8                        │
-  │   Value size: 12                     │
-  │   Type: String                       │
-  │   Key: "user_123"                    │
-  │   Value: "John Doe"                  │
+  │ DataSpace[0x1234]:                  │
+  │   Key size: 8                       │
+  │   Value size: 12                    │
+  │   Type: String                      │
+  │   Key: "user_123"                   │
+  │   Value: "John Doe"                 │
   └─────────────────────────────────────┘
 ```
 
@@ -189,10 +189,10 @@ Collision Scenario:
   Probe: 3,847,245 → 3,847,246 → 3,847,247 (found empty or matching)
 
 ┌─────────────────────────────────────────────────────────┐
-│                    KeySpace                              │
+│                    KeySpace                             │
 ├─────────────────────────────────────────────────────────┤
-│ Slot 3,847,245: [hashcode_A][offset_A] ← "user_456"    │
-│ Slot 3,847,246: [hashcode_B][offset_B] ← "user_789"    │
+│ Slot 3,847,245: [hashcode_A][offset_A] ← "user_456"     │
+│ Slot 3,847,246: [hashcode_B][offset_B] ← "user_789"     │
 │ Slot 3,847,247: [hashcode_C][offset_C] ← "user_123" ✓   │
 │ Slot 3,847,248: [0][0] ← Empty                          │
 └─────────────────────────────────────────────────────────┘
@@ -206,7 +206,7 @@ Each entry in DataSpace follows this compact structure:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│              LinearProbeRecord (6 bytes header)          │
+│              LinearProbeRecord (6 bytes header)         │
 ├─────────────────────────────────────────────────────────┤
 │ Offset │ Size │ Field        │ Description              │
 ├────────┼──────┼──────────────┼──────────────────────────┤
@@ -227,8 +227,8 @@ Value: "John Doe" (8 bytes)
 
 Record Layout:
 ┌──────┬──────┬──────┬──────────┬──────────────┐
-│ 0x08 │0x00  │0x00  │ 0x000008 │"user_123"   │
-│      │      │      │          │"John Doe"   │
+│ 0x08 │0x00  │0x00  │ 0x000008 │"user_123"    │
+│      │      │      │          │"John Doe"    │
 └──────┴──────┴──────┴──────────┴──────────────┘
 keySize type  valSize  key data   value data
 ```
@@ -276,19 +276,19 @@ Application                    Kernel                    Disk
 ```
 Application                    Kernel                    Disk
     │                            │                        │
-    │  mmap(file)                 │                        │
+    │  mmap(file)                 │                       │
     ├───────────────────────────►│                        │
     │                            │  Create page table     │
     │                            │  entries (no data copy)│
-    │  Virtual address returned   │                        │
+    │  Virtual address returned   │                       │
     │◄───────────────────────────┤                        │
     │                            │                        │
-    │  Access data directly       │                        │
+    │  Access data directly       │                       │
     │  (page fault on first access)│                      │
     │                            │  Load page from disk   │
     │                            ├───────────────────────►│
     │                            │                        │
-    │  Data available immediately │                        │
+    │  Data available immediately │                       │
     │  (subsequent accesses cached)│                      │
 ```
 
@@ -302,34 +302,34 @@ Application                    Kernel                    Disk
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│              Process Virtual Address Space               │
+│              Process Virtual Address Space              │
 ├─────────────────────────────────────────────────────────┤
-│                                                          │
-│  0x0000...  ┌─────────────────────┐                    │
-│             │   Stack              │                    │
-│             └─────────────────────┘                    │
-│                                                          │
-│  0x4000...  ┌─────────────────────┐                    │
-│             │   Heap               │                    │
-│             └─────────────────────┘                    │
-│                                                          │
-│  0x7FFF...  ┌─────────────────────┐                    │
-│             │   Mapped File        │◄─── mmap()         │
-│             │   (AxonCache data)   │    returns this    │
-│             │                      │    virtual addr   │
-│             └─────────────────────┘                    │
-│                     │                                    │
-│                     │ Page Table Entry                   │
-│                     ▼                                    │
-│  ┌──────────────────────────────────────┐              │
-│  │  Kernel Page Cache                    │              │
-│  │  ┌──────┬──────┬──────┬──────┐       │              │
-│  │  │Page 1│Page 2│Page 3│Page 4│       │              │
-│  │  └──────┴──────┴──────┴──────┘       │              │
-│  │       │                                │              │
-│  └───────┼────────────────────────────────┘              │
-│          │                                                │
-│          ▼                                                │
+│                                                         │
+│  0x0000...  ┌─────────────────────┐                     │
+│             │   Stack            │                      │
+│             └─────────────────────┘                     │
+│                                                         │
+│  0x4000...  ┌─────────────────────┐                     │
+│             │   Heap              │                     │
+│             └─────────────────────┘                     │
+│                                                         │
+│  0x7FFF...  ┌─────────────────────┐                     │
+│             │   Mapped File       │◄─── mmap()          │
+│             │   (AxonCache data)  │    returns this     │
+│             │                     │    virtual addr     │
+│             └─────────────────────┘                     │
+│                     │                                   │
+│                     │ Page Table Entry                  │
+│                     ▼                                   │
+│  ┌──────────────────────────────────────┐               │
+│  │  Kernel Page Cache                   │               │
+│  │  ┌──────┬──────┬──────┬──────┐       │               │
+│  │  │Page 1│Page 2│Page 3│Page 4│       │               │
+│  │  └──────┴──────┴──────┴──────┘       │               │
+│  │       │                              │               │
+│  └───────┼──────────────────────────────┘               │
+│          │                                              │
+│          ▼                                              │
 │  ┌──────────────────────────────────────┐               │
 │  │  Disk File (AxonCache.cache)         │               │
 │  └──────────────────────────────────────┘               │
@@ -390,7 +390,7 @@ CPU Cache Hierarchy:
 │ L1 Cache (32KB): KeySpace slots (frequently accessed)   │
 │ L2 Cache (256KB): More KeySpace + recent DataSpace      │
 │ L3 Cache (8MB): Large portions of KeySpace              │
-│ RAM: Full KeySpace + DataSpace pages                     │
+│ RAM: Full KeySpace + DataSpace pages                    │
 └─────────────────────────────────────────────────────────┘
 
 KeySpace (8MB) fits entirely in L3 cache!
@@ -568,13 +568,14 @@ Each slot in KeySpace is exactly 8 bytes (64 bits):
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│              KeySpace Slot (8 bytes)                       │
+│              KeySpace Slot (8 bytes)                        │
 ├─────────────────────────────────────────────────────────────┤
 │ Bit Range │ Size │ Content                                  │
 ├───────────┼──────┼──────────────────────────────────────────┤
-│ 63..35    │ 29b  │ Hashcode (for fast comparison)          │
-│ 34..0     │ 35b  │ Offset to DataSpace record              │
+│ 63..35    │ 29b  │ Hashcode (for fast comparison)           │
+│ 34..0     │ 35b  │ Offset to DataSpace record               │
 └─────────────────────────────────────────────────────────────┘
+```
 
 Example:
   Hashcode: 0x1A2B3C4D (29 bits, high bits)
@@ -594,7 +595,7 @@ Each record in DataSpace has a compact 6-byte header followed by variable-length
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│         LinearProbeRecord Layout                             │
+│         LinearProbeRecord Layout                            │
 ├─────────────────────────────────────────────────────────────┤
 │ Offset │ Size │ Field      │ Bits │ Description             │
 ├────────┼──────┼────────────┼──────┼─────────────────────────┤
@@ -605,6 +606,7 @@ Each record in DataSpace has a compact 6-byte header followed by variable-length
 │ +6     │ N    │ keyData    │ var  │ Actual key bytes        │
 │ +6+N   │ M    │ valueData  │ var  │ Actual value bytes      │
 └─────────────────────────────────────────────────────────────┘
+```
 
 Total Size: 6 + keySize + valSize bytes
 ```
@@ -646,12 +648,12 @@ DataSpace grows: [previous records...][new record]
 
 New Record at offset 0x1234:
   ┌──────┬──────┬──────┬──────────┬──────────────┐
-  │ 0x08 │0x00  │0x00  │ 0x000008 │"user_123"   │
-  │      │      │      │          │"John Doe"   │
+  │ 0x08 │0x00  │0x00  │ 0x000008 │"user_123"    │
+  │      │      │      │          │"John Doe"    │
   └──────┴──────┴──────┴──────────┴──────────────┘
   keySize type  valSize  key data   value data
   (8)    (0)    (8)      (8 bytes) (8 bytes)
-  
+
   Total: 6 + 8 + 8 = 22 bytes
 ```
 
@@ -748,35 +750,35 @@ KeySpace Layout:
 ┌──────────────────────────────────────────────────────────────┐
 │                    AxonCache File (20GB example)             │
 ├──────────────────────────────────────────────────────────────┤
-│                                                               │
-│  Header (64 bytes)                                            │
-│  ┌────────────────────────────────────────────────────┐     │
-│  │ magic: 0xCAFE                                       │     │
-│  │ version: 2                                          │     │
-│  │ numberOfKeySlots: 1,000,000                         │     │
-│  │ numberOfEntries: 950,000                            │     │
-│  │ dataSize: 20,000,000,000                            │     │
-│  └────────────────────────────────────────────────────┘     │
-│                                                               │
+│                                                              │
+│  Header (64 bytes)                                           │
+│  ┌────────────────────────────────────────────────────┐      │
+│  │ magic: 0xCAFE                                      │      │
+│  │ version: 2                                         │      │
+│  │ numberOfKeySlots: 1,000,000                        │      │
+│  │ numberOfEntries: 950,000                           │      │
+│  │ dataSize: 20,000,000,000                           │      │
+│  └────────────────────────────────────────────────────┘      │
+│                                                              │
 │  KeySpace (8MB = 1M slots × 8 bytes)                         │
-│  ┌──────┬──────┬──────┬──────┬──────┬──────┬──────┐         │
-│  │Slot 0│Slot 1│Slot 2│ ... │Slot N│ ... │Slot 1M│         │
-│  │[hash]│[hash]│[hash]│     │[hash]│     │[hash]│         │
-│  │[off] │[off] │[off] │     │[off] │     │[off] │         │
-│  └──────┴──────┴──────┴──────┴──────┴──────┴──────┘         │
+│  ┌──────┬──────┬──────┬──────┬──────┬──────┬───────┐         │
+│  │Slot 0│Slot 1│Slot 2│ ...  │Slot N│ ...  │Slot 1M│         │
+│  │[hash]│[hash]│[hash]│      │[hash]│      │[hash] │         │
+│  │[off] │[off] │[off] │      │[off] │      │[off]  │         │
+│  └──────┴──────┴──────┴──────┴──────┴──────┴───────┘         │
 │    │      │      │              │              │             │
 │    │      │      │              │              │             │
 │    ▼      ▼      ▼              ▼              ▼             │
-│                                                               │
-│  DataSpace (20GB)                                             │
-│  ┌────────────────────────────────────────────────────┐       │
-│  │ Record 0: [6B header][key][value]                │       │
-│  │ Record 1: [6B header][key][value]                │       │
-│  │ Record 2: [6B header][key][value]                │       │
-│  │ ...                                                │       │
-│  │ Record 950K: [6B header][key][value]            │       │
-│  └────────────────────────────────────────────────────┘       │
-│                                                               │
+│                                                              │
+│  DataSpace (20GB)                                            │
+│  ┌──────────────────────────────────────────────────┐        │
+│  │ Record 0: [6B header][key][value]                │        │
+│  │ Record 1: [6B header][key][value]                │        │
+│  │ Record 2: [6B header][key][value]                │        │
+│  │ ...                                              │        │
+│  │ Record 950K: [6B header][key][value]             │        │
+│  └──────────────────────────────────────────────────┘        │
+│                                                              │
 └──────────────────────────────────────────────────────────────┘
 ```
 
