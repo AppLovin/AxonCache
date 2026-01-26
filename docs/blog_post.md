@@ -206,18 +206,21 @@ Each entry in DataSpace follows this compact structure:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│              LinearProbeRecord (6 bytes header)         │
+│         LinearProbeRecord Structure (6-byte header)      │
 ├─────────────────────────────────────────────────────────┤
-│ Offset │ Size │ Field        │ Description              │
-├────────┼──────┼──────────────┼──────────────────────────┤
-│   0    │  2   │ keySize      │ Length of key in bytes   │
-│   2    │  5   │ dedupIndex   │ Index for deduplication  │
-│   2    │  3   │ type         │ Value type (String, etc) │
-│   4    │  3   │ valSize      │ Length of value (24-bit) │
-│   6    │  N   │ data[]       │ Key + Value data         │
+│ Byte │ Size │ Field      │ Bits │ Description          │
+├──────┼──────┼────────────┼──────┼───────────────────────┤
+│  0-1 │  2   │ keySize    │ 16   │ Key length (bytes)   │
+│  2   │  1   │ dedupIndex │  5   │ Dedup index (bits)   │
+│  2   │  1   │ type       │  3   │ Value type (bits)    │
+│  4-5 │  2   │ valSize    │ 24   │ Value length (bytes) │
+│  6+  │  N   │ keyData    │ var  │ Actual key bytes     │
+│ 6+N+ │  M   │ valueData  │ var  │ Actual value bytes   │
 └─────────────────────────────────────────────────────────┘
 
-Total: 6 bytes header + keySize + valSize
+Total Size: 6 bytes (header) + keySize + valSize
+
+Note: dedupIndex (5 bits) and type (3 bits) share byte 2
 ```
 
 **Example Record**:
@@ -225,12 +228,16 @@ Total: 6 bytes header + keySize + valSize
 Key: "user_123" (8 bytes)
 Value: "John Doe" (8 bytes)
 
-Record Layout:
-┌──────┬──────┬──────┬──────────┬──────────────┐
-│ 0x08 │0x00  │0x00  │ 0x000008 │"user_123"    │
-│      │      │      │          │"John Doe"    │
-└──────┴──────┴──────┴──────────┴──────────────┘
-keySize type  valSize  key data   value data
+Memory Layout:
+┌──────────┬──────────┬──────────┬──────────────┬──────────────┐
+│ Byte 0-1 │ Byte 2   │ Byte 4-5 │ Byte 6-13    │ Byte 14-21   │
+├──────────┼──────────┼──────────┼──────────────┼──────────────┤
+│ keySize  │ type     │ valSize  │ key data     │ value data   │
+│ 0x0008   │ 0x00     │ 0x000008 │ "user_123"   │ "John Doe"   │
+│ (8 bytes)│ (String) │ (8 bytes)│ (8 bytes)    │ (8 bytes)     │
+└──────────┴──────────┴──────────┴──────────────┴──────────────┘
+
+Total: 6 (header) + 8 (key) + 8 (value) = 22 bytes
 ```
 
 ### Why AxonCache's Hash Table Works Well
@@ -577,7 +584,8 @@ Each slot in KeySpace is exactly 8 bytes (64 bits):
 └─────────────────────────────────────────────────────────────┘
 ```
 
-Example:
+**Example:**
+```
   Hashcode: 0x1A2B3C4D (29 bits, high bits)
   Offset:   0x00001234 (35 bits, low bits)
   
@@ -595,20 +603,26 @@ Each record in DataSpace has a compact 6-byte header followed by variable-length
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│         LinearProbeRecord Layout                            │
+│         LinearProbeRecord Layout (Detailed)                 │
 ├─────────────────────────────────────────────────────────────┤
-│ Offset │ Size │ Field      │ Bits │ Description             │
-├────────┼──────┼────────────┼──────┼─────────────────────────┤
-│ +0     │ 2    │ keySize    │ 16   │ Key length in bytes     │
-│ +2     │ 1    │ dedupIndex │ 5    │ Dedup index (high bits) │
-│ +2     │ 1    │ type       │ 3    │ Value type (low bits)   │
-│ +4     │ 2    │ valSize    │ 24   │ Value length (3 bytes)  │
-│ +6     │ N    │ keyData    │ var  │ Actual key bytes        │
-│ +6+N   │ M    │ valueData  │ var  │ Actual value bytes      │
+│ Byte │ Size │ Field      │ Bits │ Description              │
+├──────┼──────┼────────────┼──────┼───────────────────────────┤
+│  0-1 │  2   │ keySize    │ 16   │ Key length in bytes      │
+│  2   │  1   │ dedupIndex │  5   │ Dedup index (high bits)  │
+│  2   │  1   │ type       │  3   │ Value type (low bits)    │
+│  4-5 │  2   │ valSize    │ 24   │ Value length (3 bytes)   │
+│  6+  │  N   │ keyData    │ var  │ Actual key bytes         │
+│ 6+N+ │  M   │ valueData  │ var  │ Actual value bytes      │
 └─────────────────────────────────────────────────────────────┘
-```
 
-Total Size: 6 + keySize + valSize bytes
+Total Size: 6 bytes (header) + keySize + valSize bytes
+
+Byte 2 Layout (dedupIndex and type share the same byte):
+┌─────────────────────────────────────────────────────────┐
+│ Bit 7 │ Bit 6 │ Bit 5 │ Bit 4 │ Bit 3 │ Bit 2 │ Bit 1 │ Bit 0 │
+├───────┼───────┼───────┼───────┼───────┼───────┼───────┼───────┤
+│              dedupIndex (5 bits, high)  │ type (3 bits, low) │
+└─────────────────────────────────────────────────────────┘
 ```
 
 **Type Encoding**:
@@ -1032,65 +1046,6 @@ cargo run --example simple_benchmark
 - **GitHub**: [https://github.com/AppLovin/AxonCache](https://github.com/AppLovin/AxonCache)
 - **Benchmarks**: See README.md for detailed performance comparisons
 - **Documentation**: Comprehensive API documentation in code
-
-## Visual Diagrams (Image Placeholders)
-
-For a more visual representation, the following diagrams would enhance this blog post:
-
-### 1. Hash Table Comparison Diagram
-**Location**: `docs/images/hash_table_comparison.png`
-
-A side-by-side comparison showing:
-- Traditional chained hash table
-- Linear probing hash table
-- AxonCache's two-level design
-- Memory layout differences
-
-### 2. Memory Mapping Flow Diagram
-**Location**: `docs/images/mmap_flow.png`
-
-A detailed diagram showing:
-- Process virtual address space
-- Page table entries
-- Kernel page cache
-- Disk file mapping
-- Page fault handling
-
-### 3. Performance Comparison Chart
-**Location**: `docs/images/performance_chart.png`
-
-Bar charts comparing:
-- Lookup latency across implementations
-- Memory usage comparison
-- Startup time comparison
-- QPS capabilities
-
-### 4. Data Structure Layout Diagram
-**Location**: `docs/images/data_structure_layout.png`
-
-A detailed memory layout showing:
-- CacheHeader structure
-- KeySpace array with hashcode/offset split
-- DataSpace records with variable-length data
-- Pointer relationships
-
-### 5. Collision Resolution Animation
-**Location**: `docs/images/collision_resolution.gif`
-
-An animated sequence showing:
-- Hash collision
-- Linear probing sequence
-- Slot finding process
-- DataSpace record access
-
-### 6. Multi-Process Memory Sharing
-**Location**: `docs/images/multi_process_sharing.png`
-
-Diagram showing:
-- Multiple processes
-- Shared page cache
-- Physical memory pages
-- Memory savings visualization
 
 ---
 
