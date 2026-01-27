@@ -2,14 +2,20 @@
 
 ## Introduction
 
-AxonCache is a production-ready, high-performance key-value store designed for large datasets. Unlike traditional in-memory hash tables that require parsing and loading entire datasets into RAM, AxonCache uses memory-mapped files to provide near-instant access to data without the memory overhead. This makes it ideal for applications dealing with datasets that exceed available RAM (our production datasets exceed 20GB).
+AxonCache is a production-ready, high-performance key-value store designed for large datasets. Unlike traditional in-memory hash tables that require parsing and loading entire datasets into RAM, AxonCache uses memory-mapped (mmap) files to provide near-instant access to data without the memory overhead. 
+
+Comparable mmap based libraries such as LevelDB or LMDB support more use cases while AxonCache is essentially read-only, removing the need for locks with a simpler and more efficient design. The only known equivalent library is named CDB (constant database) but it is an old C code based, is unmaintained and limited to 32 bits. In our benchmarks AxonCache is always faster than other file based key-value stores, and just slightly slower than the pure in memory and highly optimized swiss table provided in Abseil flat_map.
+
+AxonCache has been in use for more than 10 years at **AppLovin**. It is paired with a data replication system called **datamover** which download newer caches across datacenter, while minimizing networking costs, and a cache generation system named **populate**, that read data mostly from SQL database to generate cache input file.
 
 ### Key Features
 
 - **Rich Data Types**: Supports strings, integers, booleans, floats, and lists of strings/floats
 - **Memory-Mapped**: Zero-copy access via `mmap`, enabling instant loading without parsing
-- **Sub-microsecond Lookups**: Measured at 35ns in benchmarks, orders of magnitude faster than network calls
-- **Multi-Language Bindings**: C++, Go, Java, Python, and Rust support
+- **Sub-microsecond Lookups**: Measured at 35ns in benchmarks for a 1M keys dataset
+- **Read-Only Design**: Cache files are read-only, eliminating the need for mutexes or locks
+- **Lock-Free Concurrency**: No mutexes in the core library—thread-safe through atomic pointer swaps
+- **Multi-Language Bindings**: C++, Go, Java, and Python support
 - **Production-Tested**: Used in production for over 10 years
 - **Value Deduplication**: Optional deduplication to reduce memory footprint
 
@@ -90,7 +96,7 @@ Probe sequence: 3 → 4 → 5 → 6 (found empty slot)
 
 ## AxonCache's Hash Table Design
 
-AxonCache uses **linear probing** with several optimizations that make it exceptionally fast and memory-efficient.
+AxonCache initially used **chaining**, but in 2022 it was rewritten to use **linear probing**, along with several optimizations that improved both performance and memory efficiency. The change resulted in a significant increase in request-processing speed, with a measurable positive impact on revenue once enabled.
 
 ### Architecture Overview
 
@@ -351,36 +357,6 @@ Application                      Kernel                    Disk
 4. **Shared Memory**: Multiple processes share the same physical pages
 5. **Transparent Caching**: OS handles caching automatically
 
-### AxonCache's mmap Implementation
-
-AxonCache uses `mmap` to map the entire cache file into virtual memory:
-
-```cpp
-// Simplified mmap usage in AxonCache
-void* basePtr = mmap(
-    nullptr,              // Let OS choose address
-    fileSize,             // Map entire file
-    PROT_READ,            // Read-only access
-    MAP_SHARED,           // Share with other processes
-    fileDescriptor,       // File to map
-    0                     // Offset from start
-);
-
-// Header is at the beginning
-CacheHeader* header = (CacheHeader*)basePtr;
-
-// KeySpace starts after header
-uint64_t* keySpace = (uint64_t*)(basePtr + header->headerSize);
-
-// DataSpace starts after KeySpace
-uint8_t* dataSpace = (uint8_t*)(basePtr + header->headerSize + keySpaceSize);
-```
-
-**Key Optimizations**:
-- **MAP_POPULATE**: Optionally preload all pages (faster first access, higher initial memory)
-- **8-byte alignment**: Ensures cache-friendly memory access
-- **Read-only mapping**: Prevents accidental writes, allows OS optimizations
-
 ## Performance Analysis
 
 ### Why AxonCache is Fast: A Deep Dive
@@ -600,6 +576,9 @@ Each slot in KeySpace is exactly 8 bytes (64 bits):
 - Allows atomic reads/writes
 - Perfect alignment for 64-bit systems
 
+**KeySpace Initialization:**
+KeySpace is zero-initialized using `calloc()` during cache creation, ensuring all slots start with `offset = 0` (empty). This enables fast negative lookups—empty slots are detected immediately without accessing DataSpace.
+
 ### DataSpace Record Structure
 
 Each record in DataSpace has a compact 6-byte header followed by variable-length data:
@@ -762,6 +741,22 @@ DataSpace[0x1234]:
 Return: "John Doe" (35ns total)
 ```
 
+### Negative Lookups (Key Not Found)
+
+AxonCache handles negative lookups efficiently through two mechanisms:
+
+**Case 1: Empty Slot (Most Common)**
+- KeySpace is zero-initialized with `calloc()` during cache creation
+- Empty slots have `offset == 0` in the low 35 bits
+- Detection: Single memory read, immediate termination → **~35ns**
+
+**Case 2: Hash Collision with Key Mismatch (Rare)**
+- Two different keys hash to the same value
+- Hashcode matches, but key comparison in DataSpace fails
+- Linear probing continues until empty slot found → **~35ns + probe overhead**
+
+Both cases avoid unnecessary DataSpace access when possible, keeping negative lookups as fast as positive lookups.
+
 ### Collision Resolution Flow
 
 ```
@@ -837,7 +832,7 @@ Done (collision count: 2)
 |---------|---------------|-----------|
 | Load Time | Minutes (parsing) | <1ms (mmap) |
 | Memory Usage | Full dataset × N processes | Shared pages |
-| Max Dataset | Limited by RAM | Up to 274GB |
+| Max Dataset | Limited by RAM | Up to 274GB (with 38-bit offset) |
 | Lookup Speed | Fastest (30ns) | Very fast (35ns) |
 | Persistence | No | Yes (file-based) |
 
@@ -849,6 +844,46 @@ Done (collision count: 2)
 | Write Speed | Slower | Write-once, read-many |
 | Complexity | B-tree/LSM-tree | Simple hash table |
 | Use Case | Read-write workloads | Read-heavy workloads |
+
+### vs. Constant Database (CDB)
+
+CDB (Constant Database) is a read-only key-value store that shares similar design principles with AxonCache—both use memory-mapped files and hash tables for fast lookups. However, there are significant differences:
+
+| Feature | CDB | AxonCache |
+|---------|-----|-----------|
+| **Maintenance Status** | Not actively maintained | Actively maintained, production-tested |
+| **Language Bindings** | Separate, unmaintained bindings | Official, maintained bindings (C++, Go, Java, Python) |
+| **Data Size Limit** | 32-bit (4GB maximum) | 16-38 bit offset (65KB-274GB, configurable) |
+| **Lookup Performance** | 74.4 ns (Go, mmap) | 35.0 ns (C++), 202.7 ns (Go) |
+| **Data Types** | Strings only | Strings, integers, floats, booleans, lists |
+| **Architecture** | Single hash table | Two-level hash (KeySpace + DataSpace) |
+| **Value Deduplication** | No | Yes (optional) |
+| **Cross-Platform** | Limited | Linux, macOS |
+| **Production Use** | Legacy, minimal updates | Actively developed, 10+ years in production |
+
+**Key Limitations of CDB:**
+
+1. **32-bit Data Space Limitation**: CDB uses 32-bit offsets, limiting the total data size to 4GB. This is a fundamental architectural limitation that cannot be easily overcome without breaking compatibility.
+
+2. **Maintenance Issues**: The original CDB implementation by D. J. Bernstein is no longer actively maintained. While the format is stable, bug fixes and improvements are rare.
+
+3. **Binding Fragmentation**: Language bindings for CDB (Go, Python, etc.) are maintained separately by different authors, leading to:
+   - Inconsistent API design across languages
+   - Varying levels of maintenance and support
+   - Potential security vulnerabilities in unmaintained bindings
+   - No unified release cycle or testing
+
+4. **Limited Feature Set**: CDB only supports string values, requiring applications to serialize complex data types manually.
+
+**Why AxonCache is a Better Choice:**
+
+- **Active Development**: Regular updates, bug fixes, and performance improvements
+- **Unified Bindings**: All language bindings are part of the core project with consistent APIs
+- **Scalability**: Can handle datasets up to 68x larger than CDB (274GB vs 4GB with 38-bit offset configuration)
+- **Rich Data Types**: Native support for multiple data types without serialization overhead
+- **Production Ready**: Battle-tested in high-throughput production environments
+
+For new projects or when migrating from CDB, AxonCache provides a modern, actively maintained alternative with better performance and scalability.
 
 ## Implementation Details
 
@@ -909,10 +944,20 @@ numberOfKeySlots = expectedKeys / 0.8
 
 Balance between hashcode bits and offset bits:
 
-- **More offset bits**: Larger DataSpace (up to 274GB)
+- **More offset bits**: Larger DataSpace (up to 274GB with 38 bits)
 - **More hashcode bits**: Better collision detection, smaller DataSpace
 
-Default: 35 offset bits (supports up to 274GB DataSpace)
+**Offset Bits Range:**
+- **Minimum**: 16 bits (supports up to 65KB DataSpace)
+- **Default**: 35 bits (supports up to 32GB DataSpace)
+- **Maximum**: 38 bits (supports up to 274GB DataSpace)
+
+The offset bits can be configured from 16 to 38 bits, allowing you to scale the DataSpace size based on your needs. With 38 offset bits, you can address up to 274GB of data, which is the maximum supported by AxonCache.
+
+**Trade-offs:**
+- **Higher offset bits (36-38)**: Larger DataSpace capacity, but fewer hashcode bits for collision detection
+- **Lower offset bits (16-34)**: More hashcode bits for better collision detection, but smaller DataSpace capacity
+- **Default (35 bits)**: Good balance for most use cases, supporting datasets up to 32GB
 
 ### 3. Memory Preloading
 
@@ -949,26 +994,6 @@ AxonCache represents a unique approach to key-value storage that prioritizes:
 
 Whether you're building high-throughput services, optimizing cold starts, or managing memory-constrained environments, AxonCache provides a robust, performant solution for read-heavy workloads.
 
-### Getting Started
-
-```bash
-# C++
-./build.sh
-./build/main/axoncache_cli --bench
-
-# Go
-go run cmd/benchmark.go
-
-# Python
-python3 axoncache/bench.py
-
-# Java
-sh java/run_benchmark.sh
-
-# Rust
-cargo run --example simple_benchmark
-```
-
 ### Resources
 
 - **GitHub**: [https://github.com/AppLovin/AxonCache](https://github.com/AppLovin/AxonCache)
@@ -977,4 +1002,5 @@ cargo run --example simple_benchmark
 
 ---
 
-*AxonCache has been battle-tested in production for over 10 years, serving billions of requests with datasets exceeding 20GB. It's open-source, well-tested, and ready for your production workloads.*
+**Story told by**: Benjamin, MTS
+**Work contributed by**: the Axon ad-platform team
