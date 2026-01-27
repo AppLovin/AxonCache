@@ -4,9 +4,9 @@
 
 AxonCache is a production-ready, high-performance key-value store designed for large datasets. Unlike traditional in-memory hash tables that require parsing and loading entire datasets into RAM, AxonCache uses memory-mapped (mmap) files to provide near-instant access to data without the memory overhead. 
 
-Comparable mmap based libraries such as LevelDB or LMDB support more use cases while AxonCache is essentially read-only, removing the need for locks with a simpler and more efficient design. The only known equivalent library is named CDB (constant database) but it is an old C code based, is unmaintained and limited to 32 bits. In our benchmarks AxonCache is always faster than other file based key-value stores, and just slightly slower than the pure in memory and highly optimized swiss table provided in Abseil flat_map.
+Comparable mmap-based libraries such as **LevelDB** and **LMDB** support a broader range of use cases, whereas AxonCache is intentionally read-only. This constraint eliminates the need for locking, enabling a simpler and more efficient design. The only known comparable library is **CDB** (Constant Database), but it is an old, unmaintained C implementation limited to 32-bit addressing. In our benchmarks, AxonCache consistently outperforms other file-based key-value stores and is only marginally slower than the highly optimized, purely in-memory Swiss table implementation provided by Abseil’s flat_map.
 
-AxonCache has been in use for more than 10 years at **AppLovin**. It is paired with a data replication system called **datamover** which download newer caches across datacenter, while minimizing networking costs, and a cache generation system named **populate**, that read data mostly from SQL database to generate cache input file.
+AxonCache has been in production at **AppLovin** for over a decade. It works in tandem with a data replication system called **datamover**, which distributes updated cache files across datacenters while minimizing network costs, and a cache generation system named **populate**, which primarily reads from SQL databases to produce the cache input files.
 
 ### Key Features
 
