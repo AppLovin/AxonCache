@@ -288,7 +288,7 @@ func (c *CacheReader) checkForNewFiles() {
 					log.Errorf("Error computing latest timestamp: %s", err)
 				} else {
 					if latestTimestamp > atomic.LoadInt64(&c.MostRecentFileTimestamp) {
-						log.Infof("Found a new timestamp, latest %d, most recent %d\n", latestTimestamp, c.MostRecentFileTimestamp)
+						log.Infof("Found a new timestamp, latest %d, most recent %d\n", latestTimestamp, atomic.LoadInt64(&c.MostRecentFileTimestamp))
 						err := c.Update(fmt.Sprintf("%d", latestTimestamp))
 						if err != nil {
 							log.Errorf("Error updating to the latest timestamp %d: %s\n", latestTimestamp, err)
