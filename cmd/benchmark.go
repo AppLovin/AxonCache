@@ -167,7 +167,7 @@ func RunBenchmarkAxonCache(keysCount int, keys, vals [][]byte) {
 		}
 	}
 
-	err, _ = cache.FinishCacheCreation()
+	_, err = cache.FinishCacheCreation()
 	if err != nil {
 		log.Fatal(err)
 	}

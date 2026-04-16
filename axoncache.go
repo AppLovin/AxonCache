@@ -288,7 +288,7 @@ func (c *CacheReader) checkForNewFiles() {
 					log.Errorf("Error computing latest timestamp: %s", err)
 				} else {
 					if latestTimestamp > atomic.LoadInt64(&c.MostRecentFileTimestamp) {
-						log.Infof("Found a new timestamp, latest %d, most recent %d\n", latestTimestamp, c.MostRecentFileTimestamp)
+						log.Infof("Found a new timestamp, latest %d, most recent %d\n", latestTimestamp, atomic.LoadInt64(&c.MostRecentFileTimestamp))
 						err := c.Update(fmt.Sprintf("%d", latestTimestamp))
 						if err != nil {
 							log.Errorf("Error updating to the latest timestamp %d: %s\n", latestTimestamp, err)
@@ -315,6 +315,9 @@ func (c *CacheReader) ContainsKey(key string) (bool, error) {
 	if !c.isInitialized() {
 		return false, ErrUnInitialized
 	}
+	if len(key) == 0 {
+		return false, errors.New("Empty key")
+	}
 
 	k := []byte(key)
 
@@ -328,6 +331,9 @@ func (c *CacheReader) ContainsKey(key string) (bool, error) {
 func (c *CacheReader) GetKey(key string) (string, error) {
 	if !c.isInitialized() {
 		return "", ErrUnInitialized
+	}
+	if len(key) == 0 {
+		return "", errors.New("Empty key")
 	}
 
 	k := []byte(key)
@@ -354,6 +360,9 @@ func (c *CacheReader) GetKeyType(key string) (string, error) {
 	if !c.isInitialized() {
 		return "", ErrUnInitialized
 	}
+	if len(key) == 0 {
+		return "", errors.New("Empty key")
+	}
 
 	k := []byte(key)
 
@@ -378,6 +387,9 @@ func (c *CacheReader) GetBool(key string) (bool, error) {
 	if !c.isInitialized() {
 		return false, ErrUnInitialized
 	}
+	if len(key) == 0 {
+		return false, errors.New("Empty key")
+	}
 
 	k := []byte(key)
 
@@ -397,6 +409,9 @@ func (c *CacheReader) GetBool(key string) (bool, error) {
 func (c *CacheReader) GetInt(key string) (int, error) {
 	if !c.isInitialized() {
 		return 0, ErrUnInitialized
+	}
+	if len(key) == 0 {
+		return 0, errors.New("Empty key")
 	}
 
 	k := []byte(key)
@@ -418,6 +433,9 @@ func (c *CacheReader) GetLong(key string) (int64, error) {
 	if !c.isInitialized() {
 		return 0, ErrUnInitialized
 	}
+	if len(key) == 0 {
+		return 0, errors.New("Empty key")
+	}
 
 	k := []byte(key)
 
@@ -438,6 +456,9 @@ func (c *CacheReader) GetDouble(key string) (float64, error) {
 	if !c.isInitialized() {
 		return 0, ErrUnInitialized
 	}
+	if len(key) == 0 {
+		return 0, errors.New("Empty key")
+	}
 
 	k := []byte(key)
 
@@ -457,6 +478,9 @@ func (c *CacheReader) GetDouble(key string) (float64, error) {
 func (c *CacheReader) GetVector(key string) ([]string, error) {
 	if !c.isInitialized() {
 		return []string{}, ErrUnInitialized
+	}
+	if len(key) == 0 {
+		return []string{}, errors.New("Empty key")
 	}
 
 	k := []byte(key)
@@ -510,6 +534,9 @@ func charPtrArrayToSliceWithSizes(cStrings **C.char, cSizes *C.int, count int) [
 func (c *CacheReader) GetVectorFloat(key string) ([]float32, error) {
 	if !c.isInitialized() {
 		return []float32{}, ErrUnInitialized
+	}
+	if len(key) == 0 {
+		return []float32{}, errors.New("Empty key")
 	}
 
 	k := []byte(key)
