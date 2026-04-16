@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"sync"
 	"sync/atomic"
 	"time"
 	"unsafe"
@@ -52,6 +53,7 @@ type CacheReader struct {
 
 	Stop           chan struct{}
 	UpdateCallback UpdateCallback
+	deleteOnce     sync.Once
 }
 
 type CacheReaderOptions struct {
@@ -301,14 +303,16 @@ func (c *CacheReader) checkForNewFiles() {
 }
 
 func (c *CacheReader) Delete() {
-	// Reset the MostRecentFileTimestamp to 0, so that lookups will fail
-	atomic.StoreInt64(&c.MostRecentFileTimestamp, 0)
+	c.deleteOnce.Do(func() {
+		// Reset the MostRecentFileTimestamp to 0, so that lookups will fail
+		atomic.StoreInt64(&c.MostRecentFileTimestamp, 0)
 
-	C.CacheReader_DeleteCppObject(c.Handle)
+		C.CacheReader_DeleteCppObject(c.Handle)
 
-	c.Handle = nil
+		c.Handle = nil
 
-	close(c.Stop)
+		close(c.Stop)
+	})
 }
 
 func (c *CacheReader) ContainsKey(key string) (bool, error) {
