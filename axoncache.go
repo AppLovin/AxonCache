@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"sync"
 	"sync/atomic"
 	"time"
 	"unsafe"
@@ -52,6 +53,7 @@ type CacheReader struct {
 
 	Stop           chan struct{}
 	UpdateCallback UpdateCallback
+	wg             sync.WaitGroup
 }
 
 type CacheReaderOptions struct {
@@ -269,8 +271,10 @@ func (c *CacheReader) maybeDownloadWithRetry() error {
 }
 
 func (c *CacheReader) checkForNewFiles() {
+	c.wg.Add(1)
 	// Start a goroutine to check a condition every N seconds (configured with c.UpdatePeriod)
 	go func() {
+		defer c.wg.Done()
 		for {
 			select {
 			case <-c.Stop:
@@ -304,11 +308,15 @@ func (c *CacheReader) Delete() {
 	// Reset the MostRecentFileTimestamp to 0, so that lookups will fail
 	atomic.StoreInt64(&c.MostRecentFileTimestamp, 0)
 
+	// Signal the goroutine to stop, wait for it to exit, then free the C handle.
+	// This ordering prevents a use-after-free: if we freed the handle first and the
+	// goroutine was past its select, it could call CacheReader_Initialize on a freed object.
+	close(c.Stop)
+	c.wg.Wait()
+
 	C.CacheReader_DeleteCppObject(c.Handle)
 
 	c.Handle = nil
-
-	close(c.Stop)
 }
 
 func (c *CacheReader) ContainsKey(key string) (bool, error) {
