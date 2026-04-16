@@ -470,8 +470,6 @@ func (c *CacheReader) GetVector(key string) ([]string, error) {
 		&count, &cSizes)
 
 	if cStrings == nil {
-		C.free(unsafe.Pointer(cStrings)) // Free the array
-		C.free(unsafe.Pointer(cSizes))   // Free the sizes array
 		return []string{}, ErrNotFound
 	}
 
@@ -522,7 +520,6 @@ func (c *CacheReader) GetVectorFloat(key string) ([]float32, error) {
 		&cSize)
 
 	if cFloats == nil {
-		C.free(unsafe.Pointer(cFloats)) // Free the array
 		return []float32{}, ErrNotFound
 	}
 
