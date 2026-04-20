@@ -316,7 +316,7 @@ func (c *CacheReader) ContainsKey(key string) (bool, error) {
 		return false, ErrUnInitialized
 	}
 	if len(key) == 0 {
-		return false, errors.New("Empty key")
+		return false, ErrNotFound
 	}
 
 	k := []byte(key)
@@ -333,7 +333,7 @@ func (c *CacheReader) GetKey(key string) (string, error) {
 		return "", ErrUnInitialized
 	}
 	if len(key) == 0 {
-		return "", errors.New("Empty key")
+		return "", ErrNotFound
 	}
 
 	k := []byte(key)
@@ -361,7 +361,7 @@ func (c *CacheReader) GetKeyType(key string) (string, error) {
 		return "", ErrUnInitialized
 	}
 	if len(key) == 0 {
-		return "", errors.New("Empty key")
+		return "", ErrNotFound
 	}
 
 	k := []byte(key)
@@ -388,7 +388,7 @@ func (c *CacheReader) GetBool(key string) (bool, error) {
 		return false, ErrUnInitialized
 	}
 	if len(key) == 0 {
-		return false, errors.New("Empty key")
+		return false, ErrNotFound
 	}
 
 	k := []byte(key)
@@ -411,7 +411,7 @@ func (c *CacheReader) GetInt(key string) (int, error) {
 		return 0, ErrUnInitialized
 	}
 	if len(key) == 0 {
-		return 0, errors.New("Empty key")
+		return 0, ErrNotFound
 	}
 
 	k := []byte(key)
@@ -434,7 +434,7 @@ func (c *CacheReader) GetLong(key string) (int64, error) {
 		return 0, ErrUnInitialized
 	}
 	if len(key) == 0 {
-		return 0, errors.New("Empty key")
+		return 0, ErrNotFound
 	}
 
 	k := []byte(key)
@@ -457,7 +457,7 @@ func (c *CacheReader) GetDouble(key string) (float64, error) {
 		return 0, ErrUnInitialized
 	}
 	if len(key) == 0 {
-		return 0, errors.New("Empty key")
+		return 0, ErrNotFound
 	}
 
 	k := []byte(key)
@@ -480,7 +480,7 @@ func (c *CacheReader) GetVector(key string) ([]string, error) {
 		return []string{}, ErrUnInitialized
 	}
 	if len(key) == 0 {
-		return []string{}, errors.New("Empty key")
+		return []string{}, ErrNotFound
 	}
 
 	k := []byte(key)
@@ -536,7 +536,7 @@ func (c *CacheReader) GetVectorFloat(key string) ([]float32, error) {
 		return []float32{}, ErrUnInitialized
 	}
 	if len(key) == 0 {
-		return []float32{}, errors.New("Empty key")
+		return []float32{}, ErrNotFound
 	}
 
 	k := []byte(key)
