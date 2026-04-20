@@ -46,6 +46,28 @@ func TestCacheReader(t *testing.T) {
 	contained, err = cache.ContainsKey("267.that_does_not_exists_for_sure")
 	assert.Equal(false, contained)
 
+	contained, err = cache.ContainsKey("") // Empty key
+	assert.Equal(false, contained)
+	assert.Equal(nil, err)
+
+	// Empty key returns ErrNotFound for all Get functions
+	_, err = cache.GetKey("")
+	assert.Equal(ErrNotFound, err)
+	_, err = cache.GetKeyType("")
+	assert.Equal(ErrNotFound, err)
+	_, err = cache.GetBool("")
+	assert.Equal(ErrNotFound, err)
+	_, err = cache.GetInt("")
+	assert.Equal(ErrNotFound, err)
+	_, err = cache.GetLong("")
+	assert.Equal(ErrNotFound, err)
+	_, err = cache.GetDouble("")
+	assert.Equal(ErrNotFound, err)
+	_, err = cache.GetVector("")
+	assert.Equal(ErrNotFound, err)
+	_, err = cache.GetVectorFloat("")
+	assert.Equal(ErrNotFound, err)
+
 	_, err = cache.GetKeyType("123456789.NOTFOUND")
 	assert.Equal(ErrNotFound, err)
 
@@ -59,6 +81,8 @@ func TestCacheReader(t *testing.T) {
 	stringValue, _ = cache.GetKey("267.bar")
 	assert.Equal("bar", stringValue)
 
+	_, err = cache.GetKey("267.NOTFOUND")
+	assert.Equal(ErrNotFound, err)
 	_, err = cache.GetKey("267.NOTFOUND")
 	assert.Equal(ErrNotFound, err)
 
