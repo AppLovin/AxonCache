@@ -46,29 +46,10 @@ func TestCacheReader(t *testing.T) {
 	contained, err = cache.ContainsKey("267.that_does_not_exists_for_sure")
 	assert.Equal(false, contained)
 
-	contained, err = cache.ContainsKey("") // Empty key
-	assert.Equal(false, contained)
-	assert.Equal(nil, err)
-
-	// Empty key returns ErrNotFound for all Get functions
-	_, err = cache.GetKey("")
-	assert.Equal(ErrNotFound, err)
-	_, err = cache.GetKeyType("")
-	assert.Equal(ErrNotFound, err)
-	_, err = cache.GetBool("")
-	assert.Equal(ErrNotFound, err)
-	_, err = cache.GetInt("")
-	assert.Equal(ErrNotFound, err)
-	_, err = cache.GetLong("")
-	assert.Equal(ErrNotFound, err)
-	_, err = cache.GetDouble("")
-	assert.Equal(ErrNotFound, err)
-	_, err = cache.GetVector("")
-	assert.Equal(ErrNotFound, err)
-	_, err = cache.GetVectorFloat("")
-	assert.Equal(ErrNotFound, err)
-
 	_, err = cache.GetKeyType("123456789.NOTFOUND")
+	assert.Equal(ErrNotFound, err)
+
+	_, err = cache.GetKeyType("")
 	assert.Equal(ErrNotFound, err)
 
 	// Strings
@@ -86,6 +67,9 @@ func TestCacheReader(t *testing.T) {
 	_, err = cache.GetKey("267.NOTFOUND")
 	assert.Equal(ErrNotFound, err)
 
+	_, err = cache.GetKey("")
+	assert.Equal(ErrNotFound, err)
+
 	// Booleans
 	keyType, _ = cache.GetKeyType("992.yyy")
 	assert.Equal("Bool", keyType)
@@ -99,6 +83,9 @@ func TestCacheReader(t *testing.T) {
 	_, err = cache.GetLong("1690.NOTFOUND")
 	assert.Equal(ErrNotFound, err)
 
+	_, err = cache.GetBool("")
+	assert.Equal(ErrNotFound, err)
+
 	// Double
 	keyType, _ = cache.GetKeyType("1401.xxx")
 	assert.Equal("Double", keyType)
@@ -107,6 +94,9 @@ func TestCacheReader(t *testing.T) {
 	assert.Equal(123.456, doubleValue)
 
 	_, err = cache.GetDouble("1401.NOTFOUND")
+	assert.Equal(ErrNotFound, err)
+
+	_, err = cache.GetDouble("")
 	assert.Equal(ErrNotFound, err)
 
 	// Integer
@@ -119,6 +109,9 @@ func TestCacheReader(t *testing.T) {
 	_, err = cache.GetInt("1690.NOTFOUND")
 	assert.Equal(ErrNotFound, err)
 
+	_, err = cache.GetInt("")
+	assert.Equal(ErrNotFound, err)
+
 	// Long
 	keyType, _ = cache.GetKeyType("1690.xxx")
 	assert.Equal("Int64", keyType)
@@ -127,6 +120,9 @@ func TestCacheReader(t *testing.T) {
 	assert.Equal(int64(1234567890), longValue)
 
 	_, err = cache.GetLong("1690.NOTFOUND")
+	assert.Equal(ErrNotFound, err)
+
+	_, err = cache.GetLong("")
 	assert.Equal(ErrNotFound, err)
 
 	// String[]
@@ -141,6 +137,9 @@ func TestCacheReader(t *testing.T) {
 	_, err = cache.GetVector("999.NOTFOUND")
 	assert.Equal(ErrNotFound, err)
 
+	_, err = cache.GetVector("")
+	assert.Equal(ErrNotFound, err)
+
 	// float32[]
 	keyType, _ = cache.GetKeyType("1909.xxx")
 	assert.Equal("FloatList", keyType)
@@ -153,6 +152,9 @@ func TestCacheReader(t *testing.T) {
 	}
 
 	_, err = cache.GetVectorFloat("1909.NOTFOUND")
+	assert.Equal(ErrNotFound, err)
+
+	_, err = cache.GetVectorFloat("")
 	assert.Equal(ErrNotFound, err)
 }
 
@@ -290,6 +292,9 @@ func TestCacheReaderUninitialized(t *testing.T) {
 
 	_, err = cache.GetDouble("1401.xxx")
 	assert.Equal(ErrUnInitialized, err)
+
+	_, err = cache.GetDouble("")
+	assert.Equal(ErrNotFound, err)
 
 	_, err = cache.GetInt("1690.xxx")
 	assert.Equal(ErrUnInitialized, err)
