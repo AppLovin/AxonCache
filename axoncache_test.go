@@ -4,13 +4,13 @@
 package axoncache
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
-
-	"fmt"
 	"time"
 
 	"github.com/AppLovin/AxonCache/internal/core"
@@ -362,6 +362,41 @@ func TestCacheReaderUseAfterDelete(t *testing.T) {
 	// Update should fail too, and not crash
 	err = cache.Update("0000000000000000000000")
 	assert.NotEqual(nil, err) // should fail
+}
+
+func TestCacheReaderDoubleDelete(t *testing.T) {
+	assert := assert.New(t)
+
+	cache, err := NewCacheReader(
+		&CacheReaderOptions{
+			TaskName:          "fast_cache",
+			DestinationFolder: "test_data",
+			UpdatePeriod:      time.Second})
+	assert.Equal(nil, err)
+
+	cache.Delete()
+	cache.Delete() // must not panic
+}
+
+func TestCacheReaderConcurrentDelete(t *testing.T) {
+	assert := assert.New(t)
+
+	cache, err := NewCacheReader(
+		&CacheReaderOptions{
+			TaskName:          "fast_cache",
+			DestinationFolder: "test_data",
+			UpdatePeriod:      time.Second})
+	assert.Equal(nil, err)
+
+	var wg sync.WaitGroup
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			cache.Delete() // must not panic regardless of goroutine ordering
+		}()
+	}
+	wg.Wait()
 }
 
 func TestCacheWriterGenerateTimestampFile(t *testing.T) {
