@@ -294,7 +294,7 @@ func TestCacheReaderUninitialized(t *testing.T) {
 	assert.Equal(ErrUnInitialized, err)
 
 	_, err = cache.GetDouble("")
-	assert.Equal(ErrNotFound, err)
+	assert.Equal(ErrUnInitialized, err)
 
 	_, err = cache.GetInt("1690.xxx")
 	assert.Equal(ErrUnInitialized, err)
