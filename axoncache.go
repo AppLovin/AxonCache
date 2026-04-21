@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"sync"
 	"sync/atomic"
 	"time"
 	"unsafe"
@@ -52,6 +53,7 @@ type CacheReader struct {
 
 	Stop           chan struct{}
 	UpdateCallback UpdateCallback
+	deleteOnce     sync.Once
 }
 
 type CacheReaderOptions struct {
@@ -288,7 +290,7 @@ func (c *CacheReader) checkForNewFiles() {
 					log.Errorf("Error computing latest timestamp: %s", err)
 				} else {
 					if latestTimestamp > atomic.LoadInt64(&c.MostRecentFileTimestamp) {
-						log.Infof("Found a new timestamp, latest %d, most recent %d\n", latestTimestamp, c.MostRecentFileTimestamp)
+						log.Infof("Found a new timestamp, latest %d, most recent %d\n", latestTimestamp, atomic.LoadInt64(&c.MostRecentFileTimestamp))
 						err := c.Update(fmt.Sprintf("%d", latestTimestamp))
 						if err != nil {
 							log.Errorf("Error updating to the latest timestamp %d: %s\n", latestTimestamp, err)
@@ -301,14 +303,16 @@ func (c *CacheReader) checkForNewFiles() {
 }
 
 func (c *CacheReader) Delete() {
-	// Reset the MostRecentFileTimestamp to 0, so that lookups will fail
-	atomic.StoreInt64(&c.MostRecentFileTimestamp, 0)
+	c.deleteOnce.Do(func() {
+		// Reset the MostRecentFileTimestamp to 0, so that lookups will fail
+		atomic.StoreInt64(&c.MostRecentFileTimestamp, 0)
 
-	C.CacheReader_DeleteCppObject(c.Handle)
+		C.CacheReader_DeleteCppObject(c.Handle)
 
-	c.Handle = nil
+		c.Handle = nil
 
-	close(c.Stop)
+		close(c.Stop)
+	})
 }
 
 func (c *CacheReader) ContainsKey(key string) (bool, error) {
@@ -494,8 +498,6 @@ func (c *CacheReader) GetVector(key string) ([]string, error) {
 		&count, &cSizes)
 
 	if cStrings == nil {
-		C.free(unsafe.Pointer(cStrings)) // Free the array
-		C.free(unsafe.Pointer(cSizes))   // Free the sizes array
 		return []string{}, ErrNotFound
 	}
 
@@ -549,7 +551,6 @@ func (c *CacheReader) GetVectorFloat(key string) ([]float32, error) {
 		&cSize)
 
 	if cFloats == nil {
-		C.free(unsafe.Pointer(cFloats)) // Free the array
 		return []float32{}, ErrNotFound
 	}
 
