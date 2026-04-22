@@ -549,7 +549,7 @@ func main() {
 		Use:   "get file key",
 		Run:   GetKey,
 		Short: "wait for a file update",
-		Args:  cobra.MinimumNArgs(1),
+		Args:  cobra.MinimumNArgs(2),
 	}
 
 	var download = &cobra.Command{
