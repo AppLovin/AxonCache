@@ -38,7 +38,7 @@ namespace
 #ifdef __APPLE__
     if ( mincore( basePtr, baseSize, reinterpret_cast<char *>( vec.data() ) ) != 0 )
 #else
-    if ( mincore( mBasePointer, mBaseSize, vec.data() ) != 0 )
+    if ( mincore( basePtr, baseSize, vec.data() ) != 0 )
 #endif
     {
         AL_LOG_ERROR( "mincore failed: " + std::string( strerror( errno ) ) );
