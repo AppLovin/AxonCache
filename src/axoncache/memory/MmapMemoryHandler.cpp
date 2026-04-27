@@ -3,15 +3,21 @@
 
 #include "axoncache/logger/Logger.h"
 #include "axoncache/memory/MmapMemoryHandler.h"
+#ifdef HAVE_LIBNUMA
+#include <numa.h>
+#include <numaif.h>
+#endif
 #include <cerrno>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <cstring>
+#include <iomanip>
 #include <stdexcept>
 #include <string>
 #include <sstream>
+#include <vector>
 
 using namespace axoncache;
 
@@ -80,12 +86,6 @@ auto MmapMemoryHandler::loadMmap( const CacheHeader & header, const std::string 
     int mmapOptions = MAP_PRIVATE;
 #else
     int mmapOptions = MAP_SHARED;
-
-    // MAP_POPULATE prefetches all pages, this means mmap blocks until all the data is loaded into memory
-    if ( isPreloadMemoryEnabled )
-    {
-        mmapOptions |= MAP_POPULATE;
-    }
 #endif
     auto * result = mmap( nullptr, fileSize, PROT_READ, mmapOptions, fd, 0 );
 
@@ -102,5 +102,62 @@ auto MmapMemoryHandler::loadMmap( const CacheHeader & header, const std::string 
 
     close( fd );
 
-    return { ( uint8_t * )result, fileSize };
+#if !defined( __APPLE__ )
+    if ( isPreloadMemoryEnabled )
+    {
+#ifdef HAVE_LIBNUMA
+        if ( numa_available() >= 0 )
+        {
+            struct bitmask * nodes = numa_get_mems_allowed();
+            if ( mbind( result, fileSize, MPOL_INTERLEAVE, nodes->maskp, nodes->size + 1, MPOL_MF_STRICT ) != 0 )
+            {
+                AL_LOG_ERROR( "mbind MPOL_INTERLEAVE failed: " + std::string( strerror( errno ) ) );
+            }
+            numa_free_nodemask( nodes );
+        }
+#endif
+        madvise( result, fileSize, MADV_WILLNEED );
+
+        logResidency();
+    }
+#endif
+
+    return { static_cast<uint8_t *>( result ), fileSize };
+}
+
+auto MmapMemoryHandler::logResidency() const -> void
+{
+    if ( mBasePointer == nullptr )
+    {
+        return;
+    }
+
+    const long pageSize = sysconf( _SC_PAGESIZE );
+    const size_t pageCount = ( mBaseSize + static_cast<size_t>( pageSize ) - 1 ) / static_cast<size_t>( pageSize );
+
+    std::vector<unsigned char> vec( pageCount, 0 );
+#ifdef __APPLE__
+    if ( mincore( mBasePointer, mBaseSize, reinterpret_cast<char *>( vec.data() ) ) != 0 )
+#else
+    if ( mincore( mBasePointer, mBaseSize, vec.data() ) != 0 )
+#endif
+    {
+        AL_LOG_ERROR( "mincore failed: " + std::string( strerror( errno ) ) );
+        return;
+    }
+
+    size_t residentPages = 0;
+    for ( const auto byte : vec )
+    {
+        if ( byte & 1 )
+        {
+            ++residentPages;
+        }
+    }
+
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision( 2 );
+    oss << "mmap residency: " << residentPages << " / " << pageCount
+        << " pages (" << ( 100.0 * residentPages / pageCount ) << "%)";
+    AL_LOG_INFO( oss.str() );
 }
