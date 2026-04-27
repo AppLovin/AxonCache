@@ -21,10 +21,10 @@
 
 using namespace axoncache;
 
-MmapMemoryHandler::MmapMemoryHandler( const CacheHeader & header, const std::string & cacheFile, bool isPreloadMemoryEnabled ) :
+MmapMemoryHandler::MmapMemoryHandler( const CacheHeader & header, const std::string & cacheFile, bool isPreloadMemoryEnabled, bool isNumaInterleaveEnabled ) :
     mHeaderSize( header.headerSize )
 {
-    auto mmapResult = loadMmap( header, cacheFile, isPreloadMemoryEnabled );
+    auto mmapResult = loadMmap( header, cacheFile, isPreloadMemoryEnabled, isNumaInterleaveEnabled );
     mBasePointer = mmapResult.first;
     mBaseSize = mmapResult.second;
 
@@ -53,7 +53,7 @@ auto MmapMemoryHandler::resizeToFit( uint64_t /* newSize */ ) -> void
     throw std::runtime_error( "MmapMemoryHandler::resizeToFit() not implemented" );
 }
 
-auto MmapMemoryHandler::loadMmap( const CacheHeader & header, const std::string & cacheFile, [[maybe_unused]] bool isPreloadMemoryEnabled ) -> std::pair<uint8_t *, size_t>
+auto MmapMemoryHandler::loadMmap( const CacheHeader & header, const std::string & cacheFile, [[maybe_unused]] bool isPreloadMemoryEnabled, [[maybe_unused]] bool isNumaInterleaveEnabled ) -> std::pair<uint8_t *, size_t>
 {
     auto fd = open( cacheFile.c_str(), O_RDONLY ); // NOLINT
     if ( fd == -1 )
@@ -103,21 +103,20 @@ auto MmapMemoryHandler::loadMmap( const CacheHeader & header, const std::string 
     close( fd );
 
 #if !defined( __APPLE__ )
+#ifdef HAVE_LIBNUMA
+    if ( isNumaInterleaveEnabled && numa_available() >= 0 )
+    {
+        struct bitmask * nodes = numa_get_mems_allowed();
+        if ( mbind( result, fileSize, MPOL_INTERLEAVE, nodes->maskp, nodes->size + 1, MPOL_MF_STRICT ) != 0 )
+        {
+            AL_LOG_ERROR( "mbind MPOL_INTERLEAVE failed: " + std::string( strerror( errno ) ) );
+        }
+        numa_free_nodemask( nodes );
+    }
+#endif
     if ( isPreloadMemoryEnabled )
     {
-#ifdef HAVE_LIBNUMA
-        if ( numa_available() >= 0 )
-        {
-            struct bitmask * nodes = numa_get_mems_allowed();
-            if ( mbind( result, fileSize, MPOL_INTERLEAVE, nodes->maskp, nodes->size + 1, MPOL_MF_STRICT ) != 0 )
-            {
-                AL_LOG_ERROR( "mbind MPOL_INTERLEAVE failed: " + std::string( strerror( errno ) ) );
-            }
-            numa_free_nodemask( nodes );
-        }
-#endif
         madvise( result, fileSize, MADV_WILLNEED );
-
         logResidency();
     }
 #endif

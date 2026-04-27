@@ -47,7 +47,8 @@ type CacheReader struct {
 
 	// Used for one time cache load
 	Timestamp              string
-	IsPreloadMemoryEnabled int
+	IsPreloadMemoryEnabled  int
+	IsNumaInterleaveEnabled int
 
 	UpdatePeriod time.Duration
 
@@ -63,8 +64,9 @@ type CacheReaderOptions struct {
 	BaseUrls               string
 	DownloadAtInit         bool
 	UpdateCallback         UpdateCallback
-	Timestamp              string
-	IsPreloadMemoryEnabled bool
+	Timestamp               string
+	IsPreloadMemoryEnabled  bool
+	IsNumaInterleaveEnabled bool
 }
 
 func ensureDestinationFolderExists(folderPath string) error {
@@ -91,16 +93,22 @@ func NewCacheReader(options *CacheReaderOptions) (*CacheReader, error) {
 		isPreloadMemoryEnabled = 1
 	}
 
+	isNumaInterleaveEnabled := 0
+	if options.IsNumaInterleaveEnabled {
+		isNumaInterleaveEnabled = 1
+	}
+
 	alcacheReader := &CacheReader{
-		Handle:                 handle,
-		TaskName:               options.TaskName,
-		DestinationFolder:      options.DestinationFolder,
-		BaseUrls:               options.BaseUrls,
-		UpdatePeriod:           options.UpdatePeriod,
-		Stop:                   stop,
-		UpdateCallback:         options.UpdateCallback,
-		Timestamp:              options.Timestamp,
-		IsPreloadMemoryEnabled: isPreloadMemoryEnabled,
+		Handle:                  handle,
+		TaskName:                options.TaskName,
+		DestinationFolder:       options.DestinationFolder,
+		BaseUrls:                options.BaseUrls,
+		UpdatePeriod:            options.UpdatePeriod,
+		Stop:                    stop,
+		UpdateCallback:          options.UpdateCallback,
+		Timestamp:               options.Timestamp,
+		IsPreloadMemoryEnabled:  isPreloadMemoryEnabled,
+		IsNumaInterleaveEnabled: isNumaInterleaveEnabled,
 	}
 
 	if err := ensureDestinationFolderExists(options.DestinationFolder); err != nil {
@@ -162,7 +170,7 @@ func (c *CacheReader) Update(timestamp string) error {
 	cstring3 := C.CString(timestamp)
 	defer C.free(unsafe.Pointer(cstring3))
 
-	ret := C.CacheReader_Initialize(c.Handle, cstring1, cstring2, cstring3, C.int(c.IsPreloadMemoryEnabled))
+	ret := C.CacheReader_Initialize(c.Handle, cstring1, cstring2, cstring3, C.int(c.IsPreloadMemoryEnabled), C.int(c.IsNumaInterleaveEnabled))
 	if ret != 0 {
 		return fmt.Errorf("Error initializing reader, error code: %d", ret)
 	}

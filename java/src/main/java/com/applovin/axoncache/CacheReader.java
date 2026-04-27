@@ -29,13 +29,14 @@ public class CacheReader implements AutoCloseable {
      * @param destinationFolder The folder where the cache file is located
      * @param timestamp The timestamp of the cache file
      * @param isPreloadMemoryEnabled Whether to preload the cache into memory
+     * @param isNumaInterleaveEnabled Whether to apply NUMA interleave policy on load
      * @return 0 on success, non-zero on error
      */
-    public int initialize(String taskName, String destinationFolder, String timestamp, boolean isPreloadMemoryEnabled) {
+    public int initialize(String taskName, String destinationFolder, String timestamp, boolean isPreloadMemoryEnabled, boolean isNumaInterleaveEnabled) {
         if (nativeHandle == 0) {
             throw new IllegalStateException("CacheReader has been closed");
         }
-        return nativeInitialize(nativeHandle, taskName, destinationFolder, timestamp, isPreloadMemoryEnabled ? 1 : 0);
+        return nativeInitialize(nativeHandle, taskName, destinationFolder, timestamp, isPreloadMemoryEnabled ? 1 : 0, isNumaInterleaveEnabled ? 1 : 0);
     }
 
     /**
@@ -202,7 +203,7 @@ public class CacheReader implements AutoCloseable {
 
     // Native method declarations
     private native long nativeNewCacheReaderHandle();
-    private native int nativeInitialize(long handle, String taskName, String destinationFolder, String timestamp, int isPreloadMemoryEnabled);
+    private native int nativeInitialize(long handle, String taskName, String destinationFolder, String timestamp, int isPreloadMemoryEnabled, int isNumaInterleaveEnabled);
     private native void nativeFinalize(long handle);
     private native void nativeDeleteCppObject(long handle);
     private native boolean nativeContainsKey(long handle, String key);

@@ -15,7 +15,7 @@ namespace axoncache
 class MmapMemoryHandler : public MemoryHandler
 {
   public:
-    MmapMemoryHandler( const CacheHeader & header, const std::string & cacheFile, bool isPreloadMemoryEnabled = false );
+    MmapMemoryHandler( const CacheHeader & header, const std::string & cacheFile, bool isPreloadMemoryEnabled = false, bool isNumaInterleaveEnabled = false );
     ~MmapMemoryHandler() override;
 
     MmapMemoryHandler( const MmapMemoryHandler & ) = delete;
@@ -31,7 +31,7 @@ class MmapMemoryHandler : public MemoryHandler
     auto resizeToFit( uint64_t newSize ) -> void override;
 
   private:
-    static auto loadMmap( const CacheHeader & header, const std::string & cacheFile, bool isPreloadMemoryEnabled ) -> std::pair<uint8_t *, size_t>;
+    static auto loadMmap( const CacheHeader & header, const std::string & cacheFile, bool isPreloadMemoryEnabled, bool isNumaInterleaveEnabled ) -> std::pair<uint8_t *, size_t>;
     auto logResidency() const -> void;
 
     uint8_t * mBasePointer{};

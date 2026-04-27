@@ -78,7 +78,7 @@ class CacheReader // NOLINT
     CacheReader() = default;
     virtual ~CacheReader() = default;
 
-    int initializeReader( const std::string & taskName, const std::string & destinationFolder, const std::string & timestamp, bool isPreloadMemoryEnabled )
+    int initializeReader( const std::string & taskName, const std::string & destinationFolder, const std::string & timestamp, bool isPreloadMemoryEnabled, bool isNumaInterleaveEnabled )
     {
         const axoncache::SharedSettingsProvider settings( "" );
         axoncache::CacheOneTimeLoader loader( &settings );
@@ -121,7 +121,7 @@ class CacheReader // NOLINT
             {
                 case axoncache::CacheType::LINEAR_PROBE:
                 {
-                    auto cache = loader.loadAbsolutePath<axoncache::LinearProbeCache>( cacheName, cacheAbsolutePath, isPreloadMemoryEnabled );
+                    auto cache = loader.loadAbsolutePath<axoncache::LinearProbeCache>( cacheName, cacheAbsolutePath, isPreloadMemoryEnabled, isNumaInterleaveEnabled );
                     std::atomic_store( &mReaderLinearProbeCache, cache );
                 }
                 break;
@@ -129,14 +129,14 @@ class CacheReader // NOLINT
                 case axoncache::CacheType::LINEAR_PROBE_DEDUP:
                 case axoncache::CacheType::LINEAR_PROBE_DEDUP_TYPED:
                 {
-                    auto cache = loader.loadAbsolutePath<axoncache::LinearProbeDedupCache>( cacheName, cacheAbsolutePath, isPreloadMemoryEnabled );
+                    auto cache = loader.loadAbsolutePath<axoncache::LinearProbeDedupCache>( cacheName, cacheAbsolutePath, isPreloadMemoryEnabled, isNumaInterleaveEnabled );
                     std::atomic_store( &mReaderLinearProbeDedupCache, cache );
                 }
                 break;
 
                 case axoncache::CacheType::BUCKET_CHAIN:
                 {
-                    auto cache = loader.loadAbsolutePath<axoncache::BucketChainCache>( cacheName, cacheAbsolutePath, isPreloadMemoryEnabled );
+                    auto cache = loader.loadAbsolutePath<axoncache::BucketChainCache>( cacheName, cacheAbsolutePath, isPreloadMemoryEnabled, isNumaInterleaveEnabled );
                     std::atomic_store( &mReaderBucketChainCache, cache );
                 }
                 break;
@@ -643,9 +643,9 @@ void CacheReader_DeleteCppObject( CacheReaderHandle * handle )
     delete handle; // NOLINT
 }
 
-int CacheReader_Initialize( CacheReaderHandle * handle, const char * taskName, const char * destinationFolder, const char * timestamp, int isPreloadMemoryEnabled )
+int CacheReader_Initialize( CacheReaderHandle * handle, const char * taskName, const char * destinationFolder, const char * timestamp, int isPreloadMemoryEnabled, int isNumaInterleaveEnabled )
 {
-    return handle->src->initializeReader( taskName, destinationFolder, timestamp, isPreloadMemoryEnabled );
+    return handle->src->initializeReader( taskName, destinationFolder, timestamp, isPreloadMemoryEnabled, isNumaInterleaveEnabled );
 }
 
 void CacheReader_Finalize( CacheReaderHandle * handle )

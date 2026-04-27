@@ -26,18 +26,18 @@ class CacheLoader
     {
     }
 
-    auto load( bool isPreloadMemoryEnabled = true ) -> std::pair<bool, std::shared_ptr<Cache>>
+    auto load( bool isPreloadMemoryEnabled = true, bool isNumaInterleaveEnabled = false ) -> std::pair<bool, std::shared_ptr<Cache>>
     {
         // ex. fullCacheFileName = "/var/lib/applovin/datamover/test_cache.cache"
         const auto fullCacheFileName = mCacheOneTimeLoader.getFullCacheFileName( cacheName() );
-        return loadWithName( fullCacheFileName, isPreloadMemoryEnabled );
+        return loadWithName( fullCacheFileName, isPreloadMemoryEnabled, isNumaInterleaveEnabled );
     }
 
-    auto loadLatest( bool isPreloadMemoryEnabled = true ) -> std::pair<bool, std::shared_ptr<Cache>>
+    auto loadLatest( bool isPreloadMemoryEnabled = true, bool isNumaInterleaveEnabled = false ) -> std::pair<bool, std::shared_ptr<Cache>>
     {
         // ex. fullCacheFileName = "/var/lib/applovin/datamover/test.1647455391370.cache"
         const auto fullCacheFileName = mCacheOneTimeLoader.getLatestTimestampFullCacheFileName( cacheName() );
-        return loadWithName( fullCacheFileName, isPreloadMemoryEnabled );
+        return loadWithName( fullCacheFileName, isPreloadMemoryEnabled, isNumaInterleaveEnabled );
     }
 
     [[nodiscard]] auto cacheName() const -> const std::string &
@@ -60,7 +60,7 @@ class CacheLoader
         return mSettings;
     }
 
-    auto loadWithName( const std::string & fullCacheFileName, bool isPreloadMemoryEnabled = true ) -> std::pair<bool, std::shared_ptr<Cache>>
+    auto loadWithName( const std::string & fullCacheFileName, bool isPreloadMemoryEnabled = true, bool isNumaInterleaveEnabled = false ) -> std::pair<bool, std::shared_ptr<Cache>>
     {
         auto lastModifiedAt = std::filesystem::last_write_time( fullCacheFileName );
         if ( lastModifiedAt > mLastCacheFileModificationTime )
@@ -68,7 +68,7 @@ class CacheLoader
             std::ostringstream oss;
             AL_LOG_INFO( "reloading " + fullCacheFileName );
             mLastCacheFileModificationTime = lastModifiedAt;
-            auto retval = mCacheOneTimeLoader.loadAbsolutePath<Cache>( cacheName(), fullCacheFileName, isPreloadMemoryEnabled );
+            auto retval = mCacheOneTimeLoader.loadAbsolutePath<Cache>( cacheName(), fullCacheFileName, isPreloadMemoryEnabled, isNumaInterleaveEnabled );
             if ( retval != nullptr )
             {
                 mType = retval->type();

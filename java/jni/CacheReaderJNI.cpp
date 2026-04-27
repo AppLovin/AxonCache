@@ -16,14 +16,14 @@ extern "C" JNIEXPORT jlong JNICALL Java_com_applovin_axoncache_CacheReader_nativ
     return reinterpret_cast<jlong>( handle );
 }
 
-extern "C" JNIEXPORT jint JNICALL Java_com_applovin_axoncache_CacheReader_nativeInitialize( JNIEnv * env, jobject obj, jlong handle, jstring taskName, jstring destinationFolder, jstring timestamp, jint isPreloadMemoryEnabled )
+extern "C" JNIEXPORT jint JNICALL Java_com_applovin_axoncache_CacheReader_nativeInitialize( JNIEnv * env, jobject obj, jlong handle, jstring taskName, jstring destinationFolder, jstring timestamp, jint isPreloadMemoryEnabled, jint isNumaInterleaveEnabled )
 {
     CacheReaderHandle * readerHandle = reinterpret_cast<CacheReaderHandle *>( handle );
     std::string taskNameStr = convertToUtf8( env, taskName );
     std::string destinationFolderStr = convertToUtf8( env, destinationFolder );
     std::string timestampStr = convertToUtf8( env, timestamp );
 
-    return CacheReader_Initialize( readerHandle, taskNameStr.c_str(), destinationFolderStr.c_str(), timestampStr.c_str(), isPreloadMemoryEnabled );
+    return CacheReader_Initialize( readerHandle, taskNameStr.c_str(), destinationFolderStr.c_str(), timestampStr.c_str(), isPreloadMemoryEnabled, isNumaInterleaveEnabled );
 }
 
 extern "C" JNIEXPORT void JNICALL Java_com_applovin_axoncache_CacheReader_nativeFinalize( JNIEnv * env, jobject obj, jlong handle )
