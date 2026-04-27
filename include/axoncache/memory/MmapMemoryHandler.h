@@ -32,7 +32,6 @@ class MmapMemoryHandler : public MemoryHandler
 
   private:
     static auto loadMmap( const CacheHeader & header, const std::string & cacheFile, bool isPreloadMemoryEnabled, bool isNumaInterleaveEnabled ) -> std::pair<uint8_t *, size_t>;
-    auto logResidency() const -> void;
 
     uint8_t * mBasePointer{};
     uint64_t mBaseSize{};

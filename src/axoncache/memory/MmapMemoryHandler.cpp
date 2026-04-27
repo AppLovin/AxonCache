@@ -21,6 +21,47 @@
 
 using namespace axoncache;
 
+namespace
+{
+// Helper function to check memory residency for a mapped region
+[[maybe_unused]] auto logResidency( const void * basePtr, const size_t baseSize ) -> void
+{
+    if ( basePtr == nullptr )
+    {
+        return;
+    }
+
+    const long pageSize = sysconf( _SC_PAGESIZE );
+    const size_t pageCount = ( baseSize + static_cast<size_t>( pageSize ) - 1 ) / static_cast<size_t>( pageSize );
+
+    std::vector<unsigned char> vec( pageCount, 0 );
+#ifdef __APPLE__
+    if ( mincore( basePtr, baseSize, reinterpret_cast<char *>( vec.data() ) ) != 0 )
+#else
+    if ( mincore( mBasePointer, mBaseSize, vec.data() ) != 0 )
+#endif
+    {
+        AL_LOG_ERROR( "mincore failed: " + std::string( strerror( errno ) ) );
+        return;
+    }
+
+    size_t residentPages = 0;
+    for ( const auto byte : vec )
+    {
+        if ( byte & 1 )
+        {
+            ++residentPages;
+        }
+    }
+
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision( 2 );
+    oss << "mmap residency: " << residentPages << " / " << pageCount
+        << " pages (" << ( 100.0 * residentPages / pageCount ) << "%)";
+    AL_LOG_INFO( oss.str() );
+}
+}
+
 MmapMemoryHandler::MmapMemoryHandler( const CacheHeader & header, const std::string & cacheFile, bool isPreloadMemoryEnabled, bool isNumaInterleaveEnabled ) :
     mHeaderSize( header.headerSize )
 {
@@ -117,46 +158,9 @@ auto MmapMemoryHandler::loadMmap( const CacheHeader & header, const std::string 
     if ( isPreloadMemoryEnabled )
     {
         madvise( result, fileSize, MADV_WILLNEED );
-        logResidency();
+        logResidency( result, fileSize );
     }
 #endif
 
     return { static_cast<uint8_t *>( result ), fileSize };
-}
-
-auto MmapMemoryHandler::logResidency() const -> void
-{
-    if ( mBasePointer == nullptr )
-    {
-        return;
-    }
-
-    const long pageSize = sysconf( _SC_PAGESIZE );
-    const size_t pageCount = ( mBaseSize + static_cast<size_t>( pageSize ) - 1 ) / static_cast<size_t>( pageSize );
-
-    std::vector<unsigned char> vec( pageCount, 0 );
-#ifdef __APPLE__
-    if ( mincore( mBasePointer, mBaseSize, reinterpret_cast<char *>( vec.data() ) ) != 0 )
-#else
-    if ( mincore( mBasePointer, mBaseSize, vec.data() ) != 0 )
-#endif
-    {
-        AL_LOG_ERROR( "mincore failed: " + std::string( strerror( errno ) ) );
-        return;
-    }
-
-    size_t residentPages = 0;
-    for ( const auto byte : vec )
-    {
-        if ( byte & 1 )
-        {
-            ++residentPages;
-        }
-    }
-
-    std::ostringstream oss;
-    oss << std::fixed << std::setprecision( 2 );
-    oss << "mmap residency: " << residentPages << " / " << pageCount
-        << " pages (" << ( 100.0 * residentPages / pageCount ) << "%)";
-    AL_LOG_INFO( oss.str() );
 }
