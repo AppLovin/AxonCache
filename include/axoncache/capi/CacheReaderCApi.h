@@ -28,7 +28,7 @@ extern "C"
 
     // Creation/Init/Deletion
     CacheReaderHandle * NewCacheReaderHandle();
-    int CacheReader_Initialize( CacheReaderHandle * handle, const char * taskName, const char * destinationFolder, const char * timestamp, int isPreloadMemoryEnabled, int isNumaInterleaveEnabled );
+    int CacheReader_Initialize( CacheReaderHandle * handle, const char * taskName, const char * destinationFolder, const char * timestamp, int isPreloadMemoryEnabled );
     void CacheReader_Finalize( CacheReaderHandle * handle );
     void CacheReader_DeleteCppObject( CacheReaderHandle * handle );
 

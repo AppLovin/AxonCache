@@ -29,21 +29,21 @@ class CacheOneTimeLoader
     }
 
     template<typename Cache>
-    auto load( const std::string & cacheName, bool isPreloadMemoryEnabled = false, bool isNumaInterleaveEnabled = false ) -> std::shared_ptr<Cache>
+    auto load( const std::string & cacheName, bool isPreloadMemoryEnabled = false ) -> std::shared_ptr<Cache>
     {
         auto cacheFileName = getFullCacheFileName( cacheName );
-        return loadAbsolutePath<Cache>( cacheName, cacheFileName, isPreloadMemoryEnabled, isNumaInterleaveEnabled );
+        return loadAbsolutePath<Cache>( cacheName, cacheFileName, isPreloadMemoryEnabled );
     }
 
     template<typename Cache>
-    auto loadLatest( const std::string & cacheName, bool isPreloadMemoryEnabled = false, bool isNumaInterleaveEnabled = false ) -> std::shared_ptr<Cache>
+    auto loadLatest( const std::string & cacheName, bool isPreloadMemoryEnabled = false ) -> std::shared_ptr<Cache>
     {
         auto cacheFileName = getLatestTimestampFullCacheFileName( cacheName );
-        return loadAbsolutePath<Cache>( cacheName, cacheFileName, isPreloadMemoryEnabled, isNumaInterleaveEnabled );
+        return loadAbsolutePath<Cache>( cacheName, cacheFileName, isPreloadMemoryEnabled );
     }
 
     template<typename Cache>
-    auto loadAbsolutePath( const std::string & cacheName, const std::string & cacheFileName, bool isPreloadMemoryEnabled, bool isNumaInterleaveEnabled = false ) -> std::shared_ptr<Cache>
+    auto loadAbsolutePath( const std::string & cacheName, const std::string & cacheFileName, bool isPreloadMemoryEnabled ) -> std::shared_ptr<Cache>
     {
         const auto [name, header] = loadHeader( cacheFileName );
         AL_LOG_INFO( "opened axoncache " + cacheFileName );
@@ -60,7 +60,7 @@ class CacheOneTimeLoader
             }
         }
 
-        auto cache = std::make_shared<Cache>( header, std::make_unique<axoncache::MmapMemoryHandler>( header, cacheFileName, isPreloadMemoryEnabled, isNumaInterleaveEnabled ) );
+        auto cache = std::make_shared<Cache>( header, std::make_unique<axoncache::MmapMemoryHandler>( header, cacheFileName, isPreloadMemoryEnabled ) );
 
         if ( header.version != cache->version() )
         {

@@ -62,10 +62,10 @@ namespace
 }
 }
 
-MmapMemoryHandler::MmapMemoryHandler( const CacheHeader & header, const std::string & cacheFile, bool isPreloadMemoryEnabled, bool isNumaInterleaveEnabled ) :
+MmapMemoryHandler::MmapMemoryHandler( const CacheHeader & header, const std::string & cacheFile, bool isPreloadMemoryEnabled ) :
     mHeaderSize( header.headerSize )
 {
-    auto mmapResult = loadMmap( header, cacheFile, isPreloadMemoryEnabled, isNumaInterleaveEnabled );
+    auto mmapResult = loadMmap( header, cacheFile, isPreloadMemoryEnabled );
     mBasePointer = mmapResult.first;
     mBaseSize = mmapResult.second;
 
@@ -94,7 +94,7 @@ auto MmapMemoryHandler::resizeToFit( uint64_t /* newSize */ ) -> void
     throw std::runtime_error( "MmapMemoryHandler::resizeToFit() not implemented" );
 }
 
-auto MmapMemoryHandler::loadMmap( const CacheHeader & header, const std::string & cacheFile, [[maybe_unused]] bool isPreloadMemoryEnabled, [[maybe_unused]] bool isNumaInterleaveEnabled ) -> std::pair<uint8_t *, size_t>
+auto MmapMemoryHandler::loadMmap( const CacheHeader & header, const std::string & cacheFile, [[maybe_unused]] bool isPreloadMemoryEnabled ) -> std::pair<uint8_t *, size_t>
 {
     auto fd = open( cacheFile.c_str(), O_RDONLY ); // NOLINT
     if ( fd == -1 )
@@ -145,7 +145,7 @@ auto MmapMemoryHandler::loadMmap( const CacheHeader & header, const std::string 
 
 #if !defined( __APPLE__ )
 #ifdef HAVE_LIBNUMA
-    if ( isNumaInterleaveEnabled && numa_available() >= 0 )
+    if ( numa_available() >= 0 )
     {
         struct bitmask * nodes = numa_get_mems_allowed();
         if ( mbind( result, fileSize, MPOL_INTERLEAVE, nodes->maskp, nodes->size + 1, MPOL_MF_STRICT ) != 0 )
