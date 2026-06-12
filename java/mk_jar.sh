@@ -23,5 +23,5 @@ OUTPUT_DIR=$PWD/build/java
 # now run maven
 (cd java && \
     mvn clean package && \
-    cp target/axoncache-java-1.0.0.jar $OUTPUT_DIR/axoncache.jar)
+    cp target/axoncache-java-*.jar $OUTPUT_DIR/axoncache.jar)
 
