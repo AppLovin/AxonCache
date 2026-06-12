@@ -15,10 +15,10 @@
 using namespace axoncache;
 
 template<typename HashAlgo, typename Probe, typename ValueMgr, CacheType CacheTypeVal>
-auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getString( std::string_view key, std::string_view defaultValue ) const -> std::pair<std::string_view, bool>
+auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getString( std::string_view key, std::string_view defaultValue, int64_t * foundSlot ) const -> std::pair<std::string_view, bool>
 {
     bool isExist = false;
-    auto str = getInternal( key, CacheValueType::String, &isExist );
+    auto str = getInternal( key, CacheValueType::String, &isExist, foundSlot );
     if ( !isExist )
     {
         return std::make_pair( defaultValue, false );
@@ -30,9 +30,9 @@ auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getString( std::s
 }
 
 template<typename HashAlgo, typename Probe, typename ValueMgr, CacheType CacheTypeVal>
-auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getBool( std::string_view key, bool defaultValue ) const -> std::pair<bool, bool>
+auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getBool( std::string_view key, bool defaultValue, int64_t * foundSlot ) const -> std::pair<bool, bool>
 {
-    const auto [str, type] = getWithType( key );
+    const auto [str, type] = getWithType( key, foundSlot );
     if ( str.empty() )
     {
         return std::make_pair( defaultValue, false );
@@ -63,9 +63,9 @@ auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getBool( std::str
 }
 
 template<typename HashAlgo, typename Probe, typename ValueMgr, CacheType CacheTypeVal>
-auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getInt64( std::string_view key, int64_t defaultValue ) const -> std::pair<int64_t, bool>
+auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getInt64( std::string_view key, int64_t defaultValue, int64_t * foundSlot ) const -> std::pair<int64_t, bool>
 {
-    const auto [str, type] = getWithType( key );
+    const auto [str, type] = getWithType( key, foundSlot );
     if ( str.empty() )
     {
         return std::make_pair( defaultValue, false );
@@ -92,9 +92,9 @@ auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getInt64( std::st
 }
 
 template<typename HashAlgo, typename Probe, typename ValueMgr, CacheType CacheTypeVal>
-auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getDouble( std::string_view key, double defaultValue ) const -> std::pair<double, bool>
+auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getDouble( std::string_view key, double defaultValue, int64_t * foundSlot ) const -> std::pair<double, bool>
 {
-    const auto [str, type] = getWithType( key );
+    const auto [str, type] = getWithType( key, foundSlot );
     if ( str.empty() )
     {
         return std::make_pair( defaultValue, false );
@@ -149,9 +149,9 @@ auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::putInternal( std:
     return std::make_pair( false, collisions );
 }
 template<typename HashAlgo, typename Probe, typename ValueMgr, CacheType CacheTypeVal>
-auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getFloatVector( std::string_view key ) const -> std::vector<float>
+auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getFloatVector( std::string_view key, int64_t * foundSlot ) const -> std::vector<float>
 {
-    const auto [value, type] = getWithTypeInternal( key );
+    const auto [value, type] = getWithTypeInternal( key, foundSlot );
     if ( !value.empty() )
     {
         switch ( type )
@@ -174,9 +174,9 @@ auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getFloatVector( s
 }
 
 template<typename HashAlgo, typename Probe, typename ValueMgr, CacheType CacheTypeVal>
-auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getFloatSpan( std::string_view key ) const -> std::span<const float>
+auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getFloatSpan( std::string_view key, int64_t * foundSlot ) const -> std::span<const float>
 {
-    const auto [value, type] = getWithTypeInternal( key );
+    const auto [value, type] = getWithTypeInternal( key, foundSlot );
     if ( !value.empty() )
     {
         switch ( type )
@@ -199,9 +199,9 @@ auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getFloatSpan( std
 }
 
 template<typename HashAlgo, typename Probe, typename ValueMgr, CacheType CacheTypeVal>
-auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::readKey( std::string_view key ) -> std::string_view
+auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::readKey( std::string_view key, int64_t * foundSlot ) -> std::string_view
 {
-    const auto [value, type] = getWithTypeInternal( key );
+    const auto [value, type] = getWithTypeInternal( key, foundSlot );
     if ( value.empty() )
     {
         return {};
@@ -238,9 +238,9 @@ auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::readKey( std::str
 }
 
 template<typename HashAlgo, typename Probe, typename ValueMgr, CacheType CacheTypeVal>
-auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::readKeys( std::string_view key ) -> std::vector<std::string_view>
+auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::readKeys( std::string_view key, int64_t * foundSlot ) -> std::vector<std::string_view>
 {
-    const auto [value, type] = getWithTypeInternal( key );
+    const auto [value, type] = getWithTypeInternal( key, foundSlot );
     if ( value.empty() )
     {
         return {};
@@ -264,10 +264,10 @@ auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::readKeys( std::st
 }
 
 template<typename HashAlgo, typename Probe, typename ValueMgr, CacheType CacheTypeVal>
-auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getFloatAtIndices( std::string_view key, const std::vector<int32_t> & indices ) const -> std::vector<float>
+auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getFloatAtIndices( std::string_view key, const std::vector<int32_t> & indices, int64_t * foundSlot ) const -> std::vector<float>
 {
     std::vector<float> result( indices.size(), 0.f );
-    const auto [value, type] = getWithTypeInternal( key );
+    const auto [value, type] = getWithTypeInternal( key, foundSlot );
     if ( !value.empty() )
     {
         switch ( type )
@@ -313,9 +313,9 @@ auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getFloatAtIndices
 }
 
 template<typename HashAlgo, typename Probe, typename ValueMgr, CacheType CacheTypeVal>
-auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getFloatAtIndex( std::string_view key, int32_t index ) const -> float
+auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getFloatAtIndex( std::string_view key, int32_t index, int64_t * foundSlot ) const -> float
 {
-    const auto [value, type] = getWithTypeInternal( key );
+    const auto [value, type] = getWithTypeInternal( key, foundSlot );
     if ( !value.empty() )
     {
         switch ( type )
@@ -346,9 +346,9 @@ auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getFloatAtIndex( 
 }
 
 template<typename HashAlgo, typename Probe, typename ValueMgr, CacheType CacheTypeVal>
-auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getKeyType( std::string_view key ) const -> std::string
+auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getKeyType( std::string_view key, int64_t * foundSlot ) const -> std::string
 {
-    const auto [value, type] = getWithTypeInternal( key );
+    const auto [value, type] = getWithTypeInternal( key, foundSlot );
     if ( value.empty() )
     {
         return {};
@@ -370,50 +370,50 @@ auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getKeyType( std::
 // Explicitly instantiate the template for the types we use
 // that way we can keep out StringUtils from the header class
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::LinearProbe<8u>, axoncache::LinearProbeValue, ( axoncache::CacheType )3>::
-    getString( std::string_view, std::string_view ) const -> std::pair<std::string_view, bool>;
+    getString( std::string_view, std::string_view, int64_t * ) const -> std::pair<std::string_view, bool>;
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::LinearProbe<8u>, axoncache::LinearProbeValue, ( axoncache::CacheType )3>::
-    getBool( std::string_view, bool ) const -> std::pair<bool, bool>;
+    getBool( std::string_view, bool, int64_t * ) const -> std::pair<bool, bool>;
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::LinearProbe<8u>, axoncache::LinearProbeValue, ( axoncache::CacheType )3>::
-    getInt64( std::string_view, int64_t ) const -> std::pair<int64_t, bool>;
+    getInt64( std::string_view, int64_t, int64_t * ) const -> std::pair<int64_t, bool>;
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::LinearProbe<8u>, axoncache::LinearProbeValue, ( axoncache::CacheType )3>::
-    getDouble( std::string_view, double ) const -> std::pair<double, bool>;
+    getDouble( std::string_view, double, int64_t * ) const -> std::pair<double, bool>;
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::LinearProbe<8u>, axoncache::LinearProbeValue, ( axoncache::CacheType )3>::
-    getFloatVector( std::string_view key ) const -> std::vector<float>;
+    getFloatVector( std::string_view key, int64_t * ) const -> std::vector<float>;
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::LinearProbe<8u>, axoncache::LinearProbeValue, ( axoncache::CacheType )3>::
-    getFloatSpan( std::string_view key ) const -> std::span<const float>;
+    getFloatSpan( std::string_view key, int64_t * ) const -> std::span<const float>;
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::LinearProbe<8u>, axoncache::LinearProbeValue, ( axoncache::CacheType )3>::
-    readKey( std::string_view key ) -> std::string_view;
+    readKey( std::string_view key, int64_t * ) -> std::string_view;
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::LinearProbe<8u>, axoncache::LinearProbeValue, ( axoncache::CacheType )3>::
-    readKeys( std::string_view key ) -> std::vector<std::string_view>;
+    readKeys( std::string_view key, int64_t * ) -> std::vector<std::string_view>;
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::LinearProbe<8u>, axoncache::LinearProbeValue, ( axoncache::CacheType )3>::
-    getFloatAtIndices( std::string_view key, const std::vector<int32_t> & indices ) const -> std::vector<float>;
+    getFloatAtIndices( std::string_view key, const std::vector<int32_t> & indices, int64_t * ) const -> std::vector<float>;
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::LinearProbe<8u>, axoncache::LinearProbeValue, ( axoncache::CacheType )3>::
-    getFloatAtIndex( std::string_view key, int32_t index ) const -> float;
+    getFloatAtIndex( std::string_view key, int32_t index, int64_t * ) const -> float;
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::LinearProbe<8u>, axoncache::LinearProbeValue, ( axoncache::CacheType )3>::
-    getKeyType( std::string_view key ) const -> std::string;
+    getKeyType( std::string_view key, int64_t * ) const -> std::string;
 
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::SimpleProbe<8u>, axoncache::ChainedValue, ( axoncache::CacheType )2>::
-    getString( std::string_view, std::string_view ) const -> std::pair<std::string_view, bool>;
+    getString( std::string_view, std::string_view, int64_t * ) const -> std::pair<std::string_view, bool>;
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::SimpleProbe<8u>, axoncache::ChainedValue, ( axoncache::CacheType )3>::
-    getBool( std::string_view, bool ) const -> std::pair<bool, bool>;
+    getBool( std::string_view, bool, int64_t * ) const -> std::pair<bool, bool>;
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::SimpleProbe<8u>, axoncache::ChainedValue, ( axoncache::CacheType )3>::
-    getInt64( std::string_view, int64_t ) const -> std::pair<int64_t, bool>;
+    getInt64( std::string_view, int64_t, int64_t * ) const -> std::pair<int64_t, bool>;
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::SimpleProbe<8u>, axoncache::ChainedValue, ( axoncache::CacheType )3>::
-    getDouble( std::string_view, double ) const -> std::pair<double, bool>;
+    getDouble( std::string_view, double, int64_t * ) const -> std::pair<double, bool>;
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::SimpleProbe<8u>, axoncache::ChainedValue, ( axoncache::CacheType )3>::
-    getFloatVector( std::string_view key ) const -> std::vector<float>;
+    getFloatVector( std::string_view key, int64_t * ) const -> std::vector<float>;
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::SimpleProbe<8u>, axoncache::ChainedValue, ( axoncache::CacheType )3>::
-    getFloatSpan( std::string_view key ) const -> std::span<const float>;
+    getFloatSpan( std::string_view key, int64_t * ) const -> std::span<const float>;
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::SimpleProbe<8u>, axoncache::ChainedValue, ( axoncache::CacheType )3>::
-    readKey( std::string_view key ) -> std::string_view;
+    readKey( std::string_view key, int64_t * ) -> std::string_view;
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::SimpleProbe<8u>, axoncache::ChainedValue, ( axoncache::CacheType )3>::
-    readKeys( std::string_view key ) -> std::vector<std::string_view>;
+    readKeys( std::string_view key, int64_t * ) -> std::vector<std::string_view>;
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::SimpleProbe<8u>, axoncache::ChainedValue, ( axoncache::CacheType )3>::
-    getFloatAtIndices( std::string_view key, const std::vector<int32_t> & indices ) const -> std::vector<float>;
+    getFloatAtIndices( std::string_view key, const std::vector<int32_t> & indices, int64_t * ) const -> std::vector<float>;
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::SimpleProbe<8u>, axoncache::ChainedValue, ( axoncache::CacheType )3>::
-    getFloatAtIndex( std::string_view key, int32_t index ) const -> float;
+    getFloatAtIndex( std::string_view key, int32_t index, int64_t * ) const -> float;
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::SimpleProbe<8u>, axoncache::ChainedValue, ( axoncache::CacheType )3>::
-    getKeyType( std::string_view key ) const -> std::string;
+    getKeyType( std::string_view key, int64_t * ) const -> std::string;
 
 template auto axoncache::HashedCacheBase<axoncache::Xxh3Hasher, axoncache::LinearProbe<8u>, axoncache::LinearProbeValue, ( axoncache::CacheType )3>::
     putInternal( std::string_view key, CacheValueType type, std::string_view value ) -> std::pair<bool, uint32_t>;
