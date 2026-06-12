@@ -107,8 +107,12 @@ jobs:
       
       - name: Build JAR with Maven
         run: |
+          # Derive the artifact version from the release tag (e.g. v1.0.9 -> 1.0.9)
+          # so each tagged release produces a distinctly-versioned JAR.
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "Building axoncache-java version: $VERSION"
           cd java
-          mvn clean package
+          mvn -B -Drevision="$VERSION" clean package
       
       - name: Upload JAR
         uses: actions/upload-artifact@v4

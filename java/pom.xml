@@ -7,13 +7,17 @@
     
     <groupId>com.applovin</groupId>
     <artifactId>axoncache-java</artifactId>
-    <version>1.0.0</version>
+    <version>${revision}</version>
     <packaging>jar</packaging>
     
     <name>AxonCache Java</name>
     <description>Java bindings for AxonCache</description>
     
     <properties>
+        <!-- Default version for local/dev builds. CI overrides this from the git tag
+             via -Drevision=<tag> (see .github/workflows/release.yml) so each release
+             produces a JAR versioned to match the tag. -->
+        <revision>1.0.0</revision>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
