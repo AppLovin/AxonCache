@@ -2,13 +2,21 @@
 
 CPMAddPackage("gh:doctest/doctest#v${doctest_version}")
 
+set(SPDLOG_FMT_EXTERNAL ON CACHE BOOL "" FORCE)
+
+CPMAddPackage(
+  NAME fmt
+  GITHUB_REPOSITORY fmtlib/fmt
+  GIT_TAG ${fmt_version}
+)
+
 cpmaddpackage(
   NAME spdlog
   OPTIONS
   "SPDLOG_BUILD_EXAMPLE OFF"
   "SPDLOG_BUILD_BENCH OFF"
   "SPDLOG_BUILD_TESTS OFF"
-  "SPDLOG_INSTALL YES"
+  "SPDLOG_INSTALL OFF"
   URL https://github.com/gabime/spdlog/archive/refs/tags/v${spdlog_version}.tar.gz
 )
 
