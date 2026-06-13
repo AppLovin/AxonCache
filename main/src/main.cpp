@@ -19,7 +19,6 @@
 #include "absl/container/flat_hash_map.h"
 
 #include <cxxopts.hpp>
-#include <spdlog/spdlog.h>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -633,18 +632,17 @@ auto main( int argc, char ** argv ) -> int
             switch ( level )
             {
                 case axoncache::LogLevel::INFO:
-                    SPDLOG_INFO( msg );
+                    std::cout << msg << '\n';
                     break;
                 case axoncache::LogLevel::WARNING:
-                    SPDLOG_WARN( msg );
+                    std::cerr << msg << '\n';
                     break;
                 case axoncache::LogLevel::ERROR:
-                    SPDLOG_ERROR( msg );
+                    std::cerr << msg << '\n';
                     break;
             }
         };
         axoncache::Logger::setLogFunction( alcacheLogger );
-        spdlog::set_level( spdlog::level::info );
 
         if ( result["input"].count() > 0 )
         {

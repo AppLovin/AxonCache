@@ -2,16 +2,6 @@
 
 CPMAddPackage("gh:doctest/doctest#v${doctest_version}")
 
-cpmaddpackage(
-  NAME spdlog
-  OPTIONS
-  "SPDLOG_BUILD_EXAMPLE OFF"
-  "SPDLOG_BUILD_BENCH OFF"
-  "SPDLOG_BUILD_TESTS OFF"
-  "SPDLOG_INSTALL YES"
-  URL https://github.com/gabime/spdlog/archive/refs/tags/v${spdlog_version}.tar.gz
-)
-
 # ---- Create binary ----
 
 file(GLOB_RECURSE sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
@@ -19,7 +9,7 @@ add_executable(${PROJECT_TEST_NAME} ${sources})
 
 # even when publicly linking our lib, it becomes private for some reason
 # this requires us to list dl here, which is also a bit of a mystery
-target_link_libraries(${PROJECT_TEST_NAME} spdlog doctest::doctest ${PROJECT_LIB_NAME} dl)
+target_link_libraries(${PROJECT_TEST_NAME} doctest::doctest ${PROJECT_LIB_NAME} dl)
 target_include_directories(${PROJECT_TEST_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # enable compiler warnings
