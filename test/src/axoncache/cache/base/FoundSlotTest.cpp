@@ -179,7 +179,8 @@ TEST_CASE( "FoundSlotLinearProbeTypedGetters" )
     cache.put( std::string_view{ "fkey" }, floatValue );
     cache.put( std::string_view{ "vkey" }, vectorValue );
 
-    const auto inRange = [&]( int64_t slot ) { return slot >= 0 && slot < static_cast<int64_t>( cache.numberOfKeySlots() ); };
+    const auto inRange = [&]( int64_t slot ) 
+    { return slot >= 0 && slot < static_cast<int64_t>( cache.numberOfKeySlots() ); };
 
     {
         int64_t slot = kUnset;
