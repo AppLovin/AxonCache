@@ -28,6 +28,7 @@ where:
 -S  build with static libs
 -i  run tests and then switch branch and run backward compatibility tests
 -J  build with Java JNI bindings
+-B  use Bazel build system instead of CMake
 "
 
 # Setup default values
@@ -55,6 +56,7 @@ PROD_GIT_REF=master
 VERBOSE_FLAGS=
 FRESH_FLAG=
 BUILD_JAVA=OFF
+USE_BAZEL=OFF
 
 case `uname -s` in
     Linux)
@@ -70,38 +72,62 @@ esac
 # homebrew, cmake, openssl (needed for core libraries)
 # bison, mcrypt, boost (for servers)
 #############################################################################################################
-test `uname` = Darwin && {
-    CELLAR=
-    case `uname -m` in
-        x86_64)
-            CELLAR=/usr/local/Cellar
-        ;;
-        arm64)
-            CELLAR=/opt/homebrew/Cellar
-        ;;
-    esac
+check_cmake_dependencies ()
+{
+    test `uname` = Darwin && {
+        CELLAR=
+        case `uname -m` in
+            x86_64)
+                CELLAR=/usr/local/Cellar
+            ;;
+            arm64)
+                CELLAR=/opt/homebrew/Cellar
+            ;;
+        esac
 
-    type brew || {
-        echo "Homebrew is not installed on your machine."
-        echo "Install it by following the instructions at https://brew.sh/"
-        exit 1
-    }
-
-    for package in cmake 
-    do
-        test -d $CELLAR/$package || {
-            echo "$package is not installed on your machine."
-            echo "Install it with:"
-            echo "    brew install $package"
+        type brew || {
+            echo "Homebrew is not installed on your machine."
+            echo "Install it by following the instructions at https://brew.sh/"
             exit 1
         }
-    done
 
-    test ! -d $CELLAR/openssl@1.1 -a ! -d $CELLAR/openssl@3 && {
-        echo "openssl is not installed on your machine."
-        echo "Install it with:"
-        echo "    brew install openssl@1.1"
-        exit 1
+        for package in cmake 
+        do
+            test -d $CELLAR/$package || {
+                echo "$package is not installed on your machine."
+                echo "Install it with:"
+                echo "    brew install $package"
+                exit 1
+            }
+        done
+    }
+}
+
+#############################################################################################################
+# Check Bazel-specific dependencies on macOS
+#############################################################################################################
+check_bazel_dependencies ()
+{
+    test `uname` = Darwin && {
+        CELLAR=
+        case `uname -m` in
+            x86_64)
+                CELLAR=/usr/local/Cellar
+            ;;
+            arm64)
+                CELLAR=/opt/homebrew/Cellar
+            ;;
+        esac
+
+        # Check for bazel or bazelisk
+        if ! command -v bazelisk >/dev/null 2>&1 && ! command -v bazel >/dev/null 2>&1; then
+            echo "Neither bazel nor bazelisk is installed on your machine."
+            echo "Install bazelisk (recommended) with:"
+            echo "    brew install bazelisk"
+            echo "Or install bazel with:"
+            echo "    brew install bazel"
+            exit 1
+        fi
     }
 }
 
@@ -141,6 +167,59 @@ build_project ()
         sh java/mk_jar.sh
     }
 
+    return 0
+}
+
+#############################################################################################################
+# Build project with Bazel
+#############################################################################################################
+build_project_bazel ()
+{
+    echo "Building with Bazel..."
+    
+    # Determine Bazel binary (prefer bazelisk if available)
+    BAZEL_BIN="bazel"
+    if command -v bazelisk >/dev/null 2>&1; then
+        BAZEL_BIN="bazelisk"
+        echo "Using bazelisk for automatic version management"
+    else
+        echo "Using bazel (consider installing bazelisk for automatic version management)"
+    fi
+    
+    # Build arguments
+    BAZEL_ARGS="--config=local"
+    
+    # Build configuration based on BUILD_TYPE
+    if [[ "${BUILD_TYPE}" == "Release" ]]; then
+        BAZEL_ARGS="${BAZEL_ARGS} --compilation_mode=opt"
+    else
+        BAZEL_ARGS="${BAZEL_ARGS} --compilation_mode=dbg"
+    fi
+    
+    # Add job count
+    BAZEL_ARGS="${BAZEL_ARGS} --jobs=${PROC_COUNT}"
+    
+    # Add verbose flags if requested
+    if [[ -n "${VERBOSE_FLAGS}" ]]; then
+        BAZEL_ARGS="${BAZEL_ARGS} --verbose_failures --show_timestamps"
+    fi
+    
+    # Clean build if requested
+    if [[ "$FRESH_FLAG" == "--fresh" ]]; then
+        echo "Cleaning Bazel cache..."
+        $BAZEL_BIN clean --expunge
+    fi
+    
+    # Build the main library
+    echo "Building //:axoncache..."
+    $BAZEL_BIN build $BAZEL_ARGS //:axoncache //:axoncache_cli
+    
+    # Run tests if requested
+    if [[ $RUN_TESTS == "ON" || $ENABLE_TESTING == "ON" ]]; then
+        echo "Running tests..."
+        $BAZEL_BIN test //...
+    fi
+    
     return 0
 }
 
@@ -191,7 +270,7 @@ run_clang_format ()
     return 0
 }
 
-while getopts "::h ::v ::t ::e ::c ::w ::d ::f ::z ::j :g: :s: :b: :p: ::x ::u ::U ::l ::C ::P ::n ::S ::F ::i ::J" opt; do
+while getopts "::h ::v ::t ::e ::c ::w ::d ::f ::z ::j :g: :s: :b: :p: ::x ::u ::U ::l ::C ::P ::n ::S ::F ::i ::J ::B" opt; do
   case $opt in
     p)
       PROC_COUNT="$OPTARG"
@@ -274,6 +353,9 @@ while getopts "::h ::v ::t ::e ::c ::w ::d ::f ::z ::j :g: :s: :b: :p: ::x ::u :
     J)
       BUILD_JAVA=ON
       ;;
+    B)
+      USE_BAZEL=ON
+      ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
       exit
@@ -285,11 +367,21 @@ while getopts "::h ::v ::t ::e ::c ::w ::d ::f ::z ::j :g: :s: :b: :p: ::x ::u :
   esac
 done
 
-build_project
+# Check dependencies after we know which build system to use (macOS only)
+if [[ $USE_BAZEL == "ON" ]]; then
+    check_bazel_dependencies
+else
+    # Only check CMake dependencies on macOS, just like the original
+    test `uname` = Darwin && check_cmake_dependencies
+fi
+
+if [[ $USE_BAZEL == ON ]]; then
+    build_project_bazel
+else
+    build_project
+fi
 
 if [[ $CLANG_FORMAT == 1 ]]
 then
     run_clang_format
 fi
-
-

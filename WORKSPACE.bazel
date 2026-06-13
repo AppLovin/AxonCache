@@ -10,7 +10,7 @@
 #
 # External Dependencies:
 # - Managed via bazel/deps.bzl for centralized dependency configuration
-# - Includes C++ libraries: doctest, spdlog, cxxopts, abseil-cpp
+# - Includes C++ libraries: doctest, cxxopts, abseil-cpp
 # - All dependencies are pinned to specific versions for reproducible builds
 
 workspace(name = "axoncache")

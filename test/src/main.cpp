@@ -6,7 +6,7 @@
 
 #include "doctest/doctest.h"
 
-#include <spdlog/spdlog.h>
+#include <iostream>
 #include <axoncache/Constants.h>
 #include "axoncache/logger/Logger.h"
 
@@ -19,18 +19,17 @@ int main( int argc, char ** argv )
         switch ( level )
         {
             case axoncache::LogLevel::INFO:
-                SPDLOG_INFO( msg );
+                std::cout << msg << '\n';
                 break;
             case axoncache::LogLevel::WARNING:
-                SPDLOG_WARN( msg );
+                std::cerr << msg << '\n';
                 break;
             case axoncache::LogLevel::ERROR:
-                SPDLOG_ERROR( msg );
+                std::cerr << msg << '\n';
                 break;
         }
     };
     axoncache::Logger::setLogFunction( alcacheLogger );
-    spdlog::set_level( spdlog::level::info );
 
     context.setOption( "abort-after", 10 );  // stop test execution after 5 failed assertions
     context.setOption( "order-by", "name" ); // sort the test cases by their name

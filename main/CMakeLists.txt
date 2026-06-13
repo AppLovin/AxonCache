@@ -10,16 +10,6 @@ cpmaddpackage(
   "CXXOPTS_BUILD_TESTS NO"
   "CXXOPTS_ENABLE_INSTALL YES")
 
-cpmaddpackage(
-  NAME spdlog
-  OPTIONS
-  "SPDLOG_BUILD_EXAMPLE OFF"
-  "SPDLOG_BUILD_BENCH OFF"
-  "SPDLOG_BUILD_TESTS OFF"
-  "SPDLOG_INSTALL YES"
-  URL https://github.com/gabime/spdlog/archive/refs/tags/v${spdlog_version}.tar.gz
-)
-
 CPMAddPackage(
   NAME absl
   GITHUB_REPOSITORY abseil/abseil-cpp
@@ -37,4 +27,4 @@ add_executable(${PROJECT_MAIN_NAME} ${sources})
 
 set_target_properties(${PROJECT_MAIN_NAME} PROPERTIES OUTPUT_NAME "${PROJECT_MAIN_NAME}")
 
-target_link_libraries(${PROJECT_MAIN_NAME} ${PROJECT_LIB_NAME} spdlog cxxopts absl::flat_hash_map)
+target_link_libraries(${PROJECT_MAIN_NAME} ${PROJECT_LIB_NAME} cxxopts absl::flat_hash_map)
