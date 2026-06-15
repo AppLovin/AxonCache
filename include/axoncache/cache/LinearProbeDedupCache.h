@@ -84,25 +84,28 @@ class LinearProbeDedupCache : public LinearProbeCache
     }
 
   protected:
-    [[nodiscard]] auto getInternal( std::string_view key, CacheValueType type ) const -> std::string_view override
+    [[nodiscard]] auto getInternal( std::string_view key, CacheValueType type, int64_t * foundSlot = nullptr ) const -> std::string_view override
     {
         auto hash = Xxh3Hasher::hash( key );
         auto keySlotOffset = mProbe.findKeySlotOffset( key, hash, mKeySpacePtr );
+        this->setFoundSlot( foundSlot, keySlotOffset );
         return mValueMgr.get( mKeySpacePtr, keySlotOffset, key, static_cast<uint8_t>( type ), mValues );
     }
 
-    [[nodiscard]] auto getInternal( std::string_view key, CacheValueType type, bool * isExists ) const -> std::string_view override
+    [[nodiscard]] auto getInternal( std::string_view key, CacheValueType type, bool * isExists, int64_t * foundSlot = nullptr ) const -> std::string_view override
     {
         auto hash = Xxh3Hasher::hash( key );
         auto keySlotOffset = mProbe.findKeySlotOffset( key, hash, mKeySpacePtr );
         *isExists = ( keySlotOffset != Constants::ProbeStatus::AXONCACHE_KEY_NOT_FOUND );
+        this->setFoundSlot( foundSlot, keySlotOffset );
         return mValueMgr.get( mKeySpacePtr, keySlotOffset, key, static_cast<uint8_t>( type ), mValues );
     }
 
-    [[nodiscard]] auto getWithTypeInternal( std::string_view key ) const -> std::pair<std::string_view, CacheValueType> override
+    [[nodiscard]] auto getWithTypeInternal( std::string_view key, int64_t * foundSlot = nullptr ) const -> std::pair<std::string_view, CacheValueType> override
     {
         auto hash = Xxh3Hasher::hash( key );
         auto keySlotOffset = mProbe.findKeySlotOffset( key, hash, mKeySpacePtr );
+        this->setFoundSlot( foundSlot, keySlotOffset );
         return mValueMgr.getWithType( mKeySpacePtr, keySlotOffset, mValues );
     }
 
