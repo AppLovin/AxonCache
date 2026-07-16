@@ -189,9 +189,9 @@ class HashedCacheBase : public CacheBase
         return putInternal( key, CacheValueType::FloatList, std::string_view{ str.data(), str.size() } );
     }
 
-    [[nodiscard]] auto get( std::string_view key, std::string_view defaultValue = {}, int64_t * foundSlot = nullptr ) const -> std::string_view
+    [[nodiscard]] auto get( std::string_view key, std::string_view defaultValue = {}, uint64_t * foundHash = nullptr ) const -> std::string_view
     {
-        auto str = getInternal( key, CacheValueType::String, foundSlot );
+        auto str = getInternal( key, CacheValueType::String, foundHash );
         if ( !str.empty() )
         {
             str = StringViewToNullTerminatedString::trimExtraNullTerminator( str );
@@ -199,24 +199,24 @@ class HashedCacheBase : public CacheBase
         return str.empty() ? defaultValue : str;
     }
 
-    [[nodiscard]] auto getVector( std::string_view key, const std::vector<std::string_view> & defaultValue = {}, int64_t * foundSlot = nullptr ) const -> std::vector<std::string_view>
+    [[nodiscard]] auto getVector( std::string_view key, const std::vector<std::string_view> & defaultValue = {}, uint64_t * foundHash = nullptr ) const -> std::vector<std::string_view>
     {
-        const auto str = getInternal( key, CacheValueType::StringList, foundSlot );
+        const auto str = getInternal( key, CacheValueType::StringList, foundHash );
         const auto retValue = str.empty() ? defaultValue : StringListToString::transform( str );
         return retValue.empty() ? defaultValue : retValue;
     }
 
-    [[nodiscard]] auto getString( std::string_view key, std::string_view defaultValue = {}, int64_t * foundSlot = nullptr ) const -> std::pair<std::string_view, bool>;
+    [[nodiscard]] auto getString( std::string_view key, std::string_view defaultValue = {}, uint64_t * foundHash = nullptr ) const -> std::pair<std::string_view, bool>;
 
-    [[nodiscard]] auto getBool( std::string_view key, bool defaultValue = false, int64_t * foundSlot = nullptr ) const -> std::pair<bool, bool>;
+    [[nodiscard]] auto getBool( std::string_view key, bool defaultValue = false, uint64_t * foundHash = nullptr ) const -> std::pair<bool, bool>;
 
-    [[nodiscard]] auto getInt64( std::string_view key, int64_t defaultValue = 0, int64_t * foundSlot = nullptr ) const -> std::pair<int64_t, bool>;
+    [[nodiscard]] auto getInt64( std::string_view key, int64_t defaultValue = 0, uint64_t * foundHash = nullptr ) const -> std::pair<int64_t, bool>;
 
-    [[nodiscard]] auto getDouble( std::string_view key, double defaultValue = 0, int64_t * foundSlot = nullptr ) const -> std::pair<double, bool>;
+    [[nodiscard]] auto getDouble( std::string_view key, double defaultValue = 0, uint64_t * foundHash = nullptr ) const -> std::pair<double, bool>;
 
-    [[nodiscard]] auto getWithType( std::string_view key, int64_t * foundSlot = nullptr ) const -> std::pair<std::string_view, CacheValueType>
+    [[nodiscard]] auto getWithType( std::string_view key, uint64_t * foundHash = nullptr ) const -> std::pair<std::string_view, CacheValueType>
     {
-        const auto valueAndType = getWithTypeInternal( key, foundSlot );
+        const auto valueAndType = getWithTypeInternal( key, foundHash );
         switch ( valueAndType.second )
         {
             case CacheValueType::String:
@@ -229,62 +229,67 @@ class HashedCacheBase : public CacheBase
         return valueAndType;
     }
 
-    [[nodiscard]] auto getFloatVector( std::string_view key, int64_t * foundSlot = nullptr ) const -> std::vector<float>;
-    [[nodiscard]] auto getFloatAtIndices( std::string_view key, const std::vector<int32_t> & indices, int64_t * foundSlot = nullptr ) const -> std::vector<float>;
-    [[nodiscard]] auto getFloatAtIndex( std::string_view key, int32_t index, int64_t * foundSlot = nullptr ) const -> float;
+    [[nodiscard]] auto getFloatVector( std::string_view key, uint64_t * foundHash = nullptr ) const -> std::vector<float>;
+    [[nodiscard]] auto getFloatAtIndices( std::string_view key, const std::vector<int32_t> & indices, uint64_t * foundHash = nullptr ) const -> std::vector<float>;
+    [[nodiscard]] auto getFloatAtIndex( std::string_view key, int32_t index, uint64_t * foundHash = nullptr ) const -> float;
 
-    [[nodiscard]] auto getFloatSpan( std::string_view key, int64_t * foundSlot = nullptr ) const -> std::span<const float>;
+    [[nodiscard]] auto getFloatSpan( std::string_view key, uint64_t * foundHash = nullptr ) const -> std::span<const float>;
 
-    [[nodiscard]] auto getKeyType( std::string_view key, int64_t * foundSlot = nullptr ) const -> std::string;
+    [[nodiscard]] auto getKeyType( std::string_view key, uint64_t * foundHash = nullptr ) const -> std::string;
 
-    [[nodiscard]] auto contains( std::string_view key, int64_t * foundSlot = nullptr ) const -> bool
+    [[nodiscard]] auto contains( std::string_view key, uint64_t * foundHash = nullptr ) const -> bool
     {
         auto hash = HashAlgo::hash( key );
         auto keySlotOffset = mProbe.findKeySlotOffset( key, hash, mKeySpacePtr );
-        setFoundSlot( foundSlot, keySlotOffset );
+        setFoundHash( foundHash, hash, keySlotOffset );
         return mValueMgr.contains( mKeySpacePtr, keySlotOffset, key );
     }
 
     // C-Cache migration methods
-    auto readKey( std::string_view key, int64_t * foundSlot = nullptr ) -> std::string_view;
-    auto readKeys( std::string_view key, int64_t * foundSlot = nullptr ) -> std::vector<std::string_view>;
+    auto readKey( std::string_view key, uint64_t * foundHash = nullptr ) -> std::string_view;
+    auto readKeys( std::string_view key, uint64_t * foundHash = nullptr ) -> std::vector<std::string_view>;
 
   protected:
     virtual auto putInternal( std::string_view key, CacheValueType type, std::string_view value ) -> std::pair<bool, uint32_t>;
 
-    auto setFoundSlot( int64_t * foundSlot, int64_t keySlotOffset ) const -> void
+    // Surfaces the already-computed hash of the cache access key. Writes 0 when the key is
+    // absent, so callers can treat 0 as "no key, do not mark". The absence signal is exact for
+    // LinearProbe (findKeySlotOffset returns NOT_FOUND on a miss); for SimpleProbe/chained caches
+    // the probe returns a candidate bucket even on a miss, but foundHash is the key's hash
+    // regardless.
+    auto setFoundHash( uint64_t * foundHash, uint64_t hash, int64_t keySlotOffset ) const -> void
     {
-        if ( foundSlot != nullptr )
+        if ( foundHash != nullptr )
         {
-            *foundSlot = ( keySlotOffset == Constants::ProbeStatus::AXONCACHE_KEY_NOT_FOUND )
-                             ? -1
-                             : ( keySlotOffset >> mProbe.log2OfKeyWidth() );
+            *foundHash = ( keySlotOffset == Constants::ProbeStatus::AXONCACHE_KEY_NOT_FOUND ) 
+                ? 0U 
+                : hash;
         }
     }
 
-    [[nodiscard]] virtual auto getInternal( std::string_view key, CacheValueType type, int64_t * foundSlot = nullptr ) const -> std::string_view
+    [[nodiscard]] virtual auto getInternal( std::string_view key, CacheValueType type, uint64_t * foundHash = nullptr ) const -> std::string_view
     {
         auto hash = HashAlgo::hash( key );
         auto keySlotOffset = mProbe.findKeySlotOffset( key, hash, mKeySpacePtr );
         bool isExist = false;
-        setFoundSlot( foundSlot, keySlotOffset );
+        setFoundHash( foundHash, hash, keySlotOffset );
         return mValueMgr.get( mKeySpacePtr, keySlotOffset, key, static_cast<uint8_t>( type ), &isExist );
     }
 
-    [[nodiscard]] virtual auto getInternal( std::string_view key, CacheValueType type, bool * isExist, int64_t * foundSlot = nullptr ) const -> std::string_view
+    [[nodiscard]] virtual auto getInternal( std::string_view key, CacheValueType type, bool * isExist, uint64_t * foundHash = nullptr ) const -> std::string_view
     {
         auto hash = HashAlgo::hash( key );
         auto keySlotOffset = mProbe.findKeySlotOffset( key, hash, mKeySpacePtr );
         *isExist = ( keySlotOffset != Constants::ProbeStatus::AXONCACHE_KEY_NOT_FOUND );
-        setFoundSlot( foundSlot, keySlotOffset );
+        setFoundHash( foundHash, hash, keySlotOffset );
         return mValueMgr.get( mKeySpacePtr, keySlotOffset, key, static_cast<uint8_t>( type ), isExist );
     }
 
-    [[nodiscard]] virtual auto getWithTypeInternal( std::string_view key, int64_t * foundSlot = nullptr ) const -> std::pair<std::string_view, CacheValueType>
+    [[nodiscard]] virtual auto getWithTypeInternal( std::string_view key, uint64_t * foundHash = nullptr ) const -> std::pair<std::string_view, CacheValueType>
     {
         auto hash = HashAlgo::hash( key );
         auto keySlotOffset = mProbe.findKeySlotOffset( key, hash, mKeySpacePtr );
-        setFoundSlot( foundSlot, keySlotOffset );
+        setFoundHash( foundHash, hash, keySlotOffset );
         return mValueMgr.getWithType( mKeySpacePtr, keySlotOffset, {} );
     }
 
