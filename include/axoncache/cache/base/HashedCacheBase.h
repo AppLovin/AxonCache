@@ -261,9 +261,7 @@ class HashedCacheBase : public CacheBase
     {
         if ( foundHash != nullptr )
         {
-            *foundHash = ( keySlotOffset == Constants::ProbeStatus::AXONCACHE_KEY_NOT_FOUND ) 
-                             ? 0U 
-                             : hash;
+            *foundHash = ( keySlotOffset == Constants::ProbeStatus::AXONCACHE_KEY_NOT_FOUND ) ? 0U : hash;
         }
     }
 
