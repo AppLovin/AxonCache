@@ -63,7 +63,7 @@ TEST_CASE( "FoundHashLinearProbeExistingAndMissing" )
         CHECK( hash != 0U );
     }
 
-    // A missing key writes 0 (not left as the sentinel).
+    // A missing key writes 0
     uint64_t hash = kUnset;
     const auto retValue = cache.get( std::string_view{ "does-not-exist" }, {}, &hash );
     CHECK( retValue.empty() );
@@ -138,8 +138,6 @@ TEST_CASE( "FoundHashLinearProbeConsistentAcrossGetters" )
 
 TEST_CASE( "FoundHashLinearProbeGetStringAndGetKeyType" )
 {
-    // getString and getKeyType report the hash so that marking can stay liberal
-    // (mark on any read that locates the key).
     const auto numberOfKeySlots = 1000UL;
     auto memoryHandler = std::make_unique<MallocMemoryHandler>( numberOfKeySlots * sizeof( uint64_t ) );
     LinearProbeCache cache( kOffsetBits, numberOfKeySlots, 0.5, std::move( memoryHandler ) );
@@ -252,7 +250,7 @@ TEST_CASE( "FoundHashLinearProbeTypedGetters" )
 TEST_CASE( "FoundHashLinearProbeLiberalMarkingOnTypeMismatch" )
 {
     // The hash is reported because the KEY is present, independent of whether
-    // the requested value type matches what is stored. This is what lets the
+    // the requested value type matches what is stored. This lets the
     // usage tracker mark liberally.
     const auto numberOfKeySlots = 1000UL;
     auto memoryHandler = std::make_unique<MallocMemoryHandler>( numberOfKeySlots * sizeof( uint64_t ) );
