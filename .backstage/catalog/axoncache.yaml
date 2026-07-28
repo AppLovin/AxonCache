@@ -1,0 +1,19 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: axoncache
+  description: High-performance cache library for C++ (successor to ALCache).
+  annotations:
+    backstage.io/source-location: url:https://github.com/AppLovin/AxonCache
+    backstage.io/kubernetes-namespace: argo
+    argo-workflows.cnoe.io/label-selector: repo=applovin-axoncache
+    github.com/project-slug: AppLovin/AxonCache
+    applovin.devhub.backstage/default-slack-channel: "#argo-workflow-builds"
+    argo-workflows.cnoe.io/namespace: argo
+  tags:
+    - axoncache
+spec:
+  type: library
+  lifecycle: production
+  owner: ad-core-infra
+  system: axon
