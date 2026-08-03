@@ -10,6 +10,7 @@
 #include <vector>
 #include <algorithm>
 #include <sstream>
+#include "axoncache/common/fast_float.h"
 
 namespace axoncache
 {
@@ -63,12 +64,16 @@ class StringUtils
         if ( str.empty() )
             return 0;
 
-        char * end = ( char * )( str.data() + str.size() );
-        char * endResult = end;
-        double result = strtod( str.data(), &endResult );
+        // NOTE: strtod() ignores str.size() and requires a NUL terminator; on a non-NUL-terminated
+        // buffer it reads past the end and, if the adjacent byte is
+        // numeric, mis-reports the consumed length and this function returned 0. Use a length-bounded
+        // parser instead so the value is decoded correctly regardless of NUL termination.
+        const char * const end = str.data() + str.size();
+        double result = 0;
+        auto [ endResult, ec ] = fast_float::from_chars( str.data(), end, result );
 
         // If every character in the string is valid
-        if ( end == endResult )
+        if ( ec == std::errc() && endResult == end )
         {
             return result;
         }
