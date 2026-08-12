@@ -97,6 +97,8 @@ class LinearProbeDedupCache : public LinearProbeCache
     }
 
   protected:
+    // Keep the complete slot loaded by the probe and pass it to value decoding.
+    // Returning only its key-space offset would make the decoder load it again.
     [[nodiscard]] auto getInternal( std::string_view key, CacheValueType type, uint64_t * foundHash = nullptr ) const -> std::string_view override
     {
         auto hash = Xxh3Hasher::hash( key );

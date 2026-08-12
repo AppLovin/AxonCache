@@ -37,6 +37,9 @@ class LinearProbeValue
     auto get( const uint8_t * dataSpace, int64_t keySpaceOffset, std::string_view key, uint8_t type, bool * isExist ) const -> std::string_view;
 
     auto get( const uint8_t * dataSpace, int64_t keySpaceOffset, std::string_view key, uint8_t type, [[maybe_unused]] const std::vector<std::string_view> & frequentValues ) const -> std::string_view;
+
+    // This follows every successful dedup string probe. Keep it inline and
+    // consume the slot the probe already loaded to avoid another call and load.
     auto getFromSlot( const uint8_t * dataSpace, uint64_t slot, uint8_t type, const std::vector<std::string_view> & frequentValues ) const -> std::string_view
     {
         const uint64_t slotOffset = ( slot & mOffsetMask ) + mKeyspaceSizeOffset;
@@ -59,6 +62,8 @@ class LinearProbeValue
     }
 
     auto getWithType( const uint8_t * dataSpace, int64_t keySpaceOffset, [[maybe_unused]] const std::vector<std::string_view> & frequentValues ) const -> std::pair<std::string_view, CacheValueType>;
+    // Typed lookups also reuse the probe's slot, but remain out of line because
+    // they are outside the common string-only hot path.
     auto getWithTypeFromSlot( const uint8_t * dataSpace, uint64_t slot, const std::vector<std::string_view> & frequentValues ) const -> std::pair<std::string_view, CacheValueType>;
 
     auto contains( const uint8_t * dataSpace, int64_t keySpaceOffset, std::string_view key ) const -> bool;
