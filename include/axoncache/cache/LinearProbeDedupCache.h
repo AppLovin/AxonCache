@@ -35,6 +35,19 @@ class LinearProbeDedupCache : public LinearProbeCache
         return mCacheType;
     }
 
+    // Keep the common string lookup on the concrete cache type so it can be
+    // inlined without the base implementation's virtual getInternal dispatch.
+    [[nodiscard]] auto getString( std::string_view key, std::string_view defaultValue = {}, uint64_t * foundHash = nullptr ) const -> std::pair<std::string_view, bool>
+    {
+        bool isExist = false;
+        const auto str = LinearProbeDedupCache::getInternal( key, CacheValueType::String, &isExist, foundHash );
+        if ( !isExist )
+        {
+            return std::make_pair( defaultValue, false );
+        }
+        return std::make_pair( StringViewToNullTerminatedString::trimExtraNullTerminator( str ), true );
+    }
+
     auto setDuplicatedValues( const std::vector<std::string> & values ) -> void
     {
         if ( values.size() > 65536 )
