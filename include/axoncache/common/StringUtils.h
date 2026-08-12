@@ -70,14 +70,14 @@ class StringUtils
         // parser instead so the value is decoded correctly regardless of NUL termination.
         const char * const end = str.data() + str.size();
         double result = 0;
-        auto [ endResult, ec ] = fast_float::from_chars( str.data(), end, result );
+        auto [endResult, ec] = fast_float::from_chars( str.data(), end, result );
 
         // If every character in the string is valid
         if ( ec == std::errc() && endResult == end )
         {
             return result;
         }
-        //Unsafe, never throws any exceptions
+        // Unsafe, never throws any exceptions
         return 0;
     }
 
