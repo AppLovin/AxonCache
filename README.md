@@ -53,8 +53,8 @@ The benchmark is inserting 1,000,000 small keys (key_%i, val_%i), then randomly 
 
 | Implementation                                                               | Runtime | Lookups Lat (ns ± sd)        | Lookups QPS (avg ± sd)       | Inserts Lat (ns ± sd)        | Inserts QPS (avg ± sd)       |
 |------------------------------------------------------------------------------|---------|------------------------------|------------------------------|------------------------------|------------------------------|
-| [Abseil flat_map](https://abseil.io/docs/cpp/guides/container)               | C++     | 30.3 ns ± 0.1 ns             | 32,980,574.3 ± 85,392.4      | 25.9 ns ± 0.2 ns             | 38,595,871.3 ± 317,950.2     |
-| [AxonCache](https://github.com/AppLovin/AxonCache) C++ api                   | C++     | 35.0 ns ± 0.5 ns             | 28,550,738.0 ± 378,753.4     | 71.0 ns ± 3.9 ns             | 14,105,436.3 ± 773,987.7     |
+| [Abseil flat_map](https://abseil.io/docs/cpp/guides/container)               | C++     | 29.1 ns ± 0.6 ns             | 34,381,322.0 ± 742,696.1     | 27.7 ns ± 0.6 ns             | 36,163,725.3 ± 750,882.5     |
+| [AxonCache](https://github.com/AppLovin/AxonCache) C++ api                   | C++     | 35.2 ns ± 0.4 ns             | 28,439,352.0 ± 290,289.2     | 74.0 ns ± 2.5 ns             | 13,530,653.0 ± 447,057.1     |
 | [HashMap](https://www.baeldung.com/java-hashmap) Java HashMap                | Java    | 35.5 ns ± 0.3 ns             | 28,156,638.0 ± 211,436.8     | 31.1 ns ± 0.7 ns             | 32,216,312.3 ± 746,667.3     |
 | [Go Map](https://pkg.go.dev/builtin#map)                                     | Golang  | 54.8 ns ± 0.4 ns             | 18,263,583.7 ± 143,258.5     | 132.0 ns ± 2.0 ns            | 7,574,165.3 ± 115,968.0      |
 | [AxonCache](https://github.com/AppLovin/AxonCache) C api                     | C++     | 64.4 ns ± 0.6 ns             | 15,531,983.0 ± 153,817.7     | 74.5 ns ± 7.0 ns             | 13,503,343.3 ± 1,276,015.8   |

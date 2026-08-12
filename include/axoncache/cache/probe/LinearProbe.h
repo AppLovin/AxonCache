@@ -125,7 +125,13 @@ class LinearProbe
                 }
             }
 
-            slotId = ( slotId + 1 ) % mNumberOfKeySlots;
+            // Avoid modulo (and its division) in the collision path; key-slot counts
+            // are not guaranteed to be powers of two, so wrap explicitly.
+            ++slotId;
+            if ( slotId == mNumberOfKeySlots )
+            {
+                slotId = 0;
+            }
         }
     }
 
@@ -155,7 +161,13 @@ class LinearProbe
                 }
             }
 
-            slotId = ( slotId + 1 ) % mNumberOfKeySlots;
+            // Avoid modulo (and its division) in the collision path; key-slot counts
+            // are not guaranteed to be powers of two, so wrap explicitly.
+            ++slotId;
+            if ( slotId == mNumberOfKeySlots )
+            {
+                slotId = 0;
+            }
         }
     }
 
