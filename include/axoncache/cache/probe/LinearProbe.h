@@ -102,8 +102,9 @@ class LinearProbe
         return keySlotToPtrOffset( mNumberOfKeySlots );
     }
 
-    // for read. If found, return the offset to the record. Otherwise, AXONCACHE_KEY_NOT_FOUND
-    [[nodiscard]] auto findKeySlotOffset( std::string_view key, uint64_t hashcode, const uint8_t * keySpacePtr ) const -> int64_t
+    // Return the record offset or AXONCACHE_KEY_NOT_FOUND. Optionally return the
+    // matched slot so callers can decode its value without loading it again.
+    [[nodiscard]] auto findKeySlotOffset( std::string_view key, uint64_t hashcode, const uint8_t * keySpacePtr, uint64_t * foundSlot = nullptr ) const -> int64_t
     {
         auto cmpHashcode = ( hashcode & mHashcodeMask );
         auto slotId = ( hashcode % mNumberOfKeySlots );
@@ -121,6 +122,10 @@ class LinearProbe
                 const auto * record = reinterpret_cast<const linear::LinearProbeRecord *>( keySpacePtr + slotOffset + mKeyspaceSizeOffset );
                 if ( record->keySize == key.size() && std::memcmp( ( const void * )record->data, key.data(), key.size() ) == 0 )
                 {
+                    if ( foundSlot != nullptr )
+                    {
+                        *foundSlot = slot;
+                    }
                     return keySlotToPtrOffset( slotId );
                 }
             }
