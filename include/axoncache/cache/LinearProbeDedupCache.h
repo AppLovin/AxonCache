@@ -106,8 +106,8 @@ class LinearProbeDedupCache : public LinearProbeCache
         auto keySlotOffset = mProbe.findKeySlotOffset( key, hash, mKeySpacePtr, &slot );
         this->setFoundHash( foundHash, hash, keySlotOffset );
         return keySlotOffset == Constants::ProbeStatus::AXONCACHE_KEY_NOT_FOUND
-            ? std::string_view{}
-            : mValueMgr.getFromSlot( mKeySpacePtr, slot, static_cast<uint8_t>( type ), mValues );
+                   ? std::string_view{}
+                   : mValueMgr.getFromSlot( mKeySpacePtr, slot, static_cast<uint8_t>( type ), mValues );
     }
 
     [[nodiscard]] auto getInternal( std::string_view key, CacheValueType type, bool * isExists, uint64_t * foundHash = nullptr ) const -> std::string_view override
@@ -118,8 +118,8 @@ class LinearProbeDedupCache : public LinearProbeCache
         *isExists = ( keySlotOffset != Constants::ProbeStatus::AXONCACHE_KEY_NOT_FOUND );
         this->setFoundHash( foundHash, hash, keySlotOffset );
         return *isExists
-            ? mValueMgr.getFromSlot( mKeySpacePtr, slot, static_cast<uint8_t>( type ), mValues )
-            : std::string_view{};
+                   ? mValueMgr.getFromSlot( mKeySpacePtr, slot, static_cast<uint8_t>( type ), mValues )
+                   : std::string_view{};
     }
 
     [[nodiscard]] auto getWithTypeInternal( std::string_view key, uint64_t * foundHash = nullptr ) const -> std::pair<std::string_view, CacheValueType> override
@@ -129,8 +129,8 @@ class LinearProbeDedupCache : public LinearProbeCache
         auto keySlotOffset = mProbe.findKeySlotOffset( key, hash, mKeySpacePtr, &slot );
         this->setFoundHash( foundHash, hash, keySlotOffset );
         return keySlotOffset == Constants::ProbeStatus::AXONCACHE_KEY_NOT_FOUND
-            ? std::pair<std::string_view, CacheValueType>{}
-            : mValueMgr.getWithTypeFromSlot( mKeySpacePtr, slot, mValues );
+                   ? std::pair<std::string_view, CacheValueType>{}
+                   : mValueMgr.getWithTypeFromSlot( mKeySpacePtr, slot, mValues );
     }
 
     auto putInternal( std::string_view key, CacheValueType type, std::string_view value ) -> std::pair<bool, uint32_t> override;
