@@ -100,26 +100,35 @@ class LinearProbeDedupCache : public LinearProbeCache
     [[nodiscard]] auto getInternal( std::string_view key, CacheValueType type, uint64_t * foundHash = nullptr ) const -> std::string_view override
     {
         auto hash = Xxh3Hasher::hash( key );
-        auto keySlotOffset = mProbe.findKeySlotOffset( key, hash, mKeySpacePtr );
+        uint64_t slot = 0;
+        auto keySlotOffset = mProbe.findKeySlotOffset( key, hash, mKeySpacePtr, &slot );
         this->setFoundHash( foundHash, hash, keySlotOffset );
-        return mValueMgr.get( mKeySpacePtr, keySlotOffset, key, static_cast<uint8_t>( type ), mValues );
+        return keySlotOffset == Constants::ProbeStatus::AXONCACHE_KEY_NOT_FOUND
+            ? std::string_view{}
+            : mValueMgr.getFromSlot( mKeySpacePtr, slot, static_cast<uint8_t>( type ), mValues );
     }
 
     [[nodiscard]] auto getInternal( std::string_view key, CacheValueType type, bool * isExists, uint64_t * foundHash = nullptr ) const -> std::string_view override
     {
         auto hash = Xxh3Hasher::hash( key );
-        auto keySlotOffset = mProbe.findKeySlotOffset( key, hash, mKeySpacePtr );
+        uint64_t slot = 0;
+        auto keySlotOffset = mProbe.findKeySlotOffset( key, hash, mKeySpacePtr, &slot );
         *isExists = ( keySlotOffset != Constants::ProbeStatus::AXONCACHE_KEY_NOT_FOUND );
         this->setFoundHash( foundHash, hash, keySlotOffset );
-        return mValueMgr.get( mKeySpacePtr, keySlotOffset, key, static_cast<uint8_t>( type ), mValues );
+        return *isExists
+            ? mValueMgr.getFromSlot( mKeySpacePtr, slot, static_cast<uint8_t>( type ), mValues )
+            : std::string_view{};
     }
 
     [[nodiscard]] auto getWithTypeInternal( std::string_view key, uint64_t * foundHash = nullptr ) const -> std::pair<std::string_view, CacheValueType> override
     {
         auto hash = Xxh3Hasher::hash( key );
-        auto keySlotOffset = mProbe.findKeySlotOffset( key, hash, mKeySpacePtr );
+        uint64_t slot = 0;
+        auto keySlotOffset = mProbe.findKeySlotOffset( key, hash, mKeySpacePtr, &slot );
         this->setFoundHash( foundHash, hash, keySlotOffset );
-        return mValueMgr.getWithType( mKeySpacePtr, keySlotOffset, mValues );
+        return keySlotOffset == Constants::ProbeStatus::AXONCACHE_KEY_NOT_FOUND
+            ? std::pair<std::string_view, CacheValueType>{}
+            : mValueMgr.getWithTypeFromSlot( mKeySpacePtr, slot, mValues );
     }
 
     auto putInternal( std::string_view key, CacheValueType type, std::string_view value ) -> std::pair<bool, uint32_t> override;

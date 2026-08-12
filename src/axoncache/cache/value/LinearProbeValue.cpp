@@ -71,28 +71,16 @@ auto LinearProbeValue::get( const uint8_t * dataSpace, int64_t keySpaceOffset, [
     }
 
     const auto slot = *( reinterpret_cast<const uint64_t *>( dataSpace + keySpaceOffset ) );
-    uint64_t slotOffset = ( slot & mOffsetMask ) + mKeyspaceSizeOffset;
-    const auto * record = reinterpret_cast<const linear::LinearProbeRecord *>( dataSpace + static_cast<uint64_t>( slotOffset ) );
-    const auto * dataPtr = reinterpret_cast<const char *>( dataSpace + static_cast<uint64_t>( slotOffset ) + sizeof( const linear::LinearProbeRecord ) );
+    return getFromSlot( dataSpace, slot, type, frequentValues );
+}
 
-    if ( static_cast<uint8_t>( record->type ) != type )
-    {
-        std::ostringstream oss;
-        oss << "Type mismatch for key " << record->data
-            << " expected " << type
-            << " type in cache was " << record->type;
-        return {};
-    }
-
-    if ( ( record->dedupIndex & linear::kDedupFlag ) && !frequentValues.empty() )
-    {
-        return frequentValues[*( uint8_t * )( dataPtr + record->keySize )];
-    }
-    else if ( ( record->dedupIndex & linear::kDedupExtendedFlag ) && !frequentValues.empty() )
-    {
-        return frequentValues[*( uint16_t * )( dataPtr + record->keySize )];
-    }
-    return { dataPtr + record->keySize, record->valSize };
+auto LinearProbeValue::typeMismatch( const linear::LinearProbeRecord * record, uint8_t expectedType ) const -> std::string_view
+{
+    std::ostringstream oss;
+    oss << "Type mismatch for key " << record->data
+        << " expected " << expectedType
+        << " type in cache was " << record->type;
+    return {};
 }
 
 auto LinearProbeValue::getWithType( const uint8_t * dataSpace, int64_t keySpaceOffset, [[maybe_unused]] const std::vector<std::string_view> & frequentValues ) const -> std::pair<std::string_view, CacheValueType>
@@ -103,6 +91,11 @@ auto LinearProbeValue::getWithType( const uint8_t * dataSpace, int64_t keySpaceO
     }
 
     const auto slot = *( reinterpret_cast<const uint64_t *>( dataSpace + keySpaceOffset ) );
+    return getWithTypeFromSlot( dataSpace, slot, frequentValues );
+}
+
+auto LinearProbeValue::getWithTypeFromSlot( const uint8_t * dataSpace, uint64_t slot, const std::vector<std::string_view> & frequentValues ) const -> std::pair<std::string_view, CacheValueType>
+{
     uint64_t slotOffset = ( slot & mOffsetMask ) + mKeyspaceSizeOffset;
     const auto * record = reinterpret_cast<const linear::LinearProbeRecord *>( dataSpace + static_cast<uint64_t>( slotOffset ) );
     const auto * dataPtr = reinterpret_cast<const char *>( dataSpace + static_cast<uint64_t>( slotOffset ) + sizeof( const linear::LinearProbeRecord ) );

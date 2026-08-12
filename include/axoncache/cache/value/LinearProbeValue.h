@@ -8,6 +8,7 @@
 #include <utility>
 #include <cstdint>
 #include <vector>
+#include "axoncache/cache/probe/LinearProbe.h"
 #include "axoncache/domain/CacheValue.h"
 namespace axoncache
 {
@@ -36,12 +37,35 @@ class LinearProbeValue
     auto get( const uint8_t * dataSpace, int64_t keySpaceOffset, std::string_view key, uint8_t type, bool * isExist ) const -> std::string_view;
 
     auto get( const uint8_t * dataSpace, int64_t keySpaceOffset, std::string_view key, uint8_t type, [[maybe_unused]] const std::vector<std::string_view> & frequentValues ) const -> std::string_view;
+    auto getFromSlot( const uint8_t * dataSpace, uint64_t slot, uint8_t type, const std::vector<std::string_view> & frequentValues ) const -> std::string_view
+    {
+        const uint64_t slotOffset = ( slot & mOffsetMask ) + mKeyspaceSizeOffset;
+        const auto * record = reinterpret_cast<const linear::LinearProbeRecord *>( dataSpace + slotOffset );
+        const auto * dataPtr = reinterpret_cast<const char *>( dataSpace + slotOffset + sizeof( linear::LinearProbeRecord ) );
+
+        if ( static_cast<uint8_t>( record->type ) != type )
+        {
+            return typeMismatch( record, type );
+        }
+        if ( ( record->dedupIndex & linear::kDedupFlag ) && !frequentValues.empty() )
+        {
+            return frequentValues[*( reinterpret_cast<const uint8_t *>( dataPtr + record->keySize ) )];
+        }
+        if ( ( record->dedupIndex & linear::kDedupExtendedFlag ) && !frequentValues.empty() )
+        {
+            return frequentValues[*( reinterpret_cast<const uint16_t *>( dataPtr + record->keySize ) )];
+        }
+        return { dataPtr + record->keySize, record->valSize };
+    }
 
     auto getWithType( const uint8_t * dataSpace, int64_t keySpaceOffset, [[maybe_unused]] const std::vector<std::string_view> & frequentValues ) const -> std::pair<std::string_view, CacheValueType>;
+    auto getWithTypeFromSlot( const uint8_t * dataSpace, uint64_t slot, const std::vector<std::string_view> & frequentValues ) const -> std::pair<std::string_view, CacheValueType>;
 
     auto contains( const uint8_t * dataSpace, int64_t keySpaceOffset, std::string_view key ) const -> bool;
 
   protected:
+    auto typeMismatch( const linear::LinearProbeRecord * record, uint8_t expectedType ) const -> std::string_view;
+
     auto addToEnd( std::string_view key, uint8_t type, std::string_view value, MemoryHandler * memory ) -> uint64_t;
     auto addToEnd( std::string_view key, uint8_t type, uint32_t valueSize, uint16_t index, MemoryHandler * memory ) -> uint64_t;
 
