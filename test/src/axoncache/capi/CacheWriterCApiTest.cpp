@@ -5,9 +5,11 @@
 #include <fstream>
 #include <sstream>
 #include <cstdio>
+#include <array>
 #include "doctest/doctest.h"
 #include "axoncache/capi/CacheWriterCApi.h"
 #include "axoncache/capi/CacheReaderCApi.h"
+#include "axoncache/domain/CacheValue.h"
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while)
 // NOLINTBEGIN(cppcoreguidelines-avoid-do-while)
@@ -142,6 +144,51 @@ TEST_CASE( "CacheWriterCApiOffsetBitsTooSmallTest" ) // NOLINT
                                                 100 );
         CHECK( errorCode == 3 );
     }
+}
+
+TEST_CASE( "CacheWriterCApiDoubleHonorsValueSize" ) // NOLINT
+{
+    const std::string dataPath = std::filesystem::temp_directory_path();
+    const std::string settingsPath = dataPath + "/axoncache_double_buffer.settings";
+    const std::string cacheName = "axoncache_double_buffer";
+    const std::string timestamp = "1690484217135";
+    const std::string outputPath = dataPath + "/" + cacheName + ".cache";
+    const std::string timestampedPath = dataPath + "/" + cacheName + "." + timestamp + ".cache";
+
+    std::filesystem::remove( outputPath );
+    std::filesystem::remove( timestampedPath );
+
+    std::ostringstream settings;
+    settings << "ccache.destination_folder=" << dataPath << "\n";
+    settings << "ccache.type=5\n";
+    settings << "ccache.offset.bits=28\n";
+    writeFile( settingsPath, settings.str() );
+
+    auto * writer = NewCacheWriterHandle();
+    REQUIRE( CacheWriter_Initialize( writer, cacheName.c_str(), settingsPath.c_str(), 100 ) == 0 );
+
+    std::string key = "double.key";
+    std::array<char, 5> valueBuffer{ '1', '2', '.', '5', '9' };
+    CHECK( CacheWriter_InsertKey( writer,
+                                  key.data(),
+                                  key.size(),
+                                  valueBuffer.data(),
+                                  4,
+                                  static_cast<int8_t>( axoncache::CacheValueType::Double ) ) == 0 );
+    CHECK( CacheWriter_FinishCacheCreation( writer ) == 0 );
+    CacheWriter_Finalize( writer );
+    CacheWriter_DeleteCppObject( writer );
+    REQUIRE( ::rename( outputPath.c_str(), timestampedPath.c_str() ) == 0 );
+
+    auto * reader = NewCacheReaderHandle();
+    REQUIRE( CacheReader_Initialize( reader, cacheName.c_str(), dataPath.c_str(), timestamp.c_str(), true ) == 0 );
+    int exists = 0;
+    CHECK( CacheReader_GetDouble( reader, key.data(), key.size(), &exists, 0.0 ) == 12.5 );
+    CHECK( exists == 1 );
+    CacheReader_DeleteCppObject( reader );
+
+    std::filesystem::remove( settingsPath );
+    std::filesystem::remove( timestampedPath );
 }
 
 // NOLINTEND(cppcoreguidelines-avoid-do-while)

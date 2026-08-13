@@ -105,7 +105,9 @@ auto HashedCacheBase<HashAlgo, Probe, ValueMgr, CacheTypeVal>::getDouble( std::s
     }
     else if ( type == CacheValueType::String )
     {
-        return std::make_pair( StringUtils::toDouble( str ), true );
+        // String-backed values historically used strtod semantics when converted during a read.
+        // Retain that input compatibility without letting strtod read past the cache value.
+        return std::make_pair( StringUtils::toDoubleCompatible( str ), true );
     }
     else
     {

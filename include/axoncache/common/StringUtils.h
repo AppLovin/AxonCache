@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <vector>
 #include <algorithm>
+#include <cstdlib>
 #include <sstream>
 #include "axoncache/common/fast_float.h"
 
@@ -79,6 +80,29 @@ class StringUtils
         }
         // Unsafe, never throws any exceptions
         return 0;
+    }
+
+    static inline double toDoubleCompatible( std::string_view str )
+    {
+        if ( str.empty() )
+            return 0;
+
+        // Keep the bounded parser as the fast path for ordinary decimal values. Reads may need to
+        // preserve spellings accepted by the former strtod implementation (leading whitespace,
+        // a leading '+', hexadecimal floats, etc.), so fall back to strtod on a terminated copy.
+        // The copy is required because cache-backed string_views are not NUL-terminated.
+        const char * const end = str.data() + str.size();
+        double result = 0;
+        auto [endResult, ec] = fast_float::from_chars( str.data(), end, result );
+        if ( ec == std::errc() && endResult == end )
+        {
+            return result;
+        }
+
+        const std::string terminated{ str };
+        char * legacyEnd = nullptr;
+        result = std::strtod( terminated.c_str(), &legacyEnd );
+        return legacyEnd == terminated.c_str() + terminated.size() ? result : 0;
     }
 
     static inline std::string trim( std::string_view string )

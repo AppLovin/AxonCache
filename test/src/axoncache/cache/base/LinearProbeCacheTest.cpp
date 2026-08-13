@@ -520,6 +520,23 @@ TEST_CASE( "LinearProbeCacheAllTypeToStringTest" )
     }
 }
 
+TEST_CASE( "LinearProbeCacheStringToDoublePreservesLegacyGrammar" )
+{
+    constexpr auto numberOfKeySlots = 8UL;
+    constexpr auto maxLoadFactor = 0.5f;
+    constexpr uint16_t offsetBits = 35U;
+
+    auto memoryHandler = std::make_unique<MallocMemoryHandler>( numberOfKeySlots * sizeof( uint64_t ) );
+    LinearProbeCache cache( offsetBits, numberOfKeySlots, maxLoadFactor, std::move( memoryHandler ) );
+    cache.put( "leading-space", " 12.5" );
+    cache.put( "leading-plus", "+12.5" );
+    cache.put( "hex-float", "0x1.8p1" );
+
+    CHECK( cache.getDouble( "leading-space" ).first == 12.5 );
+    CHECK( cache.getDouble( "leading-plus" ).first == 12.5 );
+    CHECK( cache.getDouble( "hex-float" ).first == 3.0 );
+}
+
 TEST_CASE( "LinearProbeCacheDefaultValueReturnTest" )
 {
     const auto numberOfKeysSlots = 1000UL;
