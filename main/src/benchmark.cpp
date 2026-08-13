@@ -240,8 +240,6 @@ auto benchModeAxonCacheCppApi(
         const axoncache::SharedSettingsProvider settings( "" );
         axoncache::CacheOneTimeLoader loader( &settings );
 
-        auto start = clock::now();
-
         std::string taskName = "bench_cli_test";
         std::string destinationFolder{ dataPath }; // NOLINT
         std::string timestamp( "1690484217134" );
@@ -261,6 +259,10 @@ auto benchModeAxonCacheCppApi(
         cacheAbsolutePath += cacheName;
 
         auto cache = loader.loadAbsolutePath<axoncache::LinearProbeDedupCache>( cacheName, cacheAbsolutePath, true );
+
+        // Time the lookups only. Opening the cache and faulting in the whole
+        // file was being charged to them here, which the C api bench does not do.
+        auto start = clock::now();
 
         for ( int idx = 0; idx < numKeys; ++idx )
         {
