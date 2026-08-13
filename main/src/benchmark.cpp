@@ -16,6 +16,7 @@
 
 #include <string>
 #include <chrono>
+#include <cstdlib>
 #include <iomanip>
 #include <locale>
 #include <sstream>
@@ -129,13 +130,17 @@ auto benchModeAxonCacheCApi(
         {
             int size = 0;
             int isExist = 0;
-            CacheReader_GetKey( handle,
-                                keys[idx].data(), keys[idx].size(),
-                                &isExist, &size );
+            char * value = CacheReader_GetKey( handle,
+                                               keys[idx].data(), keys[idx].size(),
+                                               &isExist, &size );
             if ( isExist != 1 )
             {
                 throw std::runtime_error( "Error looking up value" );
             }
+            // CacheReader_GetKey hands back a malloc'ed copy that the caller owns.
+            // Releasing it lets the allocator hand the same block back on the next
+            // lookup; leaking it instead made every lookup extend the heap.
+            free( value );
         }
 
         auto end = clock::now();
