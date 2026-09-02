@@ -50,7 +50,7 @@ jobs:
           # visible inside this container, so one has to be installed explicitly. Must be the
           # full JDK, not -headless: CMake's FindJNI requires libjawt.so (AWT), which headless
           # builds deliberately omit.
-          apt-get install -y git ca-certificates curl python3-pip ninja-build openjdk-11-jdk
+          apt-get install -y git ca-certificates curl python3-pip ninja-build openjdk-11-jdk gcc-10 g++-10
           # Ubuntu 20.04's packaged cmake (3.16) is older than this project requires (>=3.24);
           # get a current one from PyPI instead of building it from source.
           pip3 install --upgrade "cmake>=3.24"
@@ -63,21 +63,30 @@ jobs:
       - name: Install cross-compilation tools (Linux ARM64)
         if: matrix.platform == 'linux-aarch64'
         run: |
-          apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
-      
+          # Default gcc-aarch64-linux-gnu on 20.04 is GCC 9, whose libstdc++ predates <span> and
+          # other C++20 library additions (added in GCC 10) - same reason the native x86_64 build
+          # needs gcc-10/g++-10 instead of the distro-default GCC 9.
+          apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu gcc-10-aarch64-linux-gnu g++-10-aarch64-linux-gnu
+
       - name: Build native library
         run: |
           mkdir -p build
           cd build
-          
+
           if [ "${{ matrix.platform }}" = "linux-aarch64" ]; then
             cmake .. -GNinja \
               -DCMAKE_BUILD_TYPE=Release \
               -DAL_WITH_JAVA=ON \
               -DCMAKE_SYSTEM_NAME=Linux \
               -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
-              -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
-              -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++
+              -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc-10 \
+              -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++-10
+          elif [ "${{ runner.os }}" = "Linux" ]; then
+            cmake .. -GNinja \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DAL_WITH_JAVA=ON \
+              -DCMAKE_C_COMPILER=gcc-10 \
+              -DCMAKE_CXX_COMPILER=g++-10
           else
             cmake .. -GNinja \
               -DCMAKE_BUILD_TYPE=Release \
