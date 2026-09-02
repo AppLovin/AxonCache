@@ -44,12 +44,13 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
         run: |
           apt-get update
-          # openjdk-11-jdk-headless (rather than default-jdk) is only needed to compile the JNI
-          # glue and generate native headers here - it's unrelated to the target bytecode version
-          # of the published jar, which is built separately in the package-jar job. The
-          # GH-hosted runner's pre-installed JDKs aren't visible inside this container, so one has
-          # to be installed explicitly; headless skips the desktop/font packages we don't need.
-          apt-get install -y git ca-certificates curl python3-pip ninja-build openjdk-11-jdk-headless
+          # A JDK is only needed here to compile the JNI glue and generate native headers - it's
+          # unrelated to the target bytecode version of the published jar, which is built
+          # separately in the package-jar job. The GH-hosted runner's pre-installed JDKs aren't
+          # visible inside this container, so one has to be installed explicitly. Must be the
+          # full JDK, not -headless: CMake's FindJNI requires libjawt.so (AWT), which headless
+          # builds deliberately omit.
+          apt-get install -y git ca-certificates curl python3-pip ninja-build openjdk-11-jdk
           # Ubuntu 20.04's packaged cmake (3.16) is older than this project requires (>=3.24);
           # get a current one from PyPI instead of building it from source.
           pip3 install --upgrade "cmake>=3.24"
