@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch: {}
 
 jobs:
   build-natives:
@@ -16,30 +17,42 @@ jobs:
           - os: ubuntu-22.04
             platform: linux-x86_64
             cmake-arch: x86_64
+            container: "debian:11"
           - os: ubuntu-22.04
             platform: linux-aarch64
             cmake-arch: aarch64
-    
+            container: "debian:11"
+
     runs-on: ${{ matrix.os }}
-    
+    # Linux libs are built inside a Debian 11 (glibc 2.31) container instead of directly on the
+    # ubuntu-22.04 host (glibc 2.35) - some consumers run on agents/containers with an older
+    # glibc than that, and a lib built against a newer glibc can't be loaded there at all
+    # (UnsatisfiedLinkError: version `GLIBC_2.33' not found). Building against an older glibc
+    # keeps the result loadable on anything newer, so target the oldest floor you actually need
+    # to support, not whatever happens to be on the build host.
+    container: ${{ matrix.container }}
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake ninja-build
-      
+          apt-get update
+          apt-get install -y git ca-certificates curl python3-pip ninja-build
+          # Debian 11's packaged cmake (3.18) is older than this project requires (>=3.24);
+          # get a current one from PyPI instead of building it from source.
+          pip3 install --upgrade "cmake>=3.24"
+
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
           brew install cmake ninja
-      
+
       - name: Install cross-compilation tools (Linux ARM64)
         if: matrix.platform == 'linux-aarch64'
         run: |
-          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
       
       - name: Build native library
         run: |
