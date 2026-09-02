@@ -7,13 +7,17 @@ import com.applovin.axoncache.CacheWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Collections;
 
 /**
  * Comprehensive test and example for AxonCache Java bindings
  * Tests all write and read operations
  */
 public class CacheExample {
-    
+
+    // String.repeat() is Java 11+; this stays Java 8 source-compatible.
+    private static final String SEPARATOR = String.join("", Collections.nCopies(60, "="));
+
     private static int testsPassed = 0;
     private static int testsFailed = 0;
     
@@ -32,7 +36,7 @@ public class CacheExample {
             System.exit(1);
         }
         
-        System.out.println("\n" + "=".repeat(60) + "\n");
+        System.out.println("\n" + SEPARATOR + "\n");
         System.out.println("--- Read Operations ---");
         testReadOperations(timestamp);
         
@@ -373,7 +377,7 @@ public class CacheExample {
     }
     
     private static void printSummary() {
-        System.out.println("\n" + "=".repeat(60));
+        System.out.println("\n" + SEPARATOR);
         System.out.println("Test Results:");
         System.out.println("  Passed: " + testsPassed);
         System.out.println("  Failed: " + testsFailed);
