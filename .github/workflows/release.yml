@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch: {}
 
 jobs:
   build-natives:
@@ -16,44 +17,90 @@ jobs:
           - os: ubuntu-22.04
             platform: linux-x86_64
             cmake-arch: x86_64
+            container: "ubuntu:20.04"
           - os: ubuntu-22.04
             platform: linux-aarch64
             cmake-arch: aarch64
-    
+            container: "ubuntu:20.04"
+
     runs-on: ${{ matrix.os }}
-    
+    # Linux libs are built inside an Ubuntu 20.04 (glibc 2.31) container instead of directly on
+    # the ubuntu-22.04 host (glibc 2.35) - some consumers run on agents/containers with an older
+    # glibc than that, and a lib built against a newer glibc can't be loaded there at all
+    # (UnsatisfiedLinkError: version `GLIBC_2.33' not found). Building against an older glibc
+    # keeps the result loadable on anything newer, so target the oldest floor you actually need
+    # to support, not whatever happens to be on the build host.
+    container: ${{ matrix.container }}
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install dependencies (Linux)
         if: runner.os == 'Linux'
+        env:
+          # A bare ubuntu:20.04 container has no pre-seeded timezone, unlike the GH-hosted runner
+          # images. Without this, installing a JDK pulls in tzdata as a transitive dependency and
+          # apt hangs forever on an interactive timezone prompt (no TTY in CI to answer it).
+          DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake ninja-build
-      
+          apt-get update
+          # A JDK is only needed here to compile the JNI glue and generate native headers - it's
+          # unrelated to the target bytecode version of the published jar, which is built
+          # separately in the package-jar job. The GH-hosted runner's pre-installed JDKs aren't
+          # visible inside this container, so one has to be installed explicitly. Must be the
+          # full JDK, not -headless: CMake's FindJNI requires libjawt.so (AWT), which headless
+          # builds deliberately omit.
+          apt-get install -y git ca-certificates curl python3-pip ninja-build openjdk-11-jdk gcc-10 g++-10
+          # Ubuntu 20.04's packaged cmake (3.16) is older than this project requires (>=3.24);
+          # get a current one from PyPI instead of building it from source.
+          pip3 install --upgrade "cmake>=3.24"
+
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
         run: |
           brew install cmake ninja
-      
+
       - name: Install cross-compilation tools (Linux ARM64)
         if: matrix.platform == 'linux-aarch64'
         run: |
-          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
-      
+          # Default gcc-aarch64-linux-gnu on 20.04 is GCC 9, whose libstdc++ predates <span> and
+          # other C++20 library additions (added in GCC 10) - same reason the native x86_64 build
+          # needs gcc-10/g++-10 instead of the distro-default GCC 9.
+          apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu gcc-10-aarch64-linux-gnu g++-10-aarch64-linux-gnu
+
       - name: Build native library
         run: |
           mkdir -p build
           cd build
-          
+
           if [ "${{ matrix.platform }}" = "linux-aarch64" ]; then
+            # find_package(Java) locates javac/etc. via a PROGRAM search, which always checks
+            # the host regardless of cross-compiling - that's why it succeeds. find_package(JNI)
+            # needs jni.h/jni_md.h and libjvm.so/libawt.so, which are INCLUDE/LIBRARY searches
+            # that CMake's cross-compiling heuristics fail to resolve here (even with
+            # CMAKE_FIND_ROOT_PATH_MODE_* set to BOTH), since there's no real aarch64 JDK sysroot.
+            # Sidestep FindJNI's search entirely and point it straight at the host JDK, computed
+            # from wherever javac actually resolves to - jni.h/jni_md.h don't meaningfully differ
+            # across Linux/x86_64 vs Linux/aarch64, so the host JDK's headers are exactly right.
+            JDK_HOME=$(dirname $(dirname $(readlink -f $(which javac))))
             cmake .. -GNinja \
               -DCMAKE_BUILD_TYPE=Release \
               -DAL_WITH_JAVA=ON \
               -DCMAKE_SYSTEM_NAME=Linux \
               -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
-              -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc \
-              -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++
+              -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc-10 \
+              -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++-10 \
+              -DJAVA_INCLUDE_PATH="$JDK_HOME/include" \
+              -DJAVA_INCLUDE_PATH2="$JDK_HOME/include/linux" \
+              -DJAVA_AWT_INCLUDE_PATH="$JDK_HOME/include" \
+              -DJAVA_JVM_LIBRARY="$JDK_HOME/lib/server/libjvm.so" \
+              -DJAVA_AWT_LIBRARY="$JDK_HOME/lib/libjawt.so"
+          elif [ "${{ runner.os }}" = "Linux" ]; then
+            cmake .. -GNinja \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DAL_WITH_JAVA=ON \
+              -DCMAKE_C_COMPILER=gcc-10 \
+              -DCMAKE_CXX_COMPILER=g++-10
           else
             cmake .. -GNinja \
               -DCMAKE_BUILD_TYPE=Release \
