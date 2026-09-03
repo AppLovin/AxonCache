@@ -113,16 +113,24 @@ class CacheReader // NOLINT
             return 1;
         }
 
-        mCacheType = static_cast<axoncache::CacheType>( info.cacheType );
+        auto newCacheType = static_cast<axoncache::CacheType>( info.cacheType );
 
         try
         {
-            switch ( mCacheType )
+            // mCacheType is only published (via the atomic store below) once the corresponding
+            // shared_ptr has been swapped in. This keeps a failed reload (e.g. a corrupt or
+            // truncated file, or an exception from loadAbsolutePath) from leaving mCacheType
+            // pointing at a cache-type slot whose shared_ptr was never populated, which would
+            // otherwise make every subsequent lookup dereference a null cache and report every
+            // key as missing, even though the previous, still-valid cache is sitting untouched
+            // in the other slot.
+            switch ( newCacheType )
             {
                 case axoncache::CacheType::LINEAR_PROBE:
                 {
                     auto cache = loader.loadAbsolutePath<axoncache::LinearProbeCache>( cacheName, cacheAbsolutePath, isPreloadMemoryEnabled );
                     std::atomic_store( &mReaderLinearProbeCache, cache );
+                    mCacheType.store( newCacheType );
                 }
                 break;
 
@@ -131,6 +139,7 @@ class CacheReader // NOLINT
                 {
                     auto cache = loader.loadAbsolutePath<axoncache::LinearProbeDedupCache>( cacheName, cacheAbsolutePath, isPreloadMemoryEnabled );
                     std::atomic_store( &mReaderLinearProbeDedupCache, cache );
+                    mCacheType.store( newCacheType );
                 }
                 break;
 
@@ -138,11 +147,13 @@ class CacheReader // NOLINT
                 {
                     auto cache = loader.loadAbsolutePath<axoncache::BucketChainCache>( cacheName, cacheAbsolutePath, isPreloadMemoryEnabled );
                     std::atomic_store( &mReaderBucketChainCache, cache );
+                    mCacheType.store( newCacheType );
                 }
                 break;
 
                 case axoncache::CacheType::MAP:
                 case axoncache::CacheType::NONE:
+                    mCacheType.store( newCacheType );
                     break;
             }
         }
@@ -165,7 +176,7 @@ class CacheReader // NOLINT
         {
             return 0;
         }
-        switch ( mCacheType )
+        switch ( mCacheType.load() )
         {
             case axoncache::CacheType::LINEAR_PROBE:
             {
@@ -214,7 +225,7 @@ class CacheReader // NOLINT
             return nullptr;
         }
 
-        switch ( mCacheType )
+        switch ( mCacheType.load() )
         {
             case axoncache::CacheType::LINEAR_PROBE:
             {
@@ -266,7 +277,7 @@ class CacheReader // NOLINT
         {
             return nullptr;
         }
-        switch ( mCacheType )
+        switch ( mCacheType.load() )
         {
             case axoncache::CacheType::LINEAR_PROBE:
             {
@@ -312,7 +323,7 @@ class CacheReader // NOLINT
         {
             return 0;
         }
-        switch ( mCacheType )
+        switch ( mCacheType.load() )
         {
             case axoncache::CacheType::LINEAR_PROBE:
             {
@@ -350,7 +361,7 @@ class CacheReader // NOLINT
         {
             return defaultValue;
         }
-        switch ( mCacheType )
+        switch ( mCacheType.load() )
         {
             case axoncache::CacheType::LINEAR_PROBE:
             {
@@ -392,7 +403,7 @@ class CacheReader // NOLINT
         {
             return defaultValue;
         }
-        switch ( mCacheType )
+        switch ( mCacheType.load() )
         {
             case axoncache::CacheType::LINEAR_PROBE:
             {
@@ -434,7 +445,7 @@ class CacheReader // NOLINT
         {
             return defaultValue;
         }
-        switch ( mCacheType )
+        switch ( mCacheType.load() )
         {
             case axoncache::CacheType::LINEAR_PROBE:
             {
@@ -476,7 +487,7 @@ class CacheReader // NOLINT
         {
             return defaultValue;
         }
-        switch ( mCacheType )
+        switch ( mCacheType.load() )
         {
             case axoncache::CacheType::LINEAR_PROBE:
             {
@@ -519,7 +530,7 @@ class CacheReader // NOLINT
         {
             return nullptr;
         }
-        switch ( mCacheType )
+        switch ( mCacheType.load() )
         {
             case axoncache::CacheType::LINEAR_PROBE:
             {
@@ -554,7 +565,7 @@ class CacheReader // NOLINT
         {
             return nullptr;
         }
-        switch ( mCacheType )
+        switch ( mCacheType.load() )
         {
             case axoncache::CacheType::LINEAR_PROBE:
             {
@@ -589,7 +600,7 @@ class CacheReader // NOLINT
         {
             return nullptr;
         }
-        switch ( mCacheType )
+        switch ( mCacheType.load() )
         {
             case axoncache::CacheType::LINEAR_PROBE:
             {
@@ -622,7 +633,7 @@ class CacheReader // NOLINT
     std::shared_ptr<LinearProbeCache> mReaderLinearProbeCache;
     std::shared_ptr<LinearProbeDedupCache> mReaderLinearProbeDedupCache;
     std::shared_ptr<BucketChainCache> mReaderBucketChainCache;
-    axoncache::CacheType mCacheType{ CacheType::LINEAR_PROBE_DEDUP };
+    std::atomic<axoncache::CacheType> mCacheType{ CacheType::LINEAR_PROBE_DEDUP };
 };
 
 typedef struct _CacheReaderHandle
