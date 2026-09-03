@@ -76,12 +76,13 @@ jobs:
           if [ "${{ matrix.platform }}" = "linux-aarch64" ]; then
             # find_package(Java) locates javac/etc. via a PROGRAM search, which always checks
             # the host regardless of cross-compiling - that's why it succeeds. find_package(JNI)
-            # needs jni.h/jni_md.h and libjvm.so/libawt.so, which are INCLUDE/LIBRARY searches;
-            # CMake restricts those to the target sysroot once CMAKE_SYSTEM_PROCESSOR differs
-            # from the host, and there's no aarch64 JDK sysroot here - explicitly allow those
-            # searches to also check the host, since the JNI headers/libs from the host JDK are
-            # what we actually want (jni.h/jni_md.h don't meaningfully differ across Linux/x86_64
-            # vs Linux/aarch64).
+            # needs jni.h/jni_md.h and libjvm.so/libawt.so, which are INCLUDE/LIBRARY searches
+            # that CMake's cross-compiling heuristics fail to resolve here (even with
+            # CMAKE_FIND_ROOT_PATH_MODE_* set to BOTH), since there's no real aarch64 JDK sysroot.
+            # Sidestep FindJNI's search entirely and point it straight at the host JDK, computed
+            # from wherever javac actually resolves to - jni.h/jni_md.h don't meaningfully differ
+            # across Linux/x86_64 vs Linux/aarch64, so the host JDK's headers are exactly right.
+            JDK_HOME=$(dirname $(dirname $(readlink -f $(which javac))))
             cmake .. -GNinja \
               -DCMAKE_BUILD_TYPE=Release \
               -DAL_WITH_JAVA=ON \
@@ -89,9 +90,11 @@ jobs:
               -DCMAKE_SYSTEM_PROCESSOR=aarch64 \
               -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc-10 \
               -DCMAKE_CXX_COMPILER=aarch64-linux-gnu-g++-10 \
-              -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=BOTH \
-              -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=BOTH \
-              -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=BOTH
+              -DJAVA_INCLUDE_PATH="$JDK_HOME/include" \
+              -DJAVA_INCLUDE_PATH2="$JDK_HOME/include/linux" \
+              -DJAVA_AWT_INCLUDE_PATH="$JDK_HOME/include" \
+              -DJAVA_JVM_LIBRARY="$JDK_HOME/lib/server/libjvm.so" \
+              -DJAVA_AWT_LIBRARY="$JDK_HOME/lib/libjawt.so"
           elif [ "${{ runner.os }}" = "Linux" ]; then
             cmake .. -GNinja \
               -DCMAKE_BUILD_TYPE=Release \
