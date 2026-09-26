@@ -19,7 +19,7 @@
 
 using namespace axoncache;
 
-namespace
+namespace axoncache
 {
 #if defined( __cpp_lib_atomic_shared_ptr ) && __cpp_lib_atomic_shared_ptr >= 201711L
 template<typename T>
@@ -45,6 +45,10 @@ class AtomicSharedPtr
     std::shared_ptr<T> mPtr;
 };
 #endif
+} // namespace axoncache
+
+namespace
+{
 
 // Caller need to free return ptr and valueSizes ptr for these helper functions
 char * convertToPointer( std::string_view value, int * valueSize )
