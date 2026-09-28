@@ -19,8 +19,37 @@
 
 using namespace axoncache;
 
+namespace axoncache
+{
+#if defined( __cpp_lib_atomic_shared_ptr ) && __cpp_lib_atomic_shared_ptr >= 201711L
+template<typename T>
+using AtomicSharedPtr = std::atomic<std::shared_ptr<T>>;
+#else
+template<typename T>
+class AtomicSharedPtr
+{
+  public:
+    AtomicSharedPtr() = default;
+
+    void store( std::shared_ptr<T> desired, std::memory_order /*order*/ = std::memory_order_seq_cst ) noexcept
+    {
+        std::atomic_store( &mPtr, std::move( desired ) );
+    }
+
+    std::shared_ptr<T> load( std::memory_order /*order*/ = std::memory_order_seq_cst ) const noexcept
+    {
+        return std::atomic_load( &mPtr );
+    }
+
+  private:
+    std::shared_ptr<T> mPtr;
+};
+#endif
+} // namespace axoncache
+
 namespace
 {
+
 // Caller need to free return ptr and valueSizes ptr for these helper functions
 char * convertToPointer( std::string_view value, int * valueSize )
 {
@@ -129,7 +158,7 @@ class CacheReader // NOLINT
                 case axoncache::CacheType::LINEAR_PROBE:
                 {
                     auto cache = loader.loadAbsolutePath<axoncache::LinearProbeCache>( cacheName, cacheAbsolutePath, isPreloadMemoryEnabled );
-                    std::atomic_store( &mReaderLinearProbeCache, cache );
+                    mReaderLinearProbeCache.store( cache );
                     mCacheType.store( newCacheType );
                 }
                 break;
@@ -138,7 +167,7 @@ class CacheReader // NOLINT
                 case axoncache::CacheType::LINEAR_PROBE_DEDUP_TYPED:
                 {
                     auto cache = loader.loadAbsolutePath<axoncache::LinearProbeDedupCache>( cacheName, cacheAbsolutePath, isPreloadMemoryEnabled );
-                    std::atomic_store( &mReaderLinearProbeDedupCache, cache );
+                    mReaderLinearProbeDedupCache.store( cache );
                     mCacheType.store( newCacheType );
                 }
                 break;
@@ -146,7 +175,7 @@ class CacheReader // NOLINT
                 case axoncache::CacheType::BUCKET_CHAIN:
                 {
                     auto cache = loader.loadAbsolutePath<axoncache::BucketChainCache>( cacheName, cacheAbsolutePath, isPreloadMemoryEnabled );
-                    std::atomic_store( &mReaderBucketChainCache, cache );
+                    mReaderBucketChainCache.store( cache );
                     mCacheType.store( newCacheType );
                 }
                 break;
@@ -180,7 +209,7 @@ class CacheReader // NOLINT
         {
             case axoncache::CacheType::LINEAR_PROBE:
             {
-                auto cache = std::atomic_load( &mReaderLinearProbeCache );
+                auto cache = mReaderLinearProbeCache.load();
                 if ( cache == nullptr )
                 {
                     return 0;
@@ -191,7 +220,7 @@ class CacheReader // NOLINT
             case axoncache::CacheType::LINEAR_PROBE_DEDUP:
             case axoncache::CacheType::LINEAR_PROBE_DEDUP_TYPED:
             {
-                const auto cache = std::atomic_load( &mReaderLinearProbeDedupCache );
+                const auto cache = mReaderLinearProbeDedupCache.load();
                 if ( cache == nullptr )
                 {
                     return 0;
@@ -201,7 +230,7 @@ class CacheReader // NOLINT
 
             case axoncache::CacheType::BUCKET_CHAIN:
             {
-                const auto cache = std::atomic_load( &mReaderBucketChainCache );
+                const auto cache = mReaderBucketChainCache.load();
                 if ( cache == nullptr )
                 {
                     return 0;
@@ -229,7 +258,7 @@ class CacheReader // NOLINT
         {
             case axoncache::CacheType::LINEAR_PROBE:
             {
-                auto cache = std::atomic_load( &mReaderLinearProbeCache );
+                auto cache = mReaderLinearProbeCache.load();
                 if ( cache == nullptr )
                 {
                     return nullptr;
@@ -241,7 +270,7 @@ class CacheReader // NOLINT
             case axoncache::CacheType::LINEAR_PROBE_DEDUP:
             case axoncache::CacheType::LINEAR_PROBE_DEDUP_TYPED:
             {
-                auto cache = std::atomic_load( &mReaderLinearProbeDedupCache );
+                auto cache = mReaderLinearProbeDedupCache.load();
                 if ( cache == nullptr )
                 {
                     return nullptr;
@@ -253,7 +282,7 @@ class CacheReader // NOLINT
 
             case axoncache::CacheType::BUCKET_CHAIN:
             {
-                auto cache = std::atomic_load( &mReaderBucketChainCache );
+                auto cache = mReaderBucketChainCache.load();
                 if ( cache == nullptr )
                 {
                     return nullptr;
@@ -281,7 +310,7 @@ class CacheReader // NOLINT
         {
             case axoncache::CacheType::LINEAR_PROBE:
             {
-                auto cache = std::atomic_load( &mReaderLinearProbeCache );
+                auto cache = mReaderLinearProbeCache.load();
                 if ( cache == nullptr )
                 {
                     return nullptr;
@@ -296,7 +325,7 @@ class CacheReader // NOLINT
             case axoncache::CacheType::LINEAR_PROBE_DEDUP:
             case axoncache::CacheType::LINEAR_PROBE_DEDUP_TYPED:
             {
-                auto cache = std::atomic_load( &mReaderLinearProbeDedupCache );
+                auto cache = mReaderLinearProbeDedupCache.load();
                 if ( cache == nullptr )
                 {
                     return nullptr;
@@ -327,7 +356,7 @@ class CacheReader // NOLINT
         {
             case axoncache::CacheType::LINEAR_PROBE:
             {
-                auto cache = std::atomic_load( &mReaderLinearProbeCache );
+                auto cache = mReaderLinearProbeCache.load();
                 if ( cache == nullptr )
                 {
                     return 0;
@@ -338,7 +367,7 @@ class CacheReader // NOLINT
             case axoncache::CacheType::LINEAR_PROBE_DEDUP:
             case axoncache::CacheType::LINEAR_PROBE_DEDUP_TYPED:
             {
-                auto cache = std::atomic_load( &mReaderLinearProbeDedupCache );
+                auto cache = mReaderLinearProbeDedupCache.load();
                 if ( cache == nullptr )
                 {
                     return 0;
@@ -365,7 +394,7 @@ class CacheReader // NOLINT
         {
             case axoncache::CacheType::LINEAR_PROBE:
             {
-                auto cache = std::atomic_load( &mReaderLinearProbeCache );
+                auto cache = mReaderLinearProbeCache.load();
                 if ( cache == nullptr )
                 {
                     return defaultValue;
@@ -377,7 +406,7 @@ class CacheReader // NOLINT
             case axoncache::CacheType::LINEAR_PROBE_DEDUP:
             case axoncache::CacheType::LINEAR_PROBE_DEDUP_TYPED:
             {
-                auto cache = std::atomic_load( &mReaderLinearProbeDedupCache );
+                auto cache = mReaderLinearProbeDedupCache.load();
                 if ( cache == nullptr )
                 {
                     return defaultValue;
@@ -407,7 +436,7 @@ class CacheReader // NOLINT
         {
             case axoncache::CacheType::LINEAR_PROBE:
             {
-                auto cache = std::atomic_load( &mReaderLinearProbeCache );
+                auto cache = mReaderLinearProbeCache.load();
                 if ( cache == nullptr )
                 {
                     return defaultValue;
@@ -419,7 +448,7 @@ class CacheReader // NOLINT
             case axoncache::CacheType::LINEAR_PROBE_DEDUP:
             case axoncache::CacheType::LINEAR_PROBE_DEDUP_TYPED:
             {
-                auto cache = std::atomic_load( &mReaderLinearProbeDedupCache );
+                auto cache = mReaderLinearProbeDedupCache.load();
                 if ( cache == nullptr )
                 {
                     return defaultValue;
@@ -449,7 +478,7 @@ class CacheReader // NOLINT
         {
             case axoncache::CacheType::LINEAR_PROBE:
             {
-                auto cache = std::atomic_load( &mReaderLinearProbeCache );
+                auto cache = mReaderLinearProbeCache.load();
                 if ( cache == nullptr )
                 {
                     return defaultValue;
@@ -461,7 +490,7 @@ class CacheReader // NOLINT
             case axoncache::CacheType::LINEAR_PROBE_DEDUP:
             case axoncache::CacheType::LINEAR_PROBE_DEDUP_TYPED:
             {
-                auto cache = std::atomic_load( &mReaderLinearProbeDedupCache );
+                auto cache = mReaderLinearProbeDedupCache.load();
                 if ( cache == nullptr )
                 {
                     return defaultValue;
@@ -491,7 +520,7 @@ class CacheReader // NOLINT
         {
             case axoncache::CacheType::LINEAR_PROBE:
             {
-                auto cache = std::atomic_load( &mReaderLinearProbeCache );
+                auto cache = mReaderLinearProbeCache.load();
                 if ( cache == nullptr )
                 {
                     return defaultValue;
@@ -503,7 +532,7 @@ class CacheReader // NOLINT
             case axoncache::CacheType::LINEAR_PROBE_DEDUP:
             case axoncache::CacheType::LINEAR_PROBE_DEDUP_TYPED:
             {
-                auto cache = std::atomic_load( &mReaderLinearProbeDedupCache );
+                auto cache = mReaderLinearProbeDedupCache.load();
                 if ( cache == nullptr )
                 {
                     return defaultValue;
@@ -534,7 +563,7 @@ class CacheReader // NOLINT
         {
             case axoncache::CacheType::LINEAR_PROBE:
             {
-                auto cache = std::atomic_load( &mReaderLinearProbeCache );
+                auto cache = mReaderLinearProbeCache.load();
                 if ( cache == nullptr )
                 {
                     return nullptr;
@@ -544,7 +573,7 @@ class CacheReader // NOLINT
             case axoncache::CacheType::LINEAR_PROBE_DEDUP:
             case axoncache::CacheType::LINEAR_PROBE_DEDUP_TYPED:
             {
-                auto cache = std::atomic_load( &mReaderLinearProbeDedupCache );
+                auto cache = mReaderLinearProbeDedupCache.load();
                 if ( cache == nullptr )
                 {
                     return nullptr;
@@ -569,7 +598,7 @@ class CacheReader // NOLINT
         {
             case axoncache::CacheType::LINEAR_PROBE:
             {
-                auto cache = std::atomic_load( &mReaderLinearProbeCache );
+                auto cache = mReaderLinearProbeCache.load();
                 if ( cache == nullptr )
                 {
                     return nullptr;
@@ -579,7 +608,7 @@ class CacheReader // NOLINT
             case axoncache::CacheType::LINEAR_PROBE_DEDUP:
             case axoncache::CacheType::LINEAR_PROBE_DEDUP_TYPED:
             {
-                auto cache = std::atomic_load( &mReaderLinearProbeDedupCache );
+                auto cache = mReaderLinearProbeDedupCache.load();
                 if ( cache == nullptr )
                 {
                     return nullptr;
@@ -604,7 +633,7 @@ class CacheReader // NOLINT
         {
             case axoncache::CacheType::LINEAR_PROBE:
             {
-                auto cache = std::atomic_load( &mReaderLinearProbeCache );
+                auto cache = mReaderLinearProbeCache.load();
                 if ( cache == nullptr )
                 {
                     return nullptr;
@@ -614,7 +643,7 @@ class CacheReader // NOLINT
             case axoncache::CacheType::LINEAR_PROBE_DEDUP:
             case axoncache::CacheType::LINEAR_PROBE_DEDUP_TYPED:
             {
-                auto cache = std::atomic_load( &mReaderLinearProbeDedupCache );
+                auto cache = mReaderLinearProbeDedupCache.load();
                 if ( cache == nullptr )
                 {
                     return nullptr;
@@ -630,9 +659,9 @@ class CacheReader // NOLINT
     }
 
   private:
-    std::shared_ptr<LinearProbeCache> mReaderLinearProbeCache;
-    std::shared_ptr<LinearProbeDedupCache> mReaderLinearProbeDedupCache;
-    std::shared_ptr<BucketChainCache> mReaderBucketChainCache;
+    AtomicSharedPtr<LinearProbeCache> mReaderLinearProbeCache;
+    AtomicSharedPtr<LinearProbeDedupCache> mReaderLinearProbeDedupCache;
+    AtomicSharedPtr<BucketChainCache> mReaderBucketChainCache;
     std::atomic<axoncache::CacheType> mCacheType{ CacheType::LINEAR_PROBE_DEDUP };
 };
 
