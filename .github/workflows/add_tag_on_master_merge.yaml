@@ -6,6 +6,9 @@ on:
     branches:
       - master
 
+permissions:
+  contents: write
+
 jobs:
   tag:
     runs-on: ubuntu-latest
@@ -47,3 +50,37 @@ jobs:
         run: |
           git tag ${{ steps.vars.outputs.tag }}
           git push origin ${{ steps.vars.outputs.tag }}
+
+      - name: Create GitHub Release and upload source assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.vars.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          ARCHIVE="AxonCache-${TAG}.tar.gz"
+          git archive --format=tar.gz --prefix="AxonCache-${TAG}/" --output="$ARCHIVE" "$TAG"
+          SHA256=$(sha256sum "$ARCHIVE" | awk '{print $1}')
+          echo "$SHA256  $ARCHIVE" > "${ARCHIVE}.sha256"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release for ${TAG} already exists"
+          else
+            gh release create "$TAG" \
+              --title "Release ${TAG}" \
+              --notes "Source archive SHA256: ${SHA256}"
+          fi
+
+          existing_assets=$(gh release view "$TAG" --json assets -q '.assets[].name')
+
+          if echo "$existing_assets" | grep -qx "$ARCHIVE"; then
+            echo "Asset ${ARCHIVE} already uploaded, skipping"
+          else
+            gh release upload "$TAG" "$ARCHIVE"
+          fi
+
+          if echo "$existing_assets" | grep -qx "${ARCHIVE}.sha256"; then
+            echo "Asset ${ARCHIVE}.sha256 already uploaded, skipping"
+          else
+            gh release upload "$TAG" "${ARCHIVE}.sha256"
+          fi
