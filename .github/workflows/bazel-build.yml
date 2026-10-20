@@ -13,6 +13,8 @@ on:
       - 'bazel/**'
       - '.bazelrc'
       - '.bazelversion'
+      - 'build.sh'
+      - '.github/workflows/bazel-build.yml'
   push:
     branches: [ master ]
 
@@ -24,7 +26,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # C++ Bazel Build and Test
+  # C++ Bazel Build and Test via ./build.sh (same entrypoint as other AppLovin C++ libs)
   bazel-cpp:
     runs-on: ubuntu-latest
     name: "Bazel C++ Build & Test"
@@ -45,18 +47,18 @@ jobs:
 
       - name: Build C++ Library and CLI
         run: |
-          bazel build //:axoncache //:axoncache_cli --config=ci
-          
+          chmod +x ./build.sh
+          ./build.sh -B
+
       - name: Run C++ Tests
         run: |
-          bazel test //... --config=ci --test_output=errors
+          ./build.sh -B -t
           
       - name: Test Results Summary
         if: always()
         run: |
-          echo "## 🎯 Bazel C++ Build Results" >> $GITHUB_STEP_SUMMARY
-          echo "✅ **C++ build and test completed**" >> $GITHUB_STEP_SUMMARY
-          bazel test //... --config=ci 2>&1 | grep -E "test cases|assertions" >> $GITHUB_STEP_SUMMARY || true
+          echo "## Bazel C++ Build Results" >> $GITHUB_STEP_SUMMARY
+          echo "C++ build and test via ./build.sh -B / -B -t" >> $GITHUB_STEP_SUMMARY
 
   # Summary Job
   build-summary:
@@ -68,10 +70,10 @@ jobs:
     steps:
       - name: Build Summary
         run: |
-          echo "## 🏗️ AxonCache C++ Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## AxonCache C++ Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY  
           echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| C++ Bazel (Ubuntu) | ${{ needs.bazel-cpp.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| C++ Bazel (Ubuntu) | ${{ needs.bazel-cpp.result == 'success' && 'Passed' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "🎯 **Migration Status**: Complete Bazel migration with 100% backward compatibility" >> $GITHUB_STEP_SUMMARY
+          echo "CI entrypoint: ./build.sh -B / ./build.sh -B -t (clang-tidy out of scope for this lib)." >> $GITHUB_STEP_SUMMARY
