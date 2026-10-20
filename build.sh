@@ -108,27 +108,31 @@ check_cmake_dependencies ()
 #############################################################################################################
 check_bazel_dependencies ()
 {
-    test `uname` = Darwin && {
-        CELLAR=
-        case `uname -m` in
-            x86_64)
-                CELLAR=/usr/local/Cellar
-            ;;
-            arm64)
-                CELLAR=/opt/homebrew/Cellar
-            ;;
-        esac
+    # macOS-only Homebrew checks. Must return 0 on Linux: under set -e a
+    # failing `test … = Darwin && {…}` would abort ./build.sh -B in CI.
+    if [[ $(uname -s) != Darwin ]]; then
+        return 0
+    fi
 
-        # Check for bazel or bazelisk
-        if ! command -v bazelisk >/dev/null 2>&1 && ! command -v bazel >/dev/null 2>&1; then
-            echo "Neither bazel nor bazelisk is installed on your machine."
-            echo "Install bazelisk (recommended) with:"
-            echo "    brew install bazelisk"
-            echo "Or install bazel with:"
-            echo "    brew install bazel"
-            exit 1
-        fi
-    }
+    CELLAR=
+    case `uname -m` in
+        x86_64)
+            CELLAR=/usr/local/Cellar
+        ;;
+        arm64)
+            CELLAR=/opt/homebrew/Cellar
+        ;;
+    esac
+
+    # Check for bazel or bazelisk
+    if ! command -v bazelisk >/dev/null 2>&1 && ! command -v bazel >/dev/null 2>&1; then
+        echo "Neither bazel nor bazelisk is installed on your machine."
+        echo "Install bazelisk (recommended) with:"
+        echo "    brew install bazelisk"
+        echo "Or install bazel with:"
+        echo "    brew install bazel"
+        exit 1
+    fi
 }
 
 #############################################################################################################
@@ -186,40 +190,36 @@ build_project_bazel ()
         echo "Using bazel (consider installing bazelisk for automatic version management)"
     fi
     
-    # Build arguments
-    BAZEL_ARGS="--config=local"
-    
-    # Build configuration based on BUILD_TYPE
-    if [[ "${BUILD_TYPE}" == "Release" ]]; then
-        BAZEL_ARGS="${BAZEL_ARGS} --compilation_mode=opt"
-    else
-        BAZEL_ARGS="${BAZEL_ARGS} --compilation_mode=dbg"
+    # GitHub Actions sets CI=true; use --config=ci so ./build.sh -B matches CI.
+    BAZEL_CONFIG="local"
+    if [[ "${CI:-}" == "true" ]]; then
+        BAZEL_CONFIG="ci"
+    elif [[ "${BUILD_TYPE}" == "Release" ]]; then
+        BAZEL_CONFIG="release"
     fi
-    
-    # Add job count
+
+    BAZEL_ARGS="--config=${BAZEL_CONFIG}"
     BAZEL_ARGS="${BAZEL_ARGS} --jobs=${PROC_COUNT}"
-    
-    # Add verbose flags if requested
+
     if [[ -n "${VERBOSE_FLAGS}" ]]; then
         BAZEL_ARGS="${BAZEL_ARGS} --verbose_failures --show_timestamps"
     fi
-    
-    # Clean build if requested
+
     if [[ "$FRESH_FLAG" == "--fresh" ]]; then
         echo "Cleaning Bazel cache..."
         $BAZEL_BIN clean --expunge
     fi
-    
-    # Build the main library
-    echo "Building //:axoncache..."
-    $BAZEL_BIN build $BAZEL_ARGS //:axoncache //:axoncache_cli
-    
-    # Run tests if requested
-    if [[ $RUN_TESTS == "ON" || $ENABLE_TESTING == "ON" ]]; then
-        echo "Running tests..."
-        $BAZEL_BIN test //...
+
+    # When tests run, only invoke `bazel test` once (builds deps itself).
+    if [[ $RUN_TESTS == "ON" ]]; then
+        echo "Running tests (//...)..."
+        $BAZEL_BIN test $BAZEL_ARGS //... --test_output=errors
+    else
+        echo "Building //:axoncache //:axoncache_cli..."
+        $BAZEL_BIN build $BAZEL_ARGS //:axoncache //:axoncache_cli
     fi
-    
+
+    echo "Bazel build completed successfully!"
     return 0
 }
 
