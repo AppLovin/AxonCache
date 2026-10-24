@@ -157,8 +157,8 @@ auto ChainedValue::addToEnd( std::string_view key, uint8_t type, std::string_vie
     if ( value.size() > Constants::Limit::kValueLength )
     {
         std::ostringstream oss;
-        oss << "input value size " << key.size()
-            << " is too large. max=" << Constants::Limit::kKeyLength;
+        oss << "input value size " << value.size()
+            << " is too large. max=" << Constants::Limit::kValueLength;
         AL_LOG_ERROR( oss.str() );
 
         throw std::runtime_error( "value size " + std::to_string( value.size() ) + " too large. max=" + std::to_string( Constants::Limit::kValueLength ) );
