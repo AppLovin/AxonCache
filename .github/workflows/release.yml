@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-14
+          - os: macos-15
             platform: osx-aarch64
             cmake-arch: arm64
           - os: ubuntu-22.04
