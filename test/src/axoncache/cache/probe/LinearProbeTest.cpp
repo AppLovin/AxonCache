@@ -26,11 +26,11 @@ TEST_CASE( "LinearProbeTestInvalidOffsetBits" )
 {
     for ( auto offsetBits = 0; offsetBits < Constants::kMinLinearProbeOffsetBits; offsetBits++ )
     {
-        CHECK_THROWS_WITH( LinearProbe<8> probe8( offsetBits, 1024UL ), "offset bits must in range of [ 16, 38 ]" );
+        CHECK_THROWS_WITH( LinearProbe<8> probe8( offsetBits, 1024UL ), "offset bits must be in range of [ 16, 38 ]" );
     }
     for ( auto offsetBits = Constants::kMaxLinearProbeOffsetBits + 1; offsetBits < 65; offsetBits++ )
     {
-        CHECK_THROWS_WITH( LinearProbe<8> probe8( offsetBits, 1024UL ), "offset bits must in range of [ 16, 38 ]" );
+        CHECK_THROWS_WITH( LinearProbe<8> probe8( offsetBits, 1024UL ), "offset bits must be in range of [ 16, 38 ]" );
     }
 }
 

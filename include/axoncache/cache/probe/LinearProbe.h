@@ -43,7 +43,7 @@ class LinearProbe
 
         if ( ( offsetBits < Constants::kMinLinearProbeOffsetBits ) || ( Constants::kMaxLinearProbeOffsetBits < offsetBits ) )
         {
-            throw std::runtime_error( "offset bits must in range of [ " + std::to_string( Constants::kMinLinearProbeOffsetBits ) +
+            throw std::runtime_error( "offset bits must be in range of [ " + std::to_string( Constants::kMinLinearProbeOffsetBits ) +
                                       ", " + std::to_string( Constants::kMaxLinearProbeOffsetBits ) + " ]" );
         }
 
@@ -140,7 +140,7 @@ class LinearProbe
         }
     }
 
-    // find an empty slot for write. return AXONCACHE_KEY_EXIST if key already exists in cache
+    // find an empty slot for write. return AXONCACHE_KEY_EXISTS if key already exists in cache
     [[nodiscard]] auto findFreeKeySlotOffset( std::string_view key, uint64_t hashcode, const uint8_t * keySpacePtr, uint32_t & collisions ) -> int64_t
     {
         auto cmpHashcode = ( hashcode & mHashcodeMask );
