@@ -14,6 +14,7 @@ server are never removed. Errors are printed and ignored; this script never
 fails the build. Every output base under the output user root counts, not only
 this repository's.
 """
+
 import argparse
 import os
 import shutil
@@ -21,7 +22,7 @@ import stat
 import sys
 import time
 
-GB = 1024 ** 3
+GB = 1024**3
 DAY = 24 * 3600
 CACHE_ENTRY_MAX_AGE_DAYS = 14
 
@@ -55,7 +56,12 @@ def make_writable(path):
             try:
                 mode = os.lstat(full).st_mode
                 if not stat.S_ISLNK(mode):
-                    os.chmod(full, mode | stat.S_IWUSR | (stat.S_IXUSR if stat.S_ISDIR(mode) else 0))
+                    os.chmod(
+                        full,
+                        mode
+                        | stat.S_IWUSR
+                        | (stat.S_IXUSR if stat.S_ISDIR(mode) else 0),
+                    )
             except OSError:
                 pass
 
@@ -77,7 +83,9 @@ def trim_disk_cache(cache, max_bytes, dry_run):
         return
     entries = []
     for sub in ("cas", "ac"):
-        for root, dirs, files in os.walk(os.path.join(cache, sub), onerror=lambda e: None):
+        for root, dirs, files in os.walk(
+            os.path.join(cache, sub), onerror=lambda e: None
+        ):
             for name in files:
                 full = os.path.join(root, name)
                 try:
@@ -100,8 +108,10 @@ def trim_disk_cache(cache, max_bytes, dry_run):
         used -= size
         removed += 1
     verb = "would remove" if dry_run else "removed"
-    print("bazel disk cache: %s -> %s (limit %s); %s %d entries"
-          % (fmt_gb(before), fmt_gb(used), fmt_gb(max_bytes), verb, removed))
+    print(
+        "bazel disk cache: %s -> %s (limit %s); %s %d entries"
+        % (fmt_gb(before), fmt_gb(used), fmt_gb(max_bytes), verb, removed)
+    )
 
 
 def server_running(base):
@@ -185,8 +195,10 @@ def tidy_output_bases(root, current, max_age_days, budget_bytes, dry_run):
                 remove_tree(b["path"])
             freed += size
             notes.append("%s (%s)" % (label(b), why))
-        print("bazel output bases: %s %d stale (%s): %s"
-              % (verb, len(stale), fmt_gb(freed), ", ".join(notes)))
+        print(
+            "bazel output bases: %s %d stale (%s): %s"
+            % (verb, len(stale), fmt_gb(freed), ", ".join(notes))
+        )
 
     removed_paths = {b["path"] for b, _ in stale}
     remaining = [b for b in bases if b["path"] not in removed_paths]
@@ -205,11 +217,21 @@ def tidy_output_bases(root, current, max_age_days, budget_bytes, dry_run):
             remove_tree(b["path"])
         total -= sizes[b["path"]]
         evicted.append(label(b))
-    line = "bazel output bases: %s -> %s (budget %s)" % (fmt_gb(before), fmt_gb(total), fmt_gb(budget_bytes))
+    line = "bazel output bases: %s -> %s (budget %s)" % (
+        fmt_gb(before),
+        fmt_gb(total),
+        fmt_gb(budget_bytes),
+    )
     if evicted:
-        line += "; %s %d least recently used: %s" % (verb, len(evicted), ", ".join(evicted))
+        line += "; %s %d least recently used: %s" % (
+            verb,
+            len(evicted),
+            ", ".join(evicted),
+        )
     if total > budget_bytes:
-        line += "; still over budget, running `bazel clean` in large checkouts would help"
+        line += (
+            "; still over budget, running `bazel clean` in large checkouts would help"
+        )
     print(line)
 
 
@@ -217,7 +239,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--output-user-root", required=True)
     parser.add_argument("--current-output-base", default="")
-    parser.add_argument("--disk-cache", default=os.path.expanduser("~/.cache/bazel-disk-cache"))
+    parser.add_argument(
+        "--disk-cache", default=os.path.expanduser("~/.cache/bazel-disk-cache")
+    )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
@@ -226,9 +250,12 @@ def main():
     max_age = env_number("AL_BAZEL_TIDY_MAX_AGE_DAYS", 30)
     budget = env_number("AL_BAZEL_OUTPUT_BUDGET_GB", 100) * GB
 
-    for step in (lambda: trim_disk_cache(args.disk_cache, max_cache, dry_run),
-                 lambda: tidy_output_bases(args.output_user_root, args.current_output_base,
-                                           max_age, budget, dry_run)):
+    for step in (
+        lambda: trim_disk_cache(args.disk_cache, max_cache, dry_run),
+        lambda: tidy_output_bases(
+            args.output_user_root, args.current_output_base, max_age, budget, dry_run
+        ),
+    ):
         try:
             step()
         except Exception as e:  # never fail the build
