@@ -20,6 +20,13 @@ _bazel_local_probe ()
     "$@" 2>/dev/null || true
 }
 
+# Read-only git queries. On Argo the build runs as bazeluser in a checkout made by
+# another user, which git refuses to read without safe.directory.
+_bazel_local_git ()
+{
+    _bazel_local_probe git -c safe.directory='*' "$@"
+}
+
 _bazel_local_clang_version ()
 {
     { clang --version 2>/dev/null || true; } | sed -n 's/.*clang version \([0-9.]*\).*/\1/p' | head -n 1
@@ -73,10 +80,10 @@ _bazel_local_machine_labels ()
 bazel_local_setup ()
 {
     export AL_BB_REPO="$1" AL_BB_EXEC_MODE="$2" AL_BB_BUILD_TYPE="$3" AL_BB_UNITY="$4"
-    AL_BB_COMMIT="$(_bazel_local_probe git rev-parse --short=12 HEAD)"
+    AL_BB_COMMIT="$(_bazel_local_git rev-parse --short=12 HEAD)"
     # Argo checks out the commit SHA, so git reports HEAD; CI passes the branch in AL_BB_BRANCH.
     if [[ -z "${AL_BB_BRANCH:-}" ]]; then
-        AL_BB_BRANCH="$(_bazel_local_probe git rev-parse --abbrev-ref HEAD)"
+        AL_BB_BRANCH="$(_bazel_local_git rev-parse --abbrev-ref HEAD)"
         [[ "$AL_BB_BRANCH" == "HEAD" ]] && AL_BB_BRANCH=
     fi
     export AL_BB_COMMIT AL_BB_BRANCH
@@ -97,7 +104,7 @@ bazel_local_setup ()
     if [[ -z "${BUILD_URL:-}" ]]; then
         export BUILD_URL="local/${USER:-unknown}/$AL_BB_REPO/${AL_BB_BRANCH:-unknown}/$(date +%Y-%m-%d)"
     fi
-    if [[ -n "$(_bazel_local_probe git status --porcelain --untracked-files=no)" ]]; then
+    if [[ -n "$(_bazel_local_git status --porcelain --untracked-files=no)" ]]; then
         export AL_BB_DIRTY=yes
     else
         export AL_BB_DIRTY=no
