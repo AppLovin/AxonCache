@@ -42,6 +42,20 @@ build:ci --show_timestamps
 build:ci --announce_rc
 build:ci --experimental_repository_cache_hardlinks
 
+# Local build.sh builds report to bb-portal; set AL_BB_REPORT=0 to opt out.
+build:bb-report --bes_backend=grpcs://buildbarn-bes.axon.tools
+build:bb-report --bes_results_url=https://buildbarn-portal.axon.tools/bazel-invocations/
+build:bb-report --bes_upload_mode=nowait_for_upload_complete
+build:bb-report --build_metadata=REPO=AxonCache
+build:bb-report --build_metadata=ROLE=local
+
+# Shared local disk cache for build.sh builds; AL_BAZEL_DISK_CACHE=0 turns it off.
+build:local-disk-cache --disk_cache=~/.cache/bazel-disk-cache
+build:local-disk-cache --experimental_disk_cache_gc_max_size=30G
+build:local-disk-cache --experimental_disk_cache_gc_max_age=14d
+build:local-disk-cache --experimental_disk_cache_gc_idle_delay=5m
+build:local-disk-cache --experimental_repository_cache_hardlinks
+
 # Test settings
 test --test_output=errors
 test --test_summary=detailed

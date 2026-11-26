@@ -205,6 +205,16 @@ build_project_bazel ()
         BAZEL_ARGS="${BAZEL_ARGS} --verbose_failures --show_timestamps"
     fi
 
+    # bb-portal labels for all builds; local builds also report and use the
+    # shared disk cache (BAZEL_LOCAL_ARGS is empty on CI).
+    source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/tools/bazel_local.sh"
+    if [[ "${CI:-}" == "true" ]]; then
+        bazel_local_setup AxonCache ci-local Release off
+    else
+        bazel_local_setup AxonCache local "$BUILD_TYPE" off
+    fi
+    BAZEL_ARGS="${BAZEL_ARGS} ${BAZEL_LOCAL_ARGS}"
+
     if [[ "$FRESH_FLAG" == "--fresh" ]]; then
         echo "Cleaning Bazel cache..."
         $BAZEL_BIN clean --expunge
@@ -220,6 +230,7 @@ build_project_bazel ()
     fi
 
     echo "Bazel build completed successfully!"
+    bazel_local_tidy "$BAZEL_BIN"
     return 0
 }
 
